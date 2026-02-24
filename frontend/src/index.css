@@ -1,3 +1,16 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
 body {
     margin: 0;
+}
+
+main, header, footer {
+    @apply flex p-8 bg-background;
+}
+
+.dark {
+    p {
+        @apply text-accent-foreground;
+    }
 }
