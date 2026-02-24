@@ -1,0 +1,11 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = "4.13.0"
+dotenvy = "0.15.7"
+log = "0.4.29"
+data_collection = { path = "../data_collection/" }
+actix-cors = "0.7.1"
