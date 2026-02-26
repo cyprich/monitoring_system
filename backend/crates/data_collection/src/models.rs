@@ -102,4 +102,8 @@ impl Data {
     pub fn new() -> Data {
         Data::default()
     }
+
+    pub fn json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
 }
