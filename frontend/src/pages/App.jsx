@@ -1,5 +1,4 @@
 import {useEffect, useState} from "react";
-import axios from "axios";
 import Line from "../components/charts/Line.jsx";
 
 
@@ -7,22 +6,23 @@ function App() {
     const [data, setData] = useState([])
 
     useEffect(() => {
-        axios.get("http://localhost:5000/sample_data").then((resp) => {
-            console.log(resp)
-            setData(resp.data)
+        const socket = new WebSocket("ws://127.0.0.1:8000");
 
+        socket.addEventListener("open", () => {
+            console.log("Opened Websocket connection")
         })
+
+        socket.addEventListener("message", (event) => {
+            // https://www.w3schools.com/js/js_array_methods.asp#mark_slice
+            setData(data => [...data, event.data].slice(-20))
+        })
+
+        return () => socket.close();
     }, []);
 
     return (
         <main className={"min-h-[90vh] flex-col"}>
             <p>Hello, World!</p>
-            <p>Sample data from backend:</p>
-            <div className={"pl-4"}>
-                {data.map((i) => {
-                    return <p>{i}</p>
-                })}
-            </div>
             <Line values={data}/>
         </main>
     )

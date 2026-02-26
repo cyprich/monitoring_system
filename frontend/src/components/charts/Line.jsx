@@ -38,12 +38,15 @@ function Line({values}) {
             },
             title: {
                 display: true,
-                text: 'Chart.js Line Chart',
+                text: 'CPU Usage',
             },
         },
+        animation: {
+            duration: 0
+        }
     };
 
-    const labels = values.map(() => { return 'a' });
+    const labels = values.map(() => { return '' });
 
     const data = {
         labels,
@@ -53,12 +56,7 @@ function Line({values}) {
                 data: values.map((i) => Number(i)),
                 borderColor: colors.blue["400"],
                 backgroundColor: colors.blue["200"],
-            },
-            {
-                label: 'CPU 2',
-                data: values.reverse().map((i) => Number(i * 0.5)),
-                borderColor: colors.orange["400"],
-                backgroundColor: colors.orange["200"],
+                cubicInterpolationMode: 'monotone',
             },
         ],
     };

@@ -5,7 +5,7 @@ function Header() {
     return <header className={"border-b justify-between"}>
         <div className={"flex gap-8 items-center"}>
             <Button variant={"tertiary"}>Dashboard</Button>
-            <Button variant={"ghost"}>Account</Button>
+            {/*<Button variant={"ghost"}>Account</Button>*/}
             <Button variant={"ghost"}>Settings</Button>
         </div>
         <div>
