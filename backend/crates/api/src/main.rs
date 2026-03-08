@@ -2,8 +2,10 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 
 use crate::endpoints::*;
+use crate::ws::*;
 
 mod endpoints;
+mod ws;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -21,8 +23,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Cors::permissive())
             .service(hello)
-            .service(get_data)
-            .service(get_sample_data)
+            .service(ws)
     })
     .bind(("127.0.0.1", port))?
     .run()
