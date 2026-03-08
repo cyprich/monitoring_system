@@ -7,7 +7,7 @@ edition = "2024"
 actix-web = "4.13.0"
 dotenvy = "0.15.7"
 log = "0.4.29"
-data_collection = { path = "../data_collection/" }
+collector = { path = "../collector/" }
 actix-cors = "0.7.1"
 actix-ws = "0.4.0"
 futures-util = "0.3.32"

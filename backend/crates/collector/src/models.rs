@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{UNKNOWN, unwrap_or_unknown};
 
-pub struct System {
+pub struct Collector {
     pub sys: sysinfo::System,
     pub system_name: String,
     pub host_name: String,
@@ -11,11 +11,11 @@ pub struct System {
     pub networks: sysinfo::Networks,
 }
 
-impl System {
-    pub fn new() -> Option<System> {
+impl Collector {
+    pub fn new() -> Option<Collector> {
         match sysinfo::IS_SUPPORTED_SYSTEM {
             false => None,
-            true => Some(System {
+            true => Some(Collector {
                 sys: sysinfo::System::new_all(),
                 system_name: unwrap_or_unknown(sysinfo::System::name(), "System Name"),
                 host_name: unwrap_or_unknown(sysinfo::System::host_name(), "Host Name"),
