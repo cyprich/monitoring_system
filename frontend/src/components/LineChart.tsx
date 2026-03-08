@@ -9,8 +9,9 @@ import {
     LineElement,
     Title,
     Tooltip,
-    Legend,
+    Legend, type ChartData, type ChartOptions,
 } from 'chart.js';
+import type {LineChartData} from "../props/LineChartData.ts";
 
 ChartJS.register(
     CategoryScale,
@@ -22,8 +23,14 @@ ChartJS.register(
     Legend
 );
 
-function Line({values}) {
-    const options = {
+type LineChartProps = {
+    inputData: LineChartData
+}
+
+export function LineChart({inputData}: LineChartProps) {
+    console.log(inputData)
+
+    const options: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
         scale: {
@@ -38,7 +45,7 @@ function Line({values}) {
             },
             title: {
                 display: true,
-                text: 'CPU Usage',
+                text: inputData.title,
             },
         },
         animation: {
@@ -46,18 +53,20 @@ function Line({values}) {
         }
     };
 
-    const labels = values.map(() => { return '' });
+    const labels= inputData.dataset.data.map((val) => (val.x))
+    const values = inputData.dataset.data.map((val) => (val.y))
 
-    const data = {
+    const data: ChartData<'line'> = {
         labels,
         datasets: [
             {
-                label: 'CPU 1',
-                data: values.map((i) => Number(i)),
+                label: `CPU`,
+                data: values,
                 borderColor: colors.blue["400"],
                 backgroundColor: colors.blue["200"],
                 cubicInterpolationMode: 'monotone',
-            },
+            }
+
         ],
     };
 
@@ -67,5 +76,3 @@ function Line({values}) {
         </div>
     )
 }
-
-export default Line;

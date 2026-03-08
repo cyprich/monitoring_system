@@ -6,11 +6,5 @@ body {
 }
 
 main, header, footer {
-    @apply flex p-8 bg-background;
-}
-
-.dark {
-    p {
-        @apply text-accent-foreground;
-    }
+    @apply flex p-8 bg-background
 }
