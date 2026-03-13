@@ -1,6 +1,5 @@
-mod models;
-pub use crate::models::Collector;
-pub use crate::models::Data;
+mod structs;
+pub use crate::structs::Collector;
 
 const UNKNOWN: &str = "<<unknown>>";
 

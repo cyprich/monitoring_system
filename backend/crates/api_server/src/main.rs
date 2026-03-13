@@ -9,12 +9,8 @@ mod ws;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    if let Err(val) = dotenvy::dotenv() {
-        log::error!("{}", val);
-        return Err(std::io::Error::other(val));
-    }
+    let port = shared::get_env("API_PORT").unwrap();
 
-    let port = std::env::var("API_PORT").expect("Couldn't find API_PORT environment variable");
     let port: u16 = port
         .parse()
         .expect("Couldn't convert API_PORT environment variable to u16 type ");
@@ -24,6 +20,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::permissive())
             .service(hello)
             .service(ws)
+            .service(metrics_post)
     })
     .bind(("127.0.0.1", port))?
     .run()

@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use shared::metrics::{Disk, Metrics, NetworkInterface};
 
 use crate::{UNKNOWN, unwrap_or_unknown};
 
@@ -26,12 +26,12 @@ impl Collector {
         }
     }
 
-    pub fn get_data(&mut self) -> Data {
+    pub fn get_metrics(&mut self) -> Metrics {
         self.sys.refresh_all();
         self.disks.refresh(true);
         self.networks.refresh(true);
 
-        Data {
+        Metrics {
             system_name: self.system_name.clone(),
             host_name: self.host_name.clone(),
             kernel_version: self.kernel_version.clone(),
@@ -63,47 +63,5 @@ impl Collector {
                 })
                 .collect(),
         }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Disk {
-    pub name: String,
-    pub mountpoint: String,
-    pub filesystem: String,
-    pub total_space: u64,
-    pub available_space: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct NetworkInterface {
-    pub name: String,
-    pub mac: String,
-    pub upload: u64,
-    pub download: u64,
-    pub total_upload: u64,
-    pub total_download: u64,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct Data {
-    pub system_name: String,
-    pub host_name: String,
-    pub kernel_version: String,
-    pub total_mem: u64,
-    pub used_mem: u64,
-    pub cpu_count: usize,
-    pub cpu_usage: Vec<f32>,
-    pub disks: Vec<Disk>,
-    pub networks: Vec<NetworkInterface>,
-}
-
-impl Data {
-    pub fn new() -> Data {
-        Data::default()
-    }
-
-    pub fn json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
     }
 }

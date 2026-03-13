@@ -19,7 +19,7 @@ pub async fn ws(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, 
         loop {
             tokio::select! {
                 _ = interval.tick() => {
-                    let data = collector.get_data().json();
+                    let data = collector.get_metrics().json();
                     send.text(data).await.unwrap();
                 }
 
