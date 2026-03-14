@@ -1,24 +1,20 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Disk {
-    // pub name: String,
     pub mountpoint: String,
-    // pub filesystem: String,
-    // pub total_space: u64,
     pub available_space: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkInterface {
     pub name: String,
-    // pub mac: String,
     pub upload: u64,
     pub download: u64,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Metrics {
     pub hostname: String,
     pub timestamp: NaiveDateTime,

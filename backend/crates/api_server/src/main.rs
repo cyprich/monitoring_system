@@ -1,13 +1,22 @@
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use actix_web::{middleware, web};
+use shared::structs::Metrics;
+use tokio::sync::broadcast;
 
+use crate::db::Pool;
 use crate::endpoints::*;
 use crate::ws::*;
 
 mod db;
 mod endpoints;
 mod ws;
+
+#[derive(Clone)]
+pub struct AppState {
+    pool: Pool,
+    tx: broadcast::Sender<Metrics>,
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -22,12 +31,17 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Couldn't create database pool");
 
+    let (tx, _) = broadcast::channel::<Metrics>(128);
+
+    let state = AppState { pool, tx };
+
     HttpServer::new(move || {
         App::new()
             // TODO
             .wrap(Cors::permissive())
             .wrap(middleware::NormalizePath::trim())
-            .app_data(web::Data::new(pool.clone()))
+            // .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(state.clone()))
             .service(hello)
             .service(ws)
             .service(metrics_post)

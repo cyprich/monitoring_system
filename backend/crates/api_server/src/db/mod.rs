@@ -13,8 +13,8 @@ pub async fn get_pool() -> Option<Pool> {
         .ok()
 }
 
-pub async fn insert_metrics(pool: &Pool, metrics: Metrics) {
-    let x = sqlx::query!(
+pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) {
+    let _ = sqlx::query!(
         "insert into metrics (timestamp, host_id, type_id, value) values ( $1, $2, $3, $4 )",
         metrics.timestamp,
         1,
@@ -23,6 +23,4 @@ pub async fn insert_metrics(pool: &Pool, metrics: Metrics) {
     )
     .execute(pool)
     .await;
-
-    dbg!(x);
 }

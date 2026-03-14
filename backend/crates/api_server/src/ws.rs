@@ -1,29 +1,23 @@
-use std::time::Duration;
-
 use actix_web::{Error, HttpRequest, HttpResponse, get, rt, web};
 use actix_ws::Message;
 use futures_util::StreamExt as _;
-use tokio::time::interval;
+
+use crate::AppState;
 
 #[get("/ws")]
-pub async fn ws(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+pub async fn ws(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    stream: web::Payload,
+) -> Result<HttpResponse, Error> {
     let (res, mut send, mut receive) = actix_ws::handle(&req, stream)?;
 
-    // let mut collector = collector::Collector::new().unwrap();
-
     rt::spawn(async move {
-        println!("New connection");
-
-        let mut interval = interval(Duration::from_secs(1));
+        let mut rx = state.tx.subscribe();
 
         loop {
             tokio::select! {
-                _ = interval.tick() => {
-                    // let data = collector.get_metrics().json();
-                    // send.text(data).await.unwrap();
-                    let _ = 0;
-                }
-
+                // messages from ws
                 msg = receive.next() => {
                     if let Some(msg) = msg {
                         match msg {
@@ -50,6 +44,13 @@ pub async fn ws(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, 
                             },
                             _ => {}
                         }
+                    }
+                }
+
+                // metrics from broadcast
+                metrics = rx.recv() => {
+                    if let Ok(metrics) = metrics {
+                        send.text(metrics.json()).await.unwrap();
                     }
                 }
             }

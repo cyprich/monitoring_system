@@ -1,12 +1,18 @@
 use actix_web::{HttpResponse, Responder, post, web};
 use shared::structs::Metrics;
 
-use crate::db::{self, Pool};
+use crate::{AppState, db};
 
 #[post("/metrics")]
-pub async fn metrics_post(pool: web::Data<Pool>, metrics: web::Json<Metrics>) -> impl Responder {
-    // TODO
-    // println!("New metrics:\n{:?}", metrics);
-    db::insert_metrics(pool.get_ref(), metrics.into_inner()).await;
-    HttpResponse::NotImplemented()
+pub async fn metrics_post(
+    state: web::Data<AppState>,
+    metrics: web::Json<Metrics>,
+) -> impl Responder {
+    let metrics = metrics.into_inner();
+
+    db::insert_metrics(&state.pool, &metrics).await;
+    let _ = state.tx.send(metrics);
+
+    // todo
+    HttpResponse::Ok()
 }
