@@ -9,7 +9,7 @@ use tokio::time::interval;
 pub async fn ws(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let (res, mut send, mut receive) = actix_ws::handle(&req, stream)?;
 
-    let mut collector = collector::Collector::new().unwrap();
+    // let mut collector = collector::Collector::new().unwrap();
 
     rt::spawn(async move {
         println!("New connection");
@@ -19,8 +19,9 @@ pub async fn ws(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, 
         loop {
             tokio::select! {
                 _ = interval.tick() => {
-                    let data = collector.get_metrics().json();
-                    send.text(data).await.unwrap();
+                    // let data = collector.get_metrics().json();
+                    // send.text(data).await.unwrap();
+                    let _ = 0;
                 }
 
                 msg = receive.next() => {

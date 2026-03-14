@@ -7,10 +7,20 @@ use tokio::time::sleep;
 pub use crate::structs::Collector;
 
 const UNKNOWN: &str = "<<unknown>>";
+const DELAY: u64 = 1;
 
 #[tokio::main]
 pub async fn main() {
     // TODO
+    if !Collector::is_supported_system() {
+        eprintln!("System is not supported!");
+        eprintln!("These systems are supported: ");
+        get_supported_systems()
+            .iter()
+            .for_each(|s| eprintln!("  {}", s));
+        panic!()
+    }
+
     let mut collector = Collector::new().unwrap();
     let client = reqwest::Client::new();
 
@@ -20,14 +30,14 @@ pub async fn main() {
     let url = format!("http://localhost:{port}/metrics");
 
     loop {
-        let m = collector.get_metrics();
-        let resp = client.post(&url).json(&m).send().await;
+        let metrics = collector.get_metrics();
+        let resp = client.post(&url).json(&metrics).send().await;
 
         if let Err(e) = resp {
             println!("Unsuccessful POST: {}", e);
         }
 
-        sleep(Duration::from_secs(1)).await;
+        sleep(Duration::from_secs(DELAY)).await;
     }
 }
 
@@ -42,14 +52,4 @@ pub fn get_supported_systems() -> Vec<String> {
         "Raspberry Pi".to_string(),
         "Windows".to_string(),
     ]
-}
-
-fn unwrap_or_unknown(val: Option<String>, variable_name: &str) -> String {
-    match val {
-        Some(val) => val,
-        None => {
-            log::warn!("Couldn't get {}", variable_name);
-            UNKNOWN.to_string()
-        }
-    }
 }
