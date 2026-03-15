@@ -10,7 +10,7 @@ main, header, footer {
 }
 
 main {
-    @apply flex-col p-8 bg-background;
+    @apply flex-col p-8 bg-background min-h-screen;
     @apply mt-16 /* the height of the header */
 }
 

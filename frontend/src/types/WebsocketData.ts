@@ -1,6 +1,5 @@
 export interface WebsocketData {
     hostname: string,
-    // todo date
     timestamp: Date,
     used_mem: number,
     cpu_usage: number,

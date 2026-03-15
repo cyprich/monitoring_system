@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
-import type {WebsocketData} from "../props/WebsocketData.ts";
-import {LineChart} from "../components/LineChart.tsx";
+import type {WebsocketData} from "../types/WebsocketData.ts";
+import CustomLineChart from "../components/CustomLineChart.tsx";
 
 function Dashboard() {
     const [data, setData] = useState<WebsocketData[]>([])
@@ -27,51 +27,27 @@ function Dashboard() {
         <main className={"flex flex-col"}>
             <h1>Dashboard</h1>
             <div className={"grid grid-flow-row grid-cols-3 gap-16"}>
-                <LineChart inputData={{
-                    title: "CPU Usage",
-                    dataset: {
-                        name: "CPU",
-                        data: data.map((val) => ({
-                            x: val.timestamp,
-                            y: val.cpu_usage
-                        }))
-                    }
-                }} max_y_scale={100}/>
+                <CustomLineChart name={"CPU"} keys={["CPU"]} data={
+                    data.map((i) => ({
+                        timestamp: i.timestamp.toLocaleTimeString(),
+                        cpu: i.cpu_usage
+                    }))
+                } unit={"%"} max_y={100} />
 
-                <LineChart inputData={{
-                    title: "RAM Usage",
-                    dataset: {
-                        name: "RAM",
-                        data: data.map((val) => ({
-                            x: val.timestamp,
-                            y: val.used_mem
-                        }))
-                    }
-                }} max_y_scale={undefined}/>
+                <CustomLineChart name={"RAM"} keys={["RAM"]} data={
+                    data.map((i) => ({
+                        timestamp: i.timestamp.toLocaleTimeString(),
+                        ram: i.used_mem / 1000000
+                    }))
+                } unit={"MB"} max_y={16000} />
 
-                <div/>
-
-                <LineChart inputData={{
-                    title: "Network",
-                    dataset: {
-                        name: "Network Upload",
-                        data: data.map((val) => ({
-                            x: val.timestamp,
-                            y: val.networks[0].upload
-                        }))
-                    }
-                }} max_y_scale={undefined}/>
-
-                <LineChart inputData={{
-                    title: "Network",
-                    dataset: {
-                        name: "Network Download",
-                        data: data.map((val) => ({
-                            x: val.timestamp,
-                            y: val.networks[0].download
-                        }))
-                    }
-                }} max_y_scale={undefined}/>
+                <CustomLineChart name={`Network (${data[0]?.networks[0]?.name})`} keys={["Upload", "Download"]} data={
+                    data.map((i) => ({
+                        timestamp: i.timestamp.toLocaleTimeString(),
+                        upload: i.networks[0].upload / 1000000,
+                        download: i.networks[0].download / 1000000,
+                    }))
+                } unit={"Mb"} max_y={1} />
             </div>
         </main>
     )
