@@ -10,6 +10,6 @@ export interface Dataset {
 }
 
 export interface Data {
-    x: number | string
+    x: Date
     y: number
 }

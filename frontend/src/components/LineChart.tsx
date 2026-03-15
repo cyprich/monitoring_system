@@ -24,19 +24,18 @@ ChartJS.register(
 );
 
 type LineChartProps = {
-    inputData: LineChartData
+    inputData: LineChartData,
+    max_y_scale: number | undefined
 }
 
-export function LineChart({inputData}: LineChartProps) {
-    console.log(inputData)
-
+export function LineChart({inputData, max_y_scale}: LineChartProps) {
     const options: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
         scale: {
             y: {
                 min: 0,
-                max: 100
+                max: max_y_scale
             }
         },
         plugins: {
@@ -53,14 +52,14 @@ export function LineChart({inputData}: LineChartProps) {
         }
     };
 
-    const labels= inputData.dataset.data.map((val) => (val.x))
+    const labels= inputData.dataset.data.map((val) => (`${val.x.getHours()}:${val.x.getMinutes()}:${val.x.getSeconds()}`))
     const values = inputData.dataset.data.map((val) => (val.y))
 
     const data: ChartData<'line'> = {
         labels,
         datasets: [
             {
-                label: `CPU`,
+                label: inputData.dataset.name,
                 data: values,
                 borderColor: colors.blue["400"],
                 backgroundColor: colors.blue["200"],
@@ -71,7 +70,7 @@ export function LineChart({inputData}: LineChartProps) {
     };
 
     return (
-        <div style={{position: "relative", width: "600px", height: "400px"}}>
+        <div style={{position: "relative", width: "100%", aspectRatio: "1.618"}}>
             <LineChartJS data={data} options={options} />
         </div>
     )
