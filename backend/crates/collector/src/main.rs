@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use shared::structs::UnidentifiedCollector;
+use shared::structs::unidentified_collector::UnidentifiedCollector;
 use tokio::time::sleep;
 
 const DELAY: u64 = 5;

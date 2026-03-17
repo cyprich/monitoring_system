@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, Responder, get, post, web};
-use shared::structs::UnidentifiedCollector;
+use shared::structs::unidentified_collector::UnidentifiedCollector;
 
 mod metrics;
 

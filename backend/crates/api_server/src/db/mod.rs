@@ -1,4 +1,4 @@
-use shared::structs::{Metrics, UnidentifiedCollector};
+use shared::structs::{metrics::Metrics, unidentified_collector::UnidentifiedCollector};
 use sqlx::postgres::PgPoolOptions;
 
 pub type Pool = sqlx::Pool<sqlx::Postgres>;

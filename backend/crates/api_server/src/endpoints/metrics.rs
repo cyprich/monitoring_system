@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, Responder, post, web};
-use shared::structs::Metrics;
+use shared::structs::metrics::Metrics;
 
 use crate::{AppState, db};
 

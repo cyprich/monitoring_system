@@ -1,7 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use actix_web::{middleware, web};
-use shared::structs::Metrics;
+use shared::structs::metrics::Metrics;
 use tokio::sync::broadcast;
 
 use crate::db::Pool;

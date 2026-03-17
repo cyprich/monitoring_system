@@ -1,70 +1,10 @@
-use std::fs;
-
-use chrono::NaiveDateTime;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use crate::{BASE_URL, CONFIG_FILENAME, UNKNOWN, UNNAMED};
-
-// TODO split this file into multiple
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Disk {
-    pub mountpoint: String,
-    pub available_space: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkInterface {
-    pub name: String,
-    pub upload: u64,
-    pub download: u64,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Metrics {
-    pub collector_id: i32,
-    pub hostname: String,
-    pub timestamp: NaiveDateTime,
-    pub used_mem: u64,
-    pub cpu_usage: f32,
-    pub disks: Vec<Disk>,
-    pub networks: Vec<NetworkInterface>,
-}
-
-impl Metrics {
-    pub fn new() -> Metrics {
-        Metrics::default()
-    }
-
-    pub fn json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CollectorConfig {
-    pub id: Option<i32>,
-}
-
-// TODO error message on erro would be nice
-impl CollectorConfig {
-    pub fn load() -> Option<CollectorConfig> {
-        let text = fs::read_to_string(CONFIG_FILENAME);
-        match text {
-            Ok(val) => toml::from_str(&val).ok(),
-            Err(_) => None,
-        }
-    }
-
-    pub fn save(&self) -> bool {
-        let text = toml::to_string(self);
-        match text {
-            Ok(val) => fs::write(CONFIG_FILENAME, val).is_ok(),
-            Err(_) => false,
-        }
-    }
-}
+use crate::{
+    BASE_URL, UNKNOWN, UNNAMED,
+    structs::{collector::Collector, collector_config::CollectorConfig},
+};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct UnidentifiedCollector {
@@ -174,62 +114,5 @@ impl UnidentifiedCollector {
             disks: self.disks,
             networks: self.networks,
         })
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Collector {
-    id: i32,
-    name: String,
-    system_name: String,
-    host_name: String,
-    kernel_version: String,
-    total_mem: u64,
-    cpu_count: usize,
-    #[serde(skip)]
-    sysinfo: sysinfo::System,
-    #[serde(skip)]
-    disks: sysinfo::Disks,
-    #[serde(skip)]
-    networks: sysinfo::Networks,
-}
-
-impl Collector {
-    pub fn is_supported_system() -> bool {
-        sysinfo::IS_SUPPORTED_SYSTEM
-    }
-
-    pub fn get_metrics(&mut self) -> Metrics {
-        self.sysinfo.refresh_memory();
-        self.sysinfo.refresh_cpu_usage();
-        self.disks.refresh(true);
-        self.networks.refresh(true);
-
-        Metrics {
-            // todo
-            collector_id: self.id,
-            // TODO treba ten clone?
-            hostname: self.host_name.clone(),
-            timestamp: chrono::Local::now().naive_local(),
-            used_mem: self.sysinfo.used_memory(),
-            cpu_usage: self.sysinfo.global_cpu_usage(),
-            disks: self
-                .disks
-                .iter()
-                .map(|d| Disk {
-                    mountpoint: d.mount_point().to_string_lossy().to_string(),
-                    available_space: d.available_space(),
-                })
-                .collect(),
-            networks: self
-                .networks
-                .iter()
-                .map(|(name, data)| NetworkInterface {
-                    name: name.to_string(),
-                    upload: data.transmitted(),
-                    download: data.received(),
-                })
-                .collect(),
-        }
     }
 }
