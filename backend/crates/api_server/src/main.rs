@@ -45,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(ws)
             .service(metrics_post)
+            .service(collector_register)
     })
     .bind(("127.0.0.1", port))?
     .run()
