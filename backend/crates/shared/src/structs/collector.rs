@@ -9,7 +9,7 @@ pub struct Collector {
     pub system_name: String,
     pub host_name: String,
     pub kernel_version: String,
-    pub total_mem: u64,
+    pub total_memory: u64,
     pub cpu_count: usize,
     #[serde(skip)]
     pub sysinfo: sysinfo::System,

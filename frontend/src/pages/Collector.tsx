@@ -1,12 +1,29 @@
 import {useEffect, useState} from "react";
 import type {WebsocketData} from "../types/WebsocketData.ts";
 import CustomChart from "../components/CustomChart.tsx";
+import type {Collector} from "../types/Collector.ts";
+import axios from "axios";
+import {useParams} from "react-router";
 
-function Dashboard() {
+export default function Collector() {
+    const params = useParams();
+    const id = params.id || "0";
+
+    const [collector, setCollector] = useState<Collector | null>(null)
     const [data, setData] = useState<WebsocketData[]>([])
 
+    // TODO
+    const url = `http://localhost:5000/collector/${id}`;
+
     useEffect(() => {
-        const socket = new WebSocket("ws://localhost:5000/ws");
+        axios
+            .get(url)
+            .then((resp) => {
+                // TODO check response code
+                setCollector(resp.data)
+            })
+
+        const socket = new WebSocket(`ws://localhost:5000/ws/metrics/${id}`);
 
         socket.addEventListener("open", () => {
             console.log("Websocket opened")
@@ -16,16 +33,17 @@ function Dashboard() {
             const newData: WebsocketData = JSON.parse(event.data)
             // https://howtodoinjava.com/typescript/typescript-date-object/
             newData.timestamp = new Date(newData.timestamp)
-            setData(oldData => [...oldData, newData].slice(-20))
+            setData(oldData => [...oldData, newData].slice(-30))
         })
 
         return () => socket.close()
 
-    }, []);
+    }, [id, url]);
 
     return (
         <main className={"flex flex-col"}>
-            <h1>Dashboard</h1>
+            <h1>Collector</h1>
+            <h2>{collector?.host_name}</h2>
             <div className={"grid grid-flow-row grid-cols-3 gap-16"}>
                 <CustomChart name={"CPU"} keys={["CPU"]} data={
                     data.map((i) => ({
@@ -59,4 +77,3 @@ function Dashboard() {
     )
 }
 
-export default Dashboard

@@ -6,9 +6,7 @@ export function Header() {
 
     return (
         <header className={"fixed top-0 left-0 h-16"}>
-            <Button variant={"ghost"} onClick={() => navigate("/")}>
-                Dashboard
-            </Button>
+            <Button variant={"ghost"} onClick={() => navigate("/")}>Home</Button>
         </header>
     )
 }

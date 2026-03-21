@@ -108,7 +108,7 @@ impl UnidentifiedCollector {
             system_name: self.system_name,
             host_name: self.host_name,
             kernel_version: self.kernel_version,
-            total_mem: self.total_memory,
+            total_memory: self.total_memory,
             cpu_count: self.cpu_count,
             sysinfo: self.sysinfo,
             disks: self.disks,

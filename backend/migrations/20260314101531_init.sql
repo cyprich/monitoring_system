@@ -17,6 +17,7 @@ create table hosts (
     host_name varchar,
     kernel_version varchar,
     total_memory integer,
+    cpu_count integer,
     primary key (id)
 );
 

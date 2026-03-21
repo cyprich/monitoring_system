@@ -4,13 +4,15 @@ use futures_util::StreamExt as _;
 
 use crate::AppState;
 
-#[get("/ws")]
-pub async fn ws(
+#[get("/ws/metrics/{id}")]
+pub async fn ws_metrics(
     state: web::Data<AppState>,
+    path: web::Path<i32>,
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<HttpResponse, Error> {
     let (res, mut send, mut receive) = actix_ws::handle(&req, stream)?;
+    let id = path.into_inner();
 
     rt::spawn(async move {
         let mut rx = state.tx.subscribe();
@@ -50,7 +52,9 @@ pub async fn ws(
                 // metrics from broadcast
                 metrics = rx.recv() => {
                     if let Ok(metrics) = metrics {
-                        send.text(metrics.json()).await.unwrap();
+                        if metrics.collector_id == id {
+                            send.text(metrics.json()).await.unwrap();
+                        }
                     }
                 }
             }

@@ -14,6 +14,7 @@
     "@heroui/styles": "^3.0.0-beta.8",
     "@recharts/devtools": "^0.0.11",
     "@tailwindcss/vite": "^4.2.1",
+    "axios": "^1.7.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.13.1",

@@ -3,7 +3,7 @@ use std::time::Duration;
 use shared::structs::unidentified_collector::UnidentifiedCollector;
 use tokio::time::sleep;
 
-const DELAY: u64 = 5;
+const DELAY: u64 = 1;
 // TODO temp
 const BASE_URL: &str = "http://localhost:5000";
 

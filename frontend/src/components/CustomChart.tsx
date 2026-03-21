@@ -1,11 +1,9 @@
 import {
     CartesianGrid,
-    LineChart,
     XAxis,
     YAxis,
     Legend,
     Tooltip,
-    Line,
     ReferenceLine,
     Label, Area, AreaChart,
 } from "recharts";
@@ -40,10 +38,6 @@ function getColor(index: number): string {
 export default function CustomChart({name, data, keys, unit, max_y, threshold}: LineChartProps) {
     unit = unit || "";
 
-    function tooltipFormatter(value: string): string {
-        return `${Number(value).toFixed(2)}${unit}`;
-    }
-
     return (
         <AreaChart style={{width: "100%", aspectRatio: "1.618"}} responsive data={data}>
             <defs>
@@ -75,7 +69,6 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold}: 
             <YAxis label={{value: `${name} [${unit}]`, dx: -24, angle: -90}}
                    domain={max_y ? [0, max_y] : undefined} tickLine={false} width={80} axisLine={false} />
             <Legend/>
-            {/*<Tooltip formatter={tooltipFormatter}/>*/}
             <Tooltip formatter={(val) => (`${Number(val).toFixed(2)}${unit}`)}/>
             <RechartsDevtools/>
         </AreaChart>

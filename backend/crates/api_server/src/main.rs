@@ -6,11 +6,9 @@ use tokio::sync::broadcast;
 
 use crate::db::Pool;
 use crate::endpoints::*;
-use crate::ws::*;
 
 mod db;
 mod endpoints;
-mod ws;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -40,14 +38,15 @@ async fn main() -> std::io::Result<()> {
             // TODO
             .wrap(Cors::permissive())
             .wrap(middleware::NormalizePath::trim())
-            // .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(state.clone()))
             .service(hello)
-            .service(ws)
+            .service(ws_metrics)
             .service(metrics_post)
             .service(collector_register)
+            .service(collectors)
+            .service(get_collector_by_id)
     })
-    .bind(("127.0.0.1", port))?
+    .bind(("0.0.0.0", port))?
     .run()
     .await
 }
