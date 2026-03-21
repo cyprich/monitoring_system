@@ -7,7 +7,7 @@ import {
     Tooltip,
     Line,
     ReferenceLine,
-    Label,
+    Label, Area, AreaChart,
 } from "recharts";
 import {RechartsDevtools} from "@recharts/devtools";
 import colors from "tailwindcss/colors"
@@ -23,6 +23,7 @@ interface LineChartProps {
 
 interface LineChartData {
     timestamp: string,
+
     [value: string]: number | string
 }
 
@@ -36,19 +37,30 @@ function getColor(index: number): string {
 }
 
 
-export default function CustomLineChart({name, data, keys, unit, max_y, threshold}: LineChartProps) {
+export default function CustomChart({name, data, keys, unit, max_y, threshold}: LineChartProps) {
     unit = unit || "";
 
     function tooltipFormatter(value: string): string {
         return `${Number(value).toFixed(2)}${unit}`;
     }
 
-
     return (
-        <LineChart style={{width: "100%", aspectRatio: "1.618"}} responsive data={data}>
+        <AreaChart style={{width: "100%", aspectRatio: "1.618"}} responsive data={data}>
+            <defs>
+                {
+                    keys.map((k, i) => (
+                        <linearGradient id={`grad-${k}`} x1={0} y1={0} x2={0} y2={1}>
+                            <stop offset={"10%"} stopColor={getColor(i)} stopOpacity={0.3}/>
+                            <stop offset={"90%"} stopColor={getColor(i)} stopOpacity={0.05}/>
+                        </linearGradient>
+                    ))
+                }
+            </defs>
+
             {
                 keys.map((k, i) => (
-                    <Line name={k} dataKey={k.toLowerCase()} type={"monotone"} animationDuration={0} stroke={getColor(i)} strokeWidth={1.5} dot={false}/>
+                    <Area name={k} dataKey={k.toLowerCase()} type={"monotone"} animationDuration={0} dot={false}
+                          fill={`url(#grad-${k})`} stroke={getColor(i)} strokeWidth={1.5}/>
                 ))
             }
 
@@ -58,13 +70,14 @@ export default function CustomLineChart({name, data, keys, unit, max_y, threshol
                 </ReferenceLine>
             }
 
-            <CartesianGrid strokeDasharray={"5 5"}/>
+            <CartesianGrid stroke={colors.gray[500]} opacity={0.15}/>
             <XAxis dataKey={"timestamp"} niceTicks={'adaptive'}/>
-            <YAxis label={{value: `${name} [${unit}]`, dx: -24,  angle: -90}}
-                   domain={max_y ? [0, max_y] : undefined} />
+            <YAxis label={{value: `${name} [${unit}]`, dx: -24, angle: -90}}
+                   domain={max_y ? [0, max_y] : undefined} tickLine={false} width={80} axisLine={false} />
             <Legend/>
-            <Tooltip formatter={tooltipFormatter}/>
+            {/*<Tooltip formatter={tooltipFormatter}/>*/}
+            <Tooltip formatter={(val) => (`${Number(val).toFixed(2)}${unit}`)}/>
             <RechartsDevtools/>
-        </LineChart>
+        </AreaChart>
     )
 }

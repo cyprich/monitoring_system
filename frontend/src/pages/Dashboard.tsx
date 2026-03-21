@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import type {WebsocketData} from "../types/WebsocketData.ts";
-import CustomLineChart from "../components/CustomLineChart.tsx";
+import CustomChart from "../components/CustomChart.tsx";
 
 function Dashboard() {
     const [data, setData] = useState<WebsocketData[]>([])
@@ -27,27 +27,33 @@ function Dashboard() {
         <main className={"flex flex-col"}>
             <h1>Dashboard</h1>
             <div className={"grid grid-flow-row grid-cols-3 gap-16"}>
-                <CustomLineChart name={"CPU"} keys={["CPU"]} data={
+                <CustomChart name={"CPU"} keys={["CPU"]} data={
                     data.map((i) => ({
                         timestamp: i.timestamp.toLocaleTimeString(),
                         cpu: i.cpu_usage
                     }))
                 } unit={"%"} max_y={100} />
 
-                <CustomLineChart name={"RAM"} keys={["RAM"]} data={
+                <CustomChart name={"RAM"} keys={["RAM"]} data={
                     data.map((i) => ({
                         timestamp: i.timestamp.toLocaleTimeString(),
                         ram: i.used_mem / 1000000
                     }))
                 } unit={"MB"} max_y={16000} />
 
-                <CustomLineChart name={`Network (${data[0]?.networks[0]?.name})`} keys={["Upload", "Download"]} data={
-                    data.map((i) => ({
-                        timestamp: i.timestamp.toLocaleTimeString(),
-                        upload: i.networks[0].upload / 1000000,
-                        download: i.networks[0].download / 1000000,
-                    }))
-                } unit={"Mb"} max_y={1} />
+
+
+                <CustomChart name={`Network (${data[0]?.networks[0]?.name})`} keys={["Upload", "Download"]} data={
+                    data.map((i) => {
+                        const net = i.networks.find((n) => n.name === "wlan0");
+
+                        return {
+                            timestamp: i.timestamp.toLocaleTimeString(),
+                            upload: (net?.upload || 0) / 1_000_000,
+                            download: (net?.download || 0) / 1_000_000,
+                        }
+                    })
+                } unit={"Mb"} max_y={100} />
             </div>
         </main>
     )
