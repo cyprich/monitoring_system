@@ -44,7 +44,7 @@ export default function Collector() {
         <main className={"flex flex-col"}>
             <h1>Collector</h1>
             <h2>{collector?.host_name}</h2>
-            <div className={"grid grid-flow-row grid-cols-3 gap-16"}>
+            <div className={"grid grid-flow-row grid-cols-2 gap-16"}>
                 <CustomChart name={"CPU"} keys={["CPU"]} data={
                     data.map((i) => ({
                         timestamp: i.timestamp.toLocaleTimeString(),

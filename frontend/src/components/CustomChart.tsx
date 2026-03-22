@@ -39,7 +39,7 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold}: 
     unit = unit || "";
 
     return (
-        <AreaChart style={{width: "100%", aspectRatio: "1.618"}} responsive data={data}>
+        <AreaChart style={{width: "90%", aspectRatio: "1.618"}} responsive data={data}>
             <defs>
                 {
                     keys.map((k, i) => (
