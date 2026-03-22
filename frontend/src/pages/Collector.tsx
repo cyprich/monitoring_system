@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {type ReactNode, useEffect, useState} from "react";
 import type {WebsocketData} from "../types/WebsocketData.ts";
 import CustomChart from "../components/CustomChart.tsx";
 import type {Collector} from "../types/Collector.ts";
@@ -40,40 +40,127 @@ export default function Collector() {
 
     }, [id, url]);
 
+    // TODO make it into tabs instead of the `CollectorSection`?
+
     return (
         <main className={"flex flex-col"}>
             <h1>Collector</h1>
             <h2>{collector?.host_name}</h2>
-            <div className={"grid grid-flow-row grid-cols-2 gap-16"}>
-                <CustomChart name={"CPU"} keys={["CPU"]} data={
-                    data.map((i) => ({
-                        timestamp: i.timestamp.toLocaleTimeString(),
-                        cpu: i.cpu_usage
-                    }))
-                } unit={"%"} max_y={100} />
+            <CollectorSection name={"CPU & RAM"} columns={2}>
+                <CpuChart data={data}/>
+                <RamChart data={data}/>
+            </CollectorSection>
 
-                <CustomChart name={"RAM"} keys={["RAM"]} data={
-                    data.map((i) => ({
-                        timestamp: i.timestamp.toLocaleTimeString(),
-                        ram: i.used_mem / 1000000
-                    }))
-                } unit={"MB"} max_y={16000} />
+            <CollectorSection name={"Networks"} columns={4}>
+                <NetworkChart data={data}/>
+            </CollectorSection>
 
-
-
-                <CustomChart name={`Network (${data[0]?.networks[0]?.name})`} keys={["Upload", "Download"]} data={
-                    data.map((i) => {
-                        const net = i.networks.find((n) => n.name === "wlan0");
-
-                        return {
-                            timestamp: i.timestamp.toLocaleTimeString(),
-                            upload: (net?.upload || 0) / 1_000_000,
-                            download: (net?.download || 0) / 1_000_000,
-                        }
-                    })
-                } unit={"Mb"} max_y={100} />
-            </div>
+            <CollectorSection name={"Drives"} columns={4}>
+                <DriveChart data={data}/>
+            </CollectorSection>
         </main>
     )
 }
 
+interface CollectionSectionProps {
+    name: string,
+    columns: number,
+    children: ReactNode
+}
+
+function CollectorSection(props: CollectionSectionProps) {
+    return (
+        <div>
+            <h3>{props.name}</h3>
+            <div
+                className={ `grid grid-flow-row gap-16`}
+                style={{gridTemplateColumns: `repeat(${props.columns}, 1fr)`}}
+            >
+                {
+                    props.children
+                }
+            </div>
+        </div>
+    )
+}
+
+interface CollectorProps {
+    data: WebsocketData[]
+}
+
+function CpuChart(props: CollectorProps) {
+    return (
+        <CustomChart name={"CPU"} keys={["CPU"]} data={
+            props.data.map((i) => ({
+                timestamp: i.timestamp.toLocaleTimeString(),
+                cpu: i.cpu_usage
+            }))
+        } unit={"%"} max_y={100} />
+    )
+
+}
+
+function RamChart(props: CollectorProps) {
+    return (
+        <CustomChart name={"RAM"} keys={["RAM"]} data={
+            props.data.map((i) => ({
+                timestamp: i.timestamp.toLocaleTimeString(),
+                ram: i.used_mem / 1000000
+            }))
+        } unit={"MB"} max_y={16000} />
+    )
+}
+
+function NetworkChart(props: CollectorProps) {
+    // TODO
+    const interfaceNames = ["wlan0", "tailscale0"];
+
+    return (
+        <>
+            {
+                // TODO idk if this is the best - same with drives
+                interfaceNames.map((name) => {
+                    return (
+                        <CustomChart name={`Network (${name})`} keys={["Upload", "Download"]} data={
+                            props.data.map((i) => {
+                                const net = i.networks.find((n) => name === n.name);
+
+                                return {
+                                    timestamp: i.timestamp.toLocaleTimeString(),
+                                    upload: (net?.upload || 0) / 1_000,
+                                    download: (net?.download || 0) / 1_000,
+                                }
+                            })
+                        } unit={"Kb"} max_y={1000} />
+                    )
+                })
+            }
+        </>
+    )
+}
+
+function DriveChart(props: CollectorProps) {
+    // TODO
+    const drives = props.data[0]?.disks.map((d) => (d.mountpoint));
+
+    return (
+        <>
+            {
+                drives?.map((name) => {
+                    return (
+                        <CustomChart name={name} data={
+                            props.data.map((i) => {
+                                const drive = i.disks.find((d) => d.mountpoint == name);
+
+                                return {
+                                    timestamp: i.timestamp.toLocaleTimeString(),
+                                    available_space: (drive?.available_space || 0) / 1_000_000_000
+                                }
+                            })
+                        } keys={["available_space"]} unit={"GB"} max_y={1_000}/>
+                    )
+                })
+            }
+        </>
+    )
+}
