@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Responder, post, web};
 use shared::structs::metrics::Metrics;
 
-use crate::{AppState, db};
+use crate::AppState;
 
 #[post("/metrics")]
 pub async fn metrics_post(

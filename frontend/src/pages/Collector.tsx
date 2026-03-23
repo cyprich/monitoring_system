@@ -14,14 +14,28 @@ export default function Collector() {
 
     // TODO
     const url = `http://localhost:5000/collector/${id}`;
+    const LIMIT = 200;
 
     useEffect(() => {
-        // TODO historical metrics
+        // collector
         axios
             .get(url)
             .then((resp) => {
                 // TODO check response code
                 setCollector(resp.data)
+            })
+
+        // historic metrics
+        axios
+            .get(`${url}/metrics`)
+            .then((resp) => {
+                const data: WebsocketData[] = resp.data.map((i: WebsocketData) => (
+                    {
+                        ...i,
+                        timestamp: new Date(i.timestamp)
+                    }
+                ))
+                setData(data)
             })
 
         const socket = new WebSocket(`ws://localhost:5000/ws/metrics/${id}`);
@@ -34,7 +48,7 @@ export default function Collector() {
             const newData: WebsocketData = JSON.parse(event.data)
             // https://howtodoinjava.com/typescript/typescript-date-object/
             newData.timestamp = new Date(newData.timestamp)
-            setData(oldData => [...oldData, newData].slice(-30))
+            setData(oldData => [...oldData, newData].slice(-LIMIT))
         })
 
         return () => socket.close()
@@ -155,10 +169,10 @@ function DriveChart(props: CollectorProps) {
 
                                 return {
                                     timestamp: i.timestamp.toLocaleTimeString(),
-                                    available_space: drive?.available_space_mb || 0
+                                    available_space: (drive?.available_space_mb || 0) / 1000
                                 }
                             })
-                        } unit={"MB"} max_y={1_000_000}/>
+                        } unit={"GB"} max_y={1_000}/>
                     )
                 })
             }

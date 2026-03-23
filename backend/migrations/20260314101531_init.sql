@@ -21,20 +21,24 @@ create table collectors (
     primary key (id)
 );
 
-create table metric_type (
-    id serial,
-    name varchar not null,
-    primary key (id)
+-- create table metric_type (
+--     id serial,
+--     name varchar not null,
+--     primary key (id)
+-- );
+
+create type metric_type as enum (
+    'cpu_usage',
+    'used_memory_mb'
 );
 
 create table metrics (
     timestamp timestamp,
     value double precision,
-    type_id integer,
+    metric_type metric_type,
     collector_id integer,
     component_name varchar,  -- used when we have multiple disks/network interfaces
-    primary key (timestamp, value, type_id, collector_id, component_name),
-    foreign key (type_id) references metric_type(id),
+    primary key (timestamp, value, type, collector_id, component_name),
     foreign key (collector_id) references collectors(id)
 );
 
@@ -62,11 +66,3 @@ create table notifications (
     foreign key (collector_id) references collectors(id)
     -- foreign key (severity) references notification_severity(id)
 );
-
----------- INSERT REQUIRED DATA ----------
-
-insert into metric_type (name)
-values
-    ('used_memory_mb'),
-    ('cpu_usage');
-

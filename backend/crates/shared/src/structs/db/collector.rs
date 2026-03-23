@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+// TODO i think i can make it work without this
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CollectorDB {
     pub id: i32,

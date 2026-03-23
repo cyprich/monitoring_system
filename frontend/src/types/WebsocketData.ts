@@ -1,3 +1,4 @@
+// TODO shouldt this be named Metrics?
 export interface WebsocketData {
     hostname: string,
     timestamp: Date,

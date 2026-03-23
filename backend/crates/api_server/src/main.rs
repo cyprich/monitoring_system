@@ -4,10 +4,9 @@ use actix_web::{middleware, web};
 use shared::structs::metrics::Metrics;
 use tokio::sync::broadcast;
 
-use crate::db::Pool;
 use crate::endpoints::*;
+use db::Pool;
 
-mod db;
 mod endpoints;
 
 #[derive(Clone)]
@@ -25,9 +24,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Couldn't convert API_PORT environment variable to u16 type ");
 
     // TODO why couldnt
-    let pool = crate::db::get_pool()
-        .await
-        .expect("Couldn't create database pool");
+    let pool = db::get_pool().await.expect("Couldn't create database pool");
 
     let (tx, _) = broadcast::channel::<Metrics>(128);
 
@@ -45,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             .service(collector_register)
             .service(collectors)
             .service(get_collector_by_id)
+            .service(get_collector_metrics)
     })
     .bind(("0.0.0.0", port))?
     .run()
