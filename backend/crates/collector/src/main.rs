@@ -4,8 +4,7 @@ use shared::structs::unidentified_collector::UnidentifiedCollector;
 use tokio::time::sleep;
 
 const DELAY: u64 = 1;
-// TODO temp
-const BASE_URL: &str = "http://localhost:5000";
+use shared::BASE_URL;
 
 #[tokio::main]
 pub async fn main() {

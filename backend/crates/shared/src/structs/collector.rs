@@ -9,7 +9,7 @@ pub struct Collector {
     pub system_name: String,
     pub host_name: String,
     pub kernel_version: String,
-    pub total_memory: u64,
+    pub total_memory_mb: u64,
     pub cpu_count: usize,
     #[serde(skip)]
     pub sysinfo: sysinfo::System,
@@ -31,19 +31,17 @@ impl Collector {
         self.networks.refresh(true);
 
         Metrics {
-            // todo
             collector_id: self.id,
-            // TODO treba ten clone?
-            hostname: self.host_name.clone(),
             timestamp: chrono::Local::now().naive_local(),
-            used_mem: self.sysinfo.used_memory(),
+            used_memory_mb: self.sysinfo.used_memory() / 1_000_000,
+            used_swap_mb: self.sysinfo.used_memory() / 1_000_000,
             cpu_usage: self.sysinfo.global_cpu_usage(),
             disks: self
                 .disks
                 .iter()
                 .map(|d| Disk {
                     mountpoint: d.mount_point().to_string_lossy().to_string(),
-                    available_space: d.available_space(),
+                    available_space_mb: d.available_space() / 1_000_000,
                 })
                 .collect(),
             networks: self
@@ -51,8 +49,8 @@ impl Collector {
                 .iter()
                 .map(|(name, data)| NetworkInterface {
                     name: name.to_string(),
-                    upload: data.transmitted(),
-                    download: data.received(),
+                    upload_mb: data.transmitted() / 1_000_000,
+                    download_mb: data.received() / 1_000_000,
                 })
                 .collect(),
         }

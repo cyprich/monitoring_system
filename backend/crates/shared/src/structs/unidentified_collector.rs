@@ -2,7 +2,7 @@ use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    BASE_URL, UNKNOWN, UNNAMED,
+    BASE_URL, UNKNOWN,
     structs::{collector::Collector, collector_config::CollectorConfig},
 };
 
@@ -12,7 +12,7 @@ pub struct UnidentifiedCollector {
     pub system_name: String,
     pub host_name: String,
     pub kernel_version: String,
-    pub total_memory: u64,
+    pub total_memory_mb: u64,
     pub cpu_count: usize,
     #[serde(skip)]
     sysinfo: sysinfo::System,
@@ -25,15 +25,16 @@ pub struct UnidentifiedCollector {
 impl UnidentifiedCollector {
     pub fn new() -> UnidentifiedCollector {
         let sysinfo = sysinfo::System::new_all();
-        let total_memory = sysinfo.total_memory();
+        let total_memory_mb = sysinfo.total_memory() / 1_000_000;
         let cpu_count = sysinfo.cpus().len();
+        let host_name = sysinfo::System::host_name().unwrap_or(UNKNOWN.to_string());
 
         UnidentifiedCollector {
-            name: UNNAMED.to_string(),
+            name: host_name.clone(),
             system_name: sysinfo::System::name().unwrap_or(UNKNOWN.to_string()),
-            host_name: sysinfo::System::host_name().unwrap_or(UNKNOWN.to_string()),
+            host_name,
             kernel_version: sysinfo::System::kernel_version().unwrap_or(UNKNOWN.to_string()),
-            total_memory,
+            total_memory_mb,
             cpu_count,
             sysinfo,
             disks: sysinfo::Disks::new(),
@@ -108,7 +109,7 @@ impl UnidentifiedCollector {
             system_name: self.system_name,
             host_name: self.host_name,
             kernel_version: self.kernel_version,
-            total_memory: self.total_memory,
+            total_memory_mb: self.total_memory_mb,
             cpu_count: self.cpu_count,
             sysinfo: self.sysinfo,
             disks: self.disks,

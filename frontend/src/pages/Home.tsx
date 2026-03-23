@@ -1,9 +1,8 @@
 import {useEffect, useState} from "react";
 import axios from "axios";
 import type {Collector} from "../types/Collector.ts";
-import {Card, Separator} from "@heroui/react";
-import {Link, useNavigate} from "react-router";
-// import {CircleCheckFill} from "@gravity-ui/icons";
+import {Card} from "@heroui/react";
+import {Link} from "react-router";
 
 export default function Home() {
     return (
@@ -33,15 +32,22 @@ function Collectors() {
             <h2>Collectors</h2>
             <div className={"flex gap-4"}>
                 {
-                    collectors.map((c) => (
-                        <Link to={`/collector/${c.id}`}>
-                            <Card className={"clickable min-w-72"}>
+                    collectors.map((c, i) => (
+                        <Link to={`/collector/${c.id}`} key={i}>
+                            <Card className={"clickable min-w-80"}>
                                 <Card.Header>
                                     <Card.Title>{c.host_name}</Card.Title>
-                                    <Card.Description className={"flex items-center"}>
-                                        {c.system_name}
-                                        <Separator className={"w-0.5 h-5 mx-2"} orientation={"vertical"} />
-                                        {c.kernel_version}
+                                    <Card.Description className={"flex flex-col"}>
+                                        {
+                                            c.host_name != c.name && <span>{c.host_name}</span>
+                                        }
+                                        <span className={"flex items-center"}>
+                                            <span>{c.system_name}</span>
+                                            <span className={"w-0.5 h-5 mx-2 bg-black/25"}/>
+                                            <span>{c.kernel_version}</span>
+                                        </span>
+                                        <span>CPU: {c.cpu_count} cores</span>
+                                        <span>RAM: {((c.total_memory_mb || 0) / 1000).toFixed(0)} GB</span>
                                     </Card.Description>
                                 </Card.Header>
                                 <Card.Footer>

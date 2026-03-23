@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Disk {
     pub mountpoint: String,
-    pub available_space: u64,
+    pub available_space_mb: u64,
 }

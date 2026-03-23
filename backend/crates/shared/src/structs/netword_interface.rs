@@ -3,6 +3,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkInterface {
     pub name: String,
-    pub upload: u64,
-    pub download: u64,
+    pub upload_mb: u64,
+    pub download_mb: u64,
 }

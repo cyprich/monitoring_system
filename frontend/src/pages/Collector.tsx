@@ -16,6 +16,7 @@ export default function Collector() {
     const url = `http://localhost:5000/collector/${id}`;
 
     useEffect(() => {
+        // TODO historical metrics
         axios
             .get(url)
             .then((resp) => {
@@ -44,19 +45,18 @@ export default function Collector() {
 
     return (
         <main className={"flex flex-col"}>
-            <h1>Collector</h1>
-            <h2>{collector?.host_name}</h2>
-            <CollectorSection name={"CPU & RAM"} columns={2}>
-                <CpuChart data={data}/>
-                <RamChart data={data}/>
+            <h1>{collector?.name}</h1>
+            <CollectorSection name={"CPU & RAM usage"} columns={2}>
+                <CpuChart collector={collector} data={data}/>
+                <RamChart collector={collector} data={data}/>
             </CollectorSection>
 
             <CollectorSection name={"Networks"} columns={4}>
-                <NetworkChart data={data}/>
+                <NetworkChart collector={collector} data={data}/>
             </CollectorSection>
 
             <CollectorSection name={"Drives"} columns={4}>
-                <DriveChart data={data}/>
+                <DriveChart collector={collector} data={data}/>
             </CollectorSection>
         </main>
     )
@@ -85,6 +85,7 @@ function CollectorSection(props: CollectionSectionProps) {
 }
 
 interface CollectorProps {
+    collector: Collector | null,
     data: WebsocketData[]
 }
 
@@ -105,9 +106,9 @@ function RamChart(props: CollectorProps) {
         <CustomChart name={"RAM"} keys={["RAM"]} data={
             props.data.map((i) => ({
                 timestamp: i.timestamp.toLocaleTimeString(),
-                ram: i.used_mem / 1000000
+                ram: i.used_memory_mb
             }))
-        } unit={"MB"} max_y={16000} />
+        } unit={"MB"} max_y={props.collector?.total_memory_mb || undefined} />
     )
 }
 
@@ -127,11 +128,11 @@ function NetworkChart(props: CollectorProps) {
 
                                 return {
                                     timestamp: i.timestamp.toLocaleTimeString(),
-                                    upload: (net?.upload || 0) / 1_000,
-                                    download: (net?.download || 0) / 1_000,
+                                    upload: net?.upload_mb || 0,
+                                    download: net?.download_mb || 0,
                                 }
                             })
-                        } unit={"Kb"} max_y={1000} />
+                        } unit={"MB"} max_y={1000} />
                     )
                 })
             }
@@ -148,16 +149,16 @@ function DriveChart(props: CollectorProps) {
             {
                 drives?.map((name) => {
                     return (
-                        <CustomChart name={name} data={
+                        <CustomChart name={name} keys={["available_space"]} data={
                             props.data.map((i) => {
                                 const drive = i.disks.find((d) => d.mountpoint == name);
 
                                 return {
                                     timestamp: i.timestamp.toLocaleTimeString(),
-                                    available_space: (drive?.available_space || 0) / 1_000_000_000
+                                    available_space: drive?.available_space_mb || 0
                                 }
                             })
-                        } keys={["available_space"]} unit={"GB"} max_y={1_000}/>
+                        } unit={"MB"} max_y={1_000_000}/>
                     )
                 })
             }

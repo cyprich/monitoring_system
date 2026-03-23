@@ -1,7 +1,7 @@
 export interface WebsocketData {
     hostname: string,
     timestamp: Date,
-    used_mem: number,
+    used_memory_mb: number,
     cpu_usage: number,
     disks: Disk[],
     networks: NetworkInterface[],
@@ -9,11 +9,11 @@ export interface WebsocketData {
 
 export interface Disk {
     mountpoint: string,
-    available_space: number,
+    available_space_mb: number,
 }
 
 export interface NetworkInterface {
     name: string,
-    upload: number,
-    download: number,
+    upload_mb: number,
+    download_mb: number,
 }
