@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use shared::structs::{
     db::{collector::CollectorDB, metric_type::MetricType, metrics::MetricsDB},
@@ -72,9 +72,11 @@ pub async fn register_collector(
 }
 
 pub async fn get_collectors(pool: &Pool) -> Result<Vec<CollectorDB>, shared::Error> {
-    Ok(sqlx::query_as!(CollectorDB, "select * from collectors")
-        .fetch_all(pool)
-        .await?)
+    Ok(
+        sqlx::query_as!(CollectorDB, "select * from collectors order by id")
+            .fetch_all(pool)
+            .await?,
+    )
 }
 
 pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorDB, shared::Error> {
@@ -95,14 +97,13 @@ pub async fn get_collector_metrics(pool: &Pool, id: i32) -> Result<Vec<Metrics>,
             collector_id, 
             component_name
         from metrics 
-        where collector_id = $1
-        order by timestamp"#,
+        where collector_id = $1"#,
         id
     )
     .fetch_all(pool)
     .await?;
 
-    let mut map: HashMap<NaiveDateTime, Metrics> = HashMap::new();
+    let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
         let entry = map.entry(row.timestamp).or_insert(Metrics {
@@ -123,4 +124,17 @@ pub async fn get_collector_metrics(pool: &Pool, id: i32) -> Result<Vec<Metrics>,
     }
 
     Ok(map.into_values().collect())
+}
+
+pub async fn rename_collector(pool: &Pool, id: i32, name: String) -> Result<(), shared::Error> {
+    // TODO should i return the name?
+    let result = sqlx::query_scalar!("update collectors set name = $1 where id = $2", name, id)
+        .execute(pool)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        Err(shared::Error::DbNothingChanged)
+    } else {
+        Ok(())
+    }
 }

@@ -45,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(collectors)
             .service(get_collector_by_id)
             .service(get_collector_metrics)
+            .service(rename_collector)
     })
     .bind(("0.0.0.0", port))?
     .run()
