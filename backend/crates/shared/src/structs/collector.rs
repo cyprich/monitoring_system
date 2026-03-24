@@ -1,6 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use crate::structs::{disk::Disk, metrics::Metrics, netword_interface::NetworkInterface};
+use crate::{
+    error::CollectorError,
+    structs::{
+        collector_config::CollectorConfig, disk::Disk, metrics::Metrics,
+        netword_interface::NetworkInterface, unidentified_collector::UnidentifiedCollector,
+    },
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct Collector {
@@ -54,5 +60,18 @@ impl Collector {
                 })
                 .collect(),
         }
+    }
+
+    pub async fn try_get_new_id(&mut self) -> Result<(), CollectorError> {
+        let uc = UnidentifiedCollector::from(&*self);
+        let id = uc.register_to_api().await.ok_or(CollectorError::Api())?;
+
+        self.id = id;
+
+        let mut config = CollectorConfig::load()?;
+        config.id = Some(id);
+        config.save()?;
+
+        Ok(())
     }
 }

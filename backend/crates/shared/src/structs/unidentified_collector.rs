@@ -14,12 +14,6 @@ pub struct UnidentifiedCollector {
     pub kernel_version: String,
     pub total_memory_mb: u64,
     pub cpu_count: usize,
-    #[serde(skip)]
-    sysinfo: sysinfo::System,
-    #[serde(skip)]
-    disks: sysinfo::Disks,
-    #[serde(skip)]
-    networks: sysinfo::Networks,
 }
 
 impl UnidentifiedCollector {
@@ -36,39 +30,32 @@ impl UnidentifiedCollector {
             kernel_version: sysinfo::System::kernel_version().unwrap_or(UNKNOWN.to_string()),
             total_memory_mb,
             cpu_count,
-            sysinfo,
-            disks: sysinfo::Disks::new(),
-            networks: sysinfo::Networks::new(),
+            // sysinfo,
+            // disks: sysinfo::Disks::new(),
+            // networks: sysinfo::Networks::new(),
         }
     }
 
     pub async fn identify(self) -> Option<Collector> {
         // TODO maybe some error on None?
-        let config = CollectorConfig::load();
 
-        if let Some(val) = &config
-            && let Some(id) = val.id
-        {
+        // idetify from config file
+        let mut config = CollectorConfig::load().ok()?;
+        if let Some(id) = config.id {
             return self.new_collector(id);
         }
 
+        // idetify from api
         if let Some(id) = self.register_to_api().await {
-            let config = if let Some(mut config) = config {
-                config.id = Some(id);
-                config
-            } else {
-                CollectorConfig { id: Some(id) }
-            };
-
-            config.save();
-
+            config.id = Some(id);
+            config.save().ok()?;
             self.new_collector(id)
         } else {
             None
         }
     }
 
-    async fn register_to_api(&self) -> Option<i32> {
+    pub async fn register_to_api(&self) -> Option<i32> {
         // TODO url
         let url = format!("{BASE_URL}/collector/register");
         let client = Client::new();
@@ -103,6 +90,10 @@ impl UnidentifiedCollector {
     }
 
     fn new_collector(self, id: i32) -> Option<Collector> {
+        let sysinfo = sysinfo::System::new_all();
+        let disks = sysinfo::Disks::new();
+        let networks = sysinfo::Networks::new();
+
         Some(Collector {
             id,
             name: self.name,
@@ -111,9 +102,22 @@ impl UnidentifiedCollector {
             kernel_version: self.kernel_version,
             total_memory_mb: self.total_memory_mb,
             cpu_count: self.cpu_count,
-            sysinfo: self.sysinfo,
-            disks: self.disks,
-            networks: self.networks,
+            sysinfo,
+            disks,
+            networks,
         })
+    }
+}
+
+impl From<&Collector> for UnidentifiedCollector {
+    fn from(value: &Collector) -> Self {
+        Self {
+            name: value.name.clone(),
+            system_name: value.system_name.clone(),
+            host_name: value.host_name.clone(),
+            kernel_version: value.kernel_version.clone(),
+            total_memory_mb: value.total_memory_mb,
+            cpu_count: value.cpu_count,
+        }
     }
 }

@@ -1,8 +1,7 @@
-use std::collections::{HashMap};
+use std::{collections::HashMap};
 
-use shared::structs::{ db::{collector::CollectorDB, metrics::MetricsDB, metric_type::MetricType}, metrics::Metrics, unidentified_collector::UnidentifiedCollector};
-use sqlx::{postgres::PgPoolOptions, types::chrono::NaiveDateTime};
-
+use shared::{DatabaseError, structs::{ db::{collector::CollectorDB, metric_type::MetricType, metrics::MetricsDB}, metrics::Metrics, unidentified_collector::UnidentifiedCollector}};
+use sqlx::{postgres::{PgPoolOptions}, types::chrono::NaiveDateTime};
 
 pub type Pool = sqlx::Pool<sqlx::Postgres>;
 
@@ -17,9 +16,27 @@ pub async fn get_pool() -> Option<Pool> {
         .ok()
 }
 
-pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) {
-    // TODO this surely can be done prettier
-    let _ = sqlx::query!(
+fn handle_error(error: sqlx::Error) -> Result<(), DatabaseError> {
+    match &error {
+        sqlx::Error::Database(err) => {
+            if let Some(code) = err.code() {
+                match code.as_ref() {
+                    "23503" => return Err(DatabaseError::ForeignKey),
+                    _ => return Err(DatabaseError::Database(error))
+                };
+            };
+
+            Err(DatabaseError::Database(error))
+        },
+        _ => Err(DatabaseError::Database(error)),
+    }
+}
+
+pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), DatabaseError> {
+    let mut transaction = pool.begin().await?;
+
+    // TODO this surely can be done prettier - insert multiple rows 
+    let result = sqlx::query!(
         "insert into metrics (timestamp, value, metric_type, collector_id, component_name) values ( $1, $2, ($3::text)::metric_type, $4, $5 )",
         metrics.timestamp,
         metrics.cpu_usage as f64,
@@ -27,10 +44,14 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) {
         metrics.collector_id,
         ""
     )
-    .execute(pool)
+    .execute(&mut *transaction)
     .await;
 
-    let _ = sqlx::query!(
+    if let Err(val) = result {
+        handle_error(val)?;
+    }
+
+    let result = sqlx::query!(
         "insert into metrics (timestamp, value, metric_type, collector_id, component_name) values ( $1, $2, ($3::text)::metric_type, $4, $5 )",
         metrics.timestamp,
         metrics.used_memory_mb as f64,
@@ -38,8 +59,16 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) {
         metrics.collector_id,
         ""
     )
-    .execute(pool)
+    .execute(&mut *transaction)
     .await;
+
+    if let Err(val) = result {
+        handle_error(val)?;
+    }
+
+    transaction.commit().await?;
+
+    Ok(())
 }
 
 pub async fn register_collector(pool: &Pool, collector: &UnidentifiedCollector) -> Option<i32> {
@@ -94,7 +123,8 @@ r#"select
     collector_id, 
     component_name
 from metrics 
-where collector_id = $1"#,
+where collector_id = $1
+order by timestamp"#,
         id)
     .fetch_all(pool)
     .await;

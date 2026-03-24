@@ -12,3 +12,4 @@ sqlx = { version = "0.8.6", features = [
   "runtime-tokio",
   "uuid",
 ] }
+thiserror = "2.0.18"

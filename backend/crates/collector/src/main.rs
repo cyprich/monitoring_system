@@ -3,7 +3,7 @@ use std::time::Duration;
 use shared::structs::unidentified_collector::UnidentifiedCollector;
 use tokio::time::sleep;
 
-const DELAY: u64 = 1;
+const DELAY: u64 = 5;
 use shared::BASE_URL;
 
 #[tokio::main]
@@ -34,8 +34,16 @@ pub async fn main() {
         let metrics = collector.get_metrics();
         let resp = client.post(&url).json(&metrics).send().await;
 
-        if let Err(e) = resp {
-            println!("Unsuccessful POST: {}", e);
+        match resp {
+            Ok(val) => {
+                if val.status() == reqwest::StatusCode::UNAUTHORIZED {
+                    let result = collector.try_get_new_id().await;
+                    if let Err(val) = result {
+                        eprintln!("Failed getting collector ID: {}", val)
+                    }
+                }
+            }
+            Err(val) => eprintln!("Error: {}", val),
         }
 
         sleep(Duration::from_secs(DELAY)).await;
