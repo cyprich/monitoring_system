@@ -30,13 +30,13 @@ function Collectors() {
     return (
         <div>
             <h2>Collectors</h2>
-            <div className={"flex gap-4"}>
+            <div className={"flex flex-wrap gap-4"}>
                 {
                     collectors.map((c, i) => (
                         <Link to={`/collector/${c.id}`} key={i}>
                             <Card className={"clickable min-w-80"}>
                                 <Card.Header>
-                                    <Card.Title>{c.host_name}</Card.Title>
+                                    <Card.Title>{c.name}</Card.Title>
                                     <Card.Description className={"flex flex-col"}>
                                         {
                                             c.host_name != c.name && <span>{c.host_name}</span>
@@ -52,7 +52,7 @@ function Collectors() {
                                 </Card.Header>
                                 <Card.Footer>
                                     <div className={"flex items-center gap-1"}>
-                                        <p>Last seen: </p>
+                                        <p>Last seen: <span className={"text-gray-500"}>TODO</span></p>
                                         {/*<CircleCheckFill className={"text-success"}/>*/}
                                         {/*<p className={"text-success"}>Online</p>*/}
                                     </div>

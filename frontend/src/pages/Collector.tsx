@@ -4,6 +4,8 @@ import CustomChart from "../components/CustomChart.tsx";
 import type {Collector} from "../types/Collector.ts";
 import axios from "axios";
 import {useParams} from "react-router";
+import CustomSurface from "../components/CustomSurface.tsx";
+import {Tabs} from "@heroui/react";
 
 export default function Collector() {
     const params = useParams();
@@ -58,22 +60,30 @@ export default function Collector() {
     // TODO make it into tabs instead of the `CollectorSection`?
 
     return (
-        <main className={"flex flex-col"}>
+        <main className={"flex flex-col gap-4"}>
             <h1>{collector?.name}</h1>
-            <CollectorSection name={"CPU & RAM usage"} columns={2}>
-                <CpuChart collector={collector} data={data}/>
-                <RamChart collector={collector} data={data}/>
-            </CollectorSection>
+            <CustomSurface title={"Metrics"}>
+                <MetricsTabs collector={collector} data={data}/>
+            </CustomSurface>
 
-            <CollectorSection name={"Networks"} columns={4}>
-                <NetworkChart collector={collector} data={data}/>
-            </CollectorSection>
+            <CustomSurface title={"API Endpoints"}>
+                <p className={"text-gray-500"}>//TODO</p>
+            </CustomSurface>
 
-            <CollectorSection name={"Drives"} columns={4}>
-                <DriveChart collector={collector} data={data}/>
-            </CollectorSection>
+            <CustomSurface title={"Security stuff"}>
+                <p className={"text-gray-500"}>//TODO</p>
+            </CustomSurface>
+
+            <CustomSurface title={"Settings"}>
+                <p className={"text-gray-500"}>//TODO</p>
+            </CustomSurface>
         </main>
     )
+}
+
+interface CollectorProps {
+    collector: Collector | null,
+    data: WebsocketData[]
 }
 
 interface CollectionSectionProps {
@@ -81,6 +91,80 @@ interface CollectionSectionProps {
     columns: number,
     children: ReactNode
 }
+
+function MetricsTabs({collector, data}: CollectorProps) {
+    function className(gridCols: number): string {
+        return `grid grid-cols-${gridCols} mt-8`
+    }
+
+    return (
+        <>
+            <Tabs>
+                <Tabs.ListContainer>
+                    <Tabs.List>
+                        <Tabs.Tab id={"cpu"}>
+                            CPU
+                            <Tabs.Indicator/>
+                        </Tabs.Tab>
+                        <Tabs.Tab id={"ram"}>
+                            RAM
+                            <Tabs.Indicator/>
+                        </Tabs.Tab>
+                        <Tabs.Tab id={"drives"}>
+                            Drives
+                            <Tabs.Indicator/>
+                        </Tabs.Tab>
+                        <Tabs.Tab id={"net"}>
+                            Network
+                            <Tabs.Indicator/>
+                        </Tabs.Tab>
+                    </Tabs.List>
+                </Tabs.ListContainer>
+
+                <Tabs.Panel id={"cpu"}>
+                    <div className={className(2)}>
+                        <CpuChart collector={collector} data={data}/>
+                        <CpuChart collector={collector} data={data}/>
+                    </div>
+                </Tabs.Panel>
+                <Tabs.Panel id={"ram"}>
+                    <div className={className(2)}>
+                        <RamChart collector={collector} data={data}/>
+                        <RamChart collector={collector} data={data}/>
+                    </div>
+                </Tabs.Panel>
+                <Tabs.Panel id={"drives"}>
+                    <div className={className(3)}>
+                        <DriveChart collector={collector} data={data}/>
+                    </div>
+                </Tabs.Panel>
+                <Tabs.Panel id={"net"}>
+                    <div className={className(3)}>
+                        <NetworkChart collector={collector} data={data}/>
+                    </div>
+                </Tabs.Panel>
+            </Tabs>
+
+
+
+            {/*<CollectorSection name={"CPU & RAM usage"} columns={2}>*/}
+            {/*    <CpuChart collector={collector} data={data}/>*/}
+            {/*    <RamChart collector={collector} data={data}/>*/}
+            {/*</CollectorSection>*/}
+
+            {/*<CollectorSection name={"Networks"} columns={4}>*/}
+            {/*    <NetworkChart collector={collector} data={data}/>*/}
+            {/*</CollectorSection>*/}
+
+            {/*<CollectorSection name={"Drives"} columns={4}>*/}
+            {/*    <DriveChart collector={collector} data={data}/>*/}
+            {/*</CollectorSection>*/}
+        </>
+
+)
+
+}
+
 
 function CollectorSection(props: CollectionSectionProps) {
     return (
@@ -98,10 +182,6 @@ function CollectorSection(props: CollectionSectionProps) {
     )
 }
 
-interface CollectorProps {
-    collector: Collector | null,
-    data: WebsocketData[]
-}
 
 function CpuChart(props: CollectorProps) {
     return (
