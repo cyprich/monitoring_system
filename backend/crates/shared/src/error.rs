@@ -1,12 +1,17 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("loading environment variables")]
+    Env(#[from] EnvError),
+    #[error("running api server")]
+    Server(#[from] std::io::Error),
+}
+
+#[derive(Debug, Error)]
 pub enum CollectorError {
-    // TODO maybe something more specific (not found, bad request, ...)
-    #[error("identifying")]
-    Identify(),
     #[error("communication with api")]
-    Api(),
+    Api,
 
     #[error("serializing collector config")]
     ConfigSerialize(#[from] toml::ser::Error),
@@ -16,6 +21,23 @@ pub enum CollectorError {
     ConfigLoad,
     #[error("saving collector config")]
     ConfigSave(#[from] std::io::Error),
+
+    #[error("integer parsing")]
+    ParseError(#[from] std::num::ParseIntError),
+    #[error("error with HTTP request")]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("not found")]
+    NotFound,
+    #[error("bad request")]
+    BadRequest,
+    #[error("general error")]
+    General,
+
+    #[error("system is not supported")]
+    UnsupportedSystem,
+
+    #[error("loading environment variables")]
+    Env(#[from] EnvError),
 }
 
 #[derive(Debug, Error)]
@@ -24,4 +46,12 @@ pub enum DatabaseError {
     Database(#[from] sqlx::Error),
     #[error("foreign key not found")]
     ForeignKey,
+    #[error("loading environment variables")]
+    Env(#[from] EnvError),
+}
+
+#[derive(Debug, Error)]
+pub enum EnvError {
+    #[error("loading environment file")]
+    Dotenv(#[from] dotenvy::Error),
 }

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     BASE_URL, UNKNOWN,
+    error::CollectorError,
     structs::{collector::Collector, collector_config::CollectorConfig},
 };
 
@@ -30,32 +31,29 @@ impl UnidentifiedCollector {
             kernel_version: sysinfo::System::kernel_version().unwrap_or(UNKNOWN.to_string()),
             total_memory_mb,
             cpu_count,
-            // sysinfo,
-            // disks: sysinfo::Disks::new(),
-            // networks: sysinfo::Networks::new(),
         }
     }
 
-    pub async fn identify(self) -> Option<Collector> {
-        // TODO maybe some error on None?
-
+    pub async fn identify(self) -> Result<Collector, CollectorError> {
         // idetify from config file
-        let mut config = CollectorConfig::load().ok()?;
+        let mut config = CollectorConfig::load()?;
         if let Some(id) = config.id {
-            return self.new_collector(id);
+            return Ok(self.new_collector(id));
         }
 
         // idetify from api
-        if let Some(id) = self.register_to_api().await {
-            config.id = Some(id);
-            config.save().ok()?;
-            self.new_collector(id)
-        } else {
-            None
+        let result = self.register_to_api().await;
+        match result {
+            Ok(val) => {
+                config.id = Some(val);
+                config.save()?;
+                Ok(self.new_collector(val))
+            }
+            Err(val) => Err(val),
         }
     }
 
-    pub async fn register_to_api(&self) -> Option<i32> {
+    pub async fn register_to_api(&self) -> Result<i32, CollectorError> {
         // TODO url
         let url = format!("{BASE_URL}/collector/register");
         let client = Client::new();
@@ -68,33 +66,24 @@ impl UnidentifiedCollector {
                 StatusCode::CREATED => {
                     let text = val.text().await;
                     match text {
-                        Ok(val) => val.parse().ok(),
-                        Err(_) => None,
+                        Ok(val) => Ok(val.parse()?),
+                        Err(val) => Err(CollectorError::ReqwestError(val)),
                     }
                 }
-                StatusCode::NOT_FOUND => {
-                    eprintln!("Endpoint {} not found while registering!", &url);
-                    None
-                }
-                StatusCode::BAD_REQUEST => {
-                    eprintln!("Bad request while registering!");
-                    None
-                }
-                _ => None,
+                StatusCode::NOT_FOUND => Err(CollectorError::NotFound),
+                StatusCode::BAD_REQUEST => Err(CollectorError::BadRequest),
+                _ => Err(CollectorError::General),
             },
-            Err(val) => {
-                dbg!(val);
-                None
-            }
+            Err(val) => Err(CollectorError::ReqwestError(val)),
         }
     }
 
-    fn new_collector(self, id: i32) -> Option<Collector> {
+    fn new_collector(self, id: i32) -> Collector {
         let sysinfo = sysinfo::System::new_all();
         let disks = sysinfo::Disks::new();
         let networks = sysinfo::Networks::new();
 
-        Some(Collector {
+        Collector {
             id,
             name: self.name,
             system_name: self.system_name,
@@ -105,7 +94,7 @@ impl UnidentifiedCollector {
             sysinfo,
             disks,
             networks,
-        })
+        }
     }
 }
 

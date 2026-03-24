@@ -17,7 +17,7 @@ pub struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let port = shared::get_env("API_PORT").unwrap();
+    let port = shared::env::get("API_PORT").map_err(std::io::Error::other)?;
 
     let port: u16 = port
         .parse()

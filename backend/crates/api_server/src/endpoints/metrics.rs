@@ -9,16 +9,16 @@ pub async fn metrics_post(
     metrics: web::Json<Metrics>,
 ) -> impl Responder {
     let metrics = metrics.into_inner();
-
     let result = db::insert_metrics(&state.pool, &metrics).await;
 
     if let Err(val) = result {
-        match val {
-            DatabaseError::Database(error) => {
-                return HttpResponse::InternalServerError().body(error.to_string());
+        return match val {
+            DatabaseError::ForeignKey => HttpResponse::Unauthorized().finish(),
+            DatabaseError::Database(val) => {
+                HttpResponse::InternalServerError().body(val.to_string())
             }
-            DatabaseError::ForeignKey => return HttpResponse::Unauthorized().finish(),
-        }
+            DatabaseError::Env(val) => HttpResponse::InternalServerError().body(val.to_string()),
+        };
     }
 
     let _ = state.tx.send(metrics);

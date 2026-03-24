@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use shared::structs::unidentified_collector::UnidentifiedCollector;
+use shared::{CollectorError, structs::unidentified_collector::UnidentifiedCollector};
 use tokio::time::sleep;
 
+// TODO make this user-configurable
 const DELAY: u64 = 5;
-use shared::BASE_URL;
 
 #[tokio::main]
-pub async fn main() {
+pub async fn main() -> Result<(), CollectorError> {
     // TODO
     if !sysinfo::IS_SUPPORTED_SYSTEM {
         eprintln!("System is not supported!");
@@ -15,20 +15,17 @@ pub async fn main() {
         get_supported_systems()
             .iter()
             .for_each(|s| eprintln!("  {}", s));
-        panic!()
+        return Err(CollectorError::UnsupportedSystem);
     }
 
     let uc = UnidentifiedCollector::new();
-    // TODO
-    let mut collector = uc.identify().await.unwrap();
+    let mut collector = uc.identify().await?;
 
     let client = reqwest::Client::new();
 
-    // TODO
-    // let port = shared::get_env("API_PORT").unwrap();
-    // let port: u16 = port.parse().expect("Couldn't convert port ({port}) to u16");
-    // let url = format!("http://localhost:{port}/metrics");
-    let url = format!("{BASE_URL}/metrics");
+    let addr = shared::env::get("API_ADDRESS")?;
+    let port = shared::env::get("API_PORT")?;
+    let url = format!("http://{addr}:{port}/metrics");
 
     loop {
         let metrics = collector.get_metrics();

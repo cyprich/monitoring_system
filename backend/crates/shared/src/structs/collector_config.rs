@@ -13,8 +13,7 @@ pub struct CollectorConfig {
 impl CollectorConfig {
     pub fn load() -> Result<CollectorConfig, CollectorError> {
         let text = fs::read_to_string(CONFIG_FILENAME)?;
-
-        toml::from_str(&text).map_err(|val| CollectorError::ConfigDeserialize(val))
+        toml::from_str(&text).map_err(CollectorError::ConfigDeserialize)
     }
 
     pub fn save(&self) -> Result<(), CollectorError> {
