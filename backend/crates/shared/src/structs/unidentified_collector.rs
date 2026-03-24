@@ -1,9 +1,10 @@
+use std::time::Duration;
+
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    BASE_URL, UNKNOWN,
-    error::CollectorError,
+    UNKNOWN,
     structs::{collector::Collector, collector_config::CollectorConfig},
 };
 
@@ -34,14 +35,17 @@ impl UnidentifiedCollector {
         }
     }
 
-    pub async fn identify(self) -> Result<Collector, CollectorError> {
+    pub async fn identify(self) -> Result<Collector, crate::Error> {
         // idetify from config file
-        let mut config = CollectorConfig::load()?;
-        if let Some(id) = config.id {
-            return Ok(self.new_collector(id));
+        let config = CollectorConfig::load();
+        if let Ok(c) = &config
+            && let Some(val) = c.id
+        {
+            return Ok(self.new_collector(val));
         }
 
-        // idetify from api
+        // if loading from file fails, idetify from api
+        let mut config = config.unwrap_or_default();
         let result = self.register_to_api().await;
         match result {
             Ok(val) => {
@@ -53,29 +57,55 @@ impl UnidentifiedCollector {
         }
     }
 
-    pub async fn register_to_api(&self) -> Result<i32, CollectorError> {
-        // TODO url
-        let url = format!("{BASE_URL}/collector/register");
+    pub async fn register_to_api(&self) -> Result<i32, crate::Error> {
+        let url = format!("{}/collector/register", crate::env::api_address()?);
         let client = Client::new();
 
-        let resp = client.post(&url).json(self).send().await;
-
-        // TODO maybe more retries?
-        match resp {
-            Ok(val) => match val.status() {
-                StatusCode::CREATED => {
-                    let text = val.text().await;
-                    match text {
-                        Ok(val) => Ok(val.parse()?),
-                        Err(val) => Err(CollectorError::ReqwestError(val)),
+        async fn handle_register_api_response(
+            resp: Result<reqwest::Response, reqwest::Error>,
+        ) -> Result<i32, crate::Error> {
+            match resp {
+                Ok(val) => match val.status() {
+                    StatusCode::CREATED => {
+                        let text = val.text().await;
+                        match text {
+                            Ok(val) => Ok(val.parse::<i32>()?),
+                            Err(val) => Err(crate::Error::ReqwestFromString(val.to_string())),
+                        }
                     }
-                }
-                StatusCode::NOT_FOUND => Err(CollectorError::NotFound),
-                StatusCode::BAD_REQUEST => Err(CollectorError::BadRequest),
-                _ => Err(CollectorError::General),
-            },
-            Err(val) => Err(CollectorError::ReqwestError(val)),
+                    // TODO handle all possible responses from api server
+                    _ => Err(crate::Error::HTTPResponse(val.status().as_u16())),
+                },
+                Err(val) => Err(crate::Error::ReqwestFromString(val.to_string())),
+            }
         }
+
+        let tries = 5;
+        for i in 0..tries {
+            let resp = client.post(&url).json(self).send().await;
+            let result = handle_register_api_response(resp).await;
+            match result {
+                Ok(val) => return Ok(val),
+                Err(val) => {
+                    // last try
+                    if i == tries - 1 {
+                        return Err(val);
+                    }
+
+                    eprintln!(
+                        "Error registering: {}, retries left: {}",
+                        val,
+                        tries - i - 1
+                    );
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                }
+            }
+        }
+
+        Err(crate::Error::ReqwestFromString(format!(
+            "Failed registering collector after {} tries",
+            tries
+        )))
     }
 
     fn new_collector(self, id: i32) -> Collector {

@@ -1,11 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::CollectorError,
-    structs::{
-        collector_config::CollectorConfig, disk::Disk, metrics::Metrics,
-        netword_interface::NetworkInterface, unidentified_collector::UnidentifiedCollector,
-    },
+use crate::structs::{
+    collector_config::CollectorConfig, disk::Disk, metrics::Metrics,
+    netword_interface::NetworkInterface, unidentified_collector::UnidentifiedCollector,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -26,10 +23,6 @@ pub struct Collector {
 }
 
 impl Collector {
-    pub fn is_supported_system() -> bool {
-        sysinfo::IS_SUPPORTED_SYSTEM
-    }
-
     pub fn get_metrics(&mut self) -> Metrics {
         self.sysinfo.refresh_memory();
         self.sysinfo.refresh_cpu_usage();
@@ -62,7 +55,7 @@ impl Collector {
         }
     }
 
-    pub async fn try_get_new_id(&mut self) -> Result<(), CollectorError> {
+    pub async fn try_get_new_id(&mut self) -> Result<(), crate::Error> {
         let uc = UnidentifiedCollector::from(&*self);
         let id = uc.register_to_api().await?;
 

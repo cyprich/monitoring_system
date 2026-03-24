@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use shared::{CollectorError, structs::unidentified_collector::UnidentifiedCollector};
+use shared::structs::unidentified_collector::UnidentifiedCollector;
 use tokio::time::sleep;
 
 // TODO make this user-configurable
 const DELAY: u64 = 5;
 
 #[tokio::main]
-pub async fn main() -> Result<(), CollectorError> {
+pub async fn main() -> Result<(), shared::Error> {
     // TODO
     if !sysinfo::IS_SUPPORTED_SYSTEM {
         eprintln!("System is not supported!");
@@ -15,17 +15,14 @@ pub async fn main() -> Result<(), CollectorError> {
         get_supported_systems()
             .iter()
             .for_each(|s| eprintln!("  {}", s));
-        return Err(CollectorError::UnsupportedSystem);
+        return Err(shared::Error::UnsupportedSystem);
     }
 
     let uc = UnidentifiedCollector::new();
     let mut collector = uc.identify().await?;
 
     let client = reqwest::Client::new();
-
-    let addr = shared::env::get("API_ADDRESS")?;
-    let port = shared::env::get("API_PORT")?;
-    let url = format!("http://{addr}:{port}/metrics");
+    let url = format!("{}/metrics", shared::env::api_address()?);
 
     loop {
         let metrics = collector.get_metrics();
@@ -36,11 +33,13 @@ pub async fn main() -> Result<(), CollectorError> {
                 if val.status() == reqwest::StatusCode::UNAUTHORIZED {
                     let result = collector.try_get_new_id().await;
                     if let Err(val) = result {
-                        eprintln!("Failed getting collector ID: {}", val)
+                        eprintln!("Error while getting collector ID: {}", val)
                     }
                 }
             }
-            Err(val) => eprintln!("Error: {}", val),
+            Err(val) => {
+                eprintln!("Error: {}", val);
+            }
         }
 
         sleep(Duration::from_secs(DELAY)).await;

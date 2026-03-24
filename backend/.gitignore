@@ -1,4 +1,5 @@
 **/target
+.idea
 .env
 
 collector_config.toml

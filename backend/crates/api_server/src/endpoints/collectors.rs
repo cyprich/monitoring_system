@@ -1,4 +1,4 @@
-use actix_web::{Responder, get};
+use actix_web::{HttpResponse, Responder, body, get};
 
 use crate::{AppState, endpoints::handle_db_error};
 
@@ -29,5 +29,8 @@ async fn collector_register(
     new_collector: web::Json<UnidentifiedCollector>,
 ) -> impl Responder {
     let result = db::register_collector(&state.pool, &new_collector.into_inner()).await;
-    handle_db_error(result)
+    match result {
+        Ok(val) => HttpResponse::Created().body(val.to_string()),
+        Err(val) => HttpResponse::InternalServerError().body(val.to_string()),
+    }
 }

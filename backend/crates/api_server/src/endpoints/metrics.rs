@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, Responder, post, web};
-use shared::{DatabaseError, structs::metrics::Metrics};
+use shared::structs::metrics::Metrics;
 
 use crate::AppState;
 
@@ -13,11 +13,10 @@ pub async fn metrics_post(
 
     if let Err(val) = result {
         return match val {
-            DatabaseError::ForeignKey => HttpResponse::Unauthorized().finish(),
-            DatabaseError::Database(val) => {
-                HttpResponse::InternalServerError().body(val.to_string())
+            shared::Error::DbForeignKey(error) => {
+                HttpResponse::Unauthorized().body(error.to_string())
             }
-            DatabaseError::Env(val) => HttpResponse::InternalServerError().body(val.to_string()),
+            _ => HttpResponse::InternalServerError().body(val.to_string()),
         };
     }
 

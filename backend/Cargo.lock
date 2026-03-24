@@ -275,7 +275,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
- "thiserror 2.0.18",
+ "sqlx",
  "tokio",
 ]
 
@@ -464,7 +464,6 @@ dependencies = [
  "serde_json",
  "shared",
  "sysinfo",
- "thiserror 2.0.18",
  "tokio",
  "toml",
 ]
@@ -605,7 +604,6 @@ dependencies = [
  "serde",
  "shared",
  "sqlx",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2205,7 +2203,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "sysinfo",
- "thiserror 2.0.18",
+ "tokio",
  "toml",
 ]
 
