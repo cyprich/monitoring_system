@@ -9,6 +9,11 @@ use crate::{
 use actix_web::{post, web};
 use shared::structs::unidentified_collector::UnidentifiedCollector;
 
+#[derive(Deserialize)]
+struct QueryLimit {
+    limit: Option<i32>,
+}
+
 #[get("/collectors")]
 async fn collectors(state: web::Data<AppState>) -> impl Responder {
     let result = db::get_collectors(&state.pool).await;
@@ -22,8 +27,12 @@ async fn get_collector_by_id(state: web::Data<AppState>, id: web::Path<i32>) -> 
 }
 
 #[get("/collector/{id}/metrics")]
-async fn get_collector_metrics(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
-    let result = db::get_collector_metrics(&state.pool, id.into_inner()).await;
+async fn get_collector_metrics(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+    query: web::Query<QueryLimit>,
+) -> impl Responder {
+    let result = db::get_collector_metrics(&state.pool, id.into_inner(), query.limit).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 

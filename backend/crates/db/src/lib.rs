@@ -87,21 +87,38 @@ pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorDB, sh
     )
 }
 
-pub async fn get_collector_metrics(pool: &Pool, id: i32) -> Result<Vec<Metrics>, shared::Error> {
-    let result = sqlx::query_as!(
-        MetricsDB,
-        r#"select 
-            timestamp, 
-            value, 
-            metric_type as "metric_type: MetricType", 
-            collector_id, 
-            component_name
-        from metrics 
-        where collector_id = $1"#,
-        id
-    )
-    .fetch_all(pool)
-    .await?;
+pub async fn get_collector_metrics(
+    pool: &Pool,
+    id: i32,
+    limit: Option<i32>,
+) -> Result<Vec<Metrics>, shared::Error> {
+    let sql = "select * from metrics where collector_id = $1";
+
+    let result = match limit {
+        Some(val) => {
+            let sql = format!(
+                "{sql} and timestamp in (
+                    select distinct timestamp
+                    from metrics
+                    where collector_id = $1
+                    order by timestamp desc
+                    limit $2)"
+            );
+
+            sqlx::query_as::<_, MetricsDB>(&sql)
+                .bind(id)
+                .bind(val)
+                .fetch_all(pool)
+                .await?
+        }
+
+        None => {
+            sqlx::query_as::<_, MetricsDB>(sql)
+                .bind(id)
+                .fetch_all(pool)
+                .await?
+        }
+    };
 
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 

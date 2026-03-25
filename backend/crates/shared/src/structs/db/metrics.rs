@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 
 use crate::structs::db::metric_type::MetricType;
 
-#[derive(Debug)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct MetricsDB {
     pub timestamp: NaiveDateTime,
     pub value: f64,
