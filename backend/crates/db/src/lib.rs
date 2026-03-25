@@ -19,34 +19,28 @@ pub async fn get_pool() -> Result<Pool, shared::Error> {
 }
 
 pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared::Error> {
-    let mut transaction = pool.begin().await?;
+    // TODO add other
+    let values_to_insert = [
+        (MetricType::CpuUsage, metrics.cpu_usage as f64),
+        (MetricType::UsedMemoryMb, metrics.used_memory_mb as f64),
+        (MetricType::UsedSwapMb, metrics.used_swap_mb as f64),
+    ]
+    .iter()
+    .map(|(t, v)| {
+        format!(
+            "('{}', {}, '{}'::metric_type, {}, '')",
+            metrics.timestamp, v, t, metrics.collector_id
+        )
+    })
+    .collect::<Vec<String>>()
+    .join(", ");
 
-    // TODO this surely can be done prettier - insert multiple rows
-    sqlx::query!(
-        "insert into metrics (timestamp, value, metric_type, collector_id, component_name) values ( $1, $2, ($3::text)::metric_type, $4, $5 )",
-        metrics.timestamp,
-        metrics.cpu_usage as f64,
-        MetricType::CpuUsage.to_string(),
-        metrics.collector_id,
-        ""
-    )
-    .execute(&mut *transaction)
-    .await?;
+    let sql = format!(
+        "insert into metrics (timestamp, value, metric_type, collector_id, component_name) values {}",
+        values_to_insert
+    );
 
-    sqlx::query!(
-        "insert into metrics 
-        (timestamp, value, metric_type, collector_id, component_name) 
-        values ( $1, $2, ($3::text)::metric_type, $4, $5 )",
-        metrics.timestamp,
-        metrics.used_memory_mb as f64,
-        MetricType::UsedMemoryMb.to_string(),
-        metrics.collector_id,
-        ""
-    )
-    .execute(&mut *transaction)
-    .await?;
-
-    transaction.commit().await?;
+    sqlx::query(&sql).execute(pool).await?;
 
     Ok(())
 }
