@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub enum MetricType {
     CpuUsage,
     UsedMemoryMb,
+    UsedSwapMb,
 }
 
 impl Display for MetricType {
@@ -14,6 +15,7 @@ impl Display for MetricType {
         match self {
             MetricType::CpuUsage => write!(f, "cpu_usage"),
             MetricType::UsedMemoryMb => write!(f, "used_memory_mb"),
+            MetricType::UsedSwapMb => write!(f, "used_swap_mb"),
         }
     }
 }

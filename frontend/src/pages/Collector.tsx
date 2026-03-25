@@ -4,7 +4,7 @@ import type {Collector} from "../types/Collector.ts";
 import axios from "axios";
 import {useParams} from "react-router";
 import CustomSurface from "../components/CustomSurface.tsx";
-import {Input, Tabs} from "@heroui/react";
+import {Tabs} from "@heroui/react";
 import {useEffect, useState} from "react";
 import {getMetricsLimit} from "../helpFunctions.ts";
 import {SettingsMetricsCountSection} from "../components/settings/SettingsMetricsCountSection.tsx";
@@ -126,8 +126,8 @@ function MetricsTabs({collector, data}: CollectorProps) {
                             CPU
                             <Tabs.Indicator/>
                         </Tabs.Tab>
-                        <Tabs.Tab id={"ram"}>
-                            RAM
+                        <Tabs.Tab id={"mem"}>
+                            Memory
                             <Tabs.Indicator/>
                         </Tabs.Tab>
                         <Tabs.Tab id={"drives"}>
@@ -147,10 +147,9 @@ function MetricsTabs({collector, data}: CollectorProps) {
                         <CpuChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
-                <Tabs.Panel id={"ram"}>
+                <Tabs.Panel id={"mem"}>
                     <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
-                        <RamChart collector={collector} data={data}/>
-                        <RamChart collector={collector} data={data}/>
+                        <MemoryCharts collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"drives"}>
@@ -180,14 +179,28 @@ function CpuChart(props: CollectorProps) {
 
 }
 
-function RamChart(props: CollectorProps) {
+function MemoryCharts(props: CollectorProps) {
+    const max_y = props.collector === null ? undefined : (
+        Math.max(props.collector.total_memory_mb || 0, props.collector.total_swap_mb || 0)
+    )
+
     return (
-        <CustomChart name={"RAM"} keys={["RAM"]} data={
-            props.data.map((i) => ({
-                timestamp: i.timestamp.toLocaleTimeString(),
-                ram: i.used_memory_mb
-            }))
-        } unit={"MB"} max_y={props.collector?.total_memory_mb || undefined} />
+        <>
+            <CustomChart name={"RAM"} keys={["RAM"]} data={
+                props.data.map((i) => ({
+                    timestamp: i.timestamp.toLocaleTimeString(),
+                    ram: i.used_memory_mb
+                }))
+            } unit={"MB"} max_y={max_y} />
+
+            <CustomChart name={"SWAP"} keys={["SWAP"]} data={
+                props.data.map((i) => ({
+                    timestamp: i.timestamp.toLocaleTimeString(),
+                    swap: i.used_swap_mb
+                }))
+            } unit={"MB"} max_y={max_y} />
+
+        </>
     )
 }
 

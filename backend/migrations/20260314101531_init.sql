@@ -17,6 +17,7 @@ create table collectors (
     host_name varchar not null,
     kernel_version varchar not null,
     total_memory_mb integer not null,
+    total_swap_mb integer not null,
     cpu_count integer not null,
     primary key (id)
 );
@@ -29,7 +30,8 @@ create table collectors (
 
 create type metric_type as enum (
     'cpu_usage',
-    'used_memory_mb'
+    'used_memory_mb', 
+    'used_swap_mb' 
 );
 
 create table metrics (

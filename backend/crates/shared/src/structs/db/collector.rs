@@ -10,5 +10,6 @@ pub struct CollectorDB {
     pub host_name: Option<String>,
     pub kernel_version: Option<String>,
     pub total_memory_mb: Option<i32>,
+    pub total_swap_mb: Option<i32>,
     pub cpu_count: Option<i32>,
 }

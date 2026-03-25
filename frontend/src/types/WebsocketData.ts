@@ -3,6 +3,7 @@ export interface WebsocketData {
     hostname: string,
     timestamp: Date,
     used_memory_mb: number,
+    used_swap_mb: number,
     cpu_usage: number,
     disks: Disk[],
     networks: NetworkInterface[],

@@ -57,14 +57,15 @@ pub async fn register_collector(
 ) -> Result<i32, shared::Error> {
     Ok(sqlx::query_scalar!(
         "insert into collectors 
-        (name, system_name, host_name, kernel_version, total_memory_mb, cpu_count) 
-        values ($1, $2, $3, $4, $5, $6) 
+        (name, system_name, host_name, kernel_version, total_memory_mb, total_swap_mb, cpu_count) 
+        values ($1, $2, $3, $4, $5, $6, $7) 
         returning id",
         collector.name,
         collector.system_name,
         collector.host_name,
         collector.kernel_version,
         collector.total_memory_mb as i32,
+        collector.total_swap_mb as i32,
         collector.cpu_count as i32
     )
     .fetch_one(pool)
@@ -137,6 +138,7 @@ pub async fn get_collector_metrics(
         match row.metric_type {
             MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
             MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
+            MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
         }
     }
 

@@ -15,6 +15,7 @@ pub struct UnidentifiedCollector {
     pub host_name: String,
     pub kernel_version: String,
     pub total_memory_mb: u64,
+    pub total_swap_mb: u64,
     pub cpu_count: usize,
 }
 
@@ -22,6 +23,7 @@ impl UnidentifiedCollector {
     pub fn new() -> UnidentifiedCollector {
         let sysinfo = sysinfo::System::new_all();
         let total_memory_mb = sysinfo.total_memory() / 1_000_000;
+        let total_swap_mb = sysinfo.total_swap() / 1_000_000;
         let cpu_count = sysinfo.cpus().len();
         let host_name = sysinfo::System::host_name().unwrap_or(UNKNOWN.to_string());
 
@@ -31,6 +33,7 @@ impl UnidentifiedCollector {
             host_name,
             kernel_version: sysinfo::System::kernel_version().unwrap_or(UNKNOWN.to_string()),
             total_memory_mb,
+            total_swap_mb,
             cpu_count,
         }
     }
@@ -80,7 +83,7 @@ impl UnidentifiedCollector {
             }
         }
 
-        let tries = 5;
+        let tries = 10;
         for i in 0..tries {
             let resp = client.post(&url).json(self).send().await;
             let result = handle_register_api_response(resp).await;
@@ -92,11 +95,7 @@ impl UnidentifiedCollector {
                         return Err(val);
                     }
 
-                    eprintln!(
-                        "Error registering: {}, retries left: {}",
-                        val,
-                        tries - i - 1
-                    );
+                    eprintln!("Error registering: {}, try: {}/{}", val, i + 1, tries);
                     tokio::time::sleep(Duration::from_secs(5)).await;
                 }
             }
@@ -120,6 +119,7 @@ impl UnidentifiedCollector {
             host_name: self.host_name,
             kernel_version: self.kernel_version,
             total_memory_mb: self.total_memory_mb,
+            total_swap_mb: self.total_swap_mb,
             cpu_count: self.cpu_count,
             sysinfo,
             disks,
@@ -136,6 +136,7 @@ impl From<&Collector> for UnidentifiedCollector {
             host_name: value.host_name.clone(),
             kernel_version: value.kernel_version.clone(),
             total_memory_mb: value.total_memory_mb,
+            total_swap_mb: value.total_swap_mb,
             cpu_count: value.cpu_count,
         }
     }

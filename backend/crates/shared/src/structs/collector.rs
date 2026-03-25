@@ -13,6 +13,7 @@ pub struct Collector {
     pub host_name: String,
     pub kernel_version: String,
     pub total_memory_mb: u64,
+    pub total_swap_mb: u64,
     pub cpu_count: usize,
     #[serde(skip)]
     pub sysinfo: sysinfo::System,
@@ -33,7 +34,7 @@ impl Collector {
             collector_id: self.id,
             timestamp: chrono::Local::now().naive_local(),
             used_memory_mb: self.sysinfo.used_memory() / 1_000_000,
-            used_swap_mb: self.sysinfo.used_memory() / 1_000_000,
+            used_swap_mb: self.sysinfo.used_swap() / 1_000_000,
             cpu_usage: self.sysinfo.global_cpu_usage(),
             disks: self
                 .disks

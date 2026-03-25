@@ -18,7 +18,7 @@ export function SettingsMetricsCountSection(props: Props) {
     return (
         <>
             <SettingsGeneralSection
-                title={"Metrics Count"}
+                title={"Metrics Count Limit"}
                 description={"How many datapoints to show in metrics charts"}
             >
                 <ToggleButtonGroup
