@@ -1,11 +1,15 @@
-import {type ReactNode, useEffect, useState} from "react";
 import type {WebsocketData} from "../types/WebsocketData.ts";
 import CustomChart from "../components/CustomChart.tsx";
 import type {Collector} from "../types/Collector.ts";
 import axios from "axios";
 import {useParams} from "react-router";
 import CustomSurface from "../components/CustomSurface.tsx";
-import {Tabs} from "@heroui/react";
+import {Input, Tabs} from "@heroui/react";
+import {useEffect, useState} from "react";
+import {getMetricsLimit} from "../helpFunctions.ts";
+import {SettingsMetricsCountSection} from "../components/settings/SettingsMetricsCountSection.tsx";
+import SettingsGeneralSection from "../components/settings/SettingsGeneralSection.tsx";
+import ConfirmableInput from "../components/ConfirmableInput.tsx";
 
 export default function Collector() {
     const params = useParams();
@@ -14,9 +18,9 @@ export default function Collector() {
     const [collector, setCollector] = useState<Collector | null>(null)
     const [data, setData] = useState<WebsocketData[]>([])
 
-    // TODO
+    // TODO link
     const url = `http://localhost:5000/collector/${id}`;
-    const LIMIT = 200;
+    const LIMIT = getMetricsLimit();
 
     useEffect(() => {
         // collector
@@ -29,7 +33,11 @@ export default function Collector() {
 
         // historic metrics
         axios
-            .get(`${url}/metrics`)
+            .get(`${url}/metrics`, {
+                params: {
+                    limit: LIMIT
+                }
+            })
             .then((resp) => {
                 const data: WebsocketData[] = resp.data.map((i: WebsocketData) => (
                     {
@@ -55,9 +63,7 @@ export default function Collector() {
 
         return () => socket.close()
 
-    }, [id, url]);
-
-    // TODO make it into tabs instead of the `CollectorSection`?
+    }, [LIMIT, id, url]);
 
     return (
         <main className={"flex flex-col gap-4"}>
@@ -67,15 +73,37 @@ export default function Collector() {
             </CustomSurface>
 
             <CustomSurface title={"API Endpoints"}>
-                <p className={"text-gray-500"}>//TODO</p>
+                <p className={"custom-description"}>//TODO</p>
             </CustomSurface>
 
-            <CustomSurface title={"Security stuff"}>
-                <p className={"text-gray-500"}>//TODO</p>
+            <CustomSurface title={"Security stuff?"}>
+                <p className={"custom-description"}>//TODO</p>
             </CustomSurface>
 
-            <CustomSurface title={"Settings"}>
-                <p className={"text-gray-500"}>//TODO</p>
+            <CustomSurface title={"Settings"} className={"flex flex-col gap-6"}>
+                <div>
+                    <SettingsGeneralSection title={"Collector name"}>
+                        {
+                            collector !== null &&
+                            <ConfirmableInput
+                                value={collector.name}
+                                variant={"secondary"}
+                                onConfirm={(newName) => {
+                                    if (collector === null) { return }
+                                    console.log(`${url}/rename`)
+                                    axios
+                                        .patch(`${url}/rename`, {"name": newName})
+                                        .then(() => {
+                                            setCollector((old) => old ? {...old, name: newName} : old)
+                                        }).catch((e) => { console.log(e) /* TODO */ })
+                                }}
+                            />
+                        }
+                    </SettingsGeneralSection>
+                </div>
+                <div>
+                    <SettingsMetricsCountSection showWarning={true}/>
+                </div>
             </CustomSurface>
         </main>
     )
@@ -86,16 +114,8 @@ interface CollectorProps {
     data: WebsocketData[]
 }
 
-interface CollectionSectionProps {
-    name: string,
-    columns: number,
-    children: ReactNode
-}
-
 function MetricsTabs({collector, data}: CollectorProps) {
-    function className(gridCols: number): string {
-        return `grid grid-cols-${gridCols} mt-8`
-    }
+    const className = "grid mt-8"
 
     return (
         <>
@@ -122,66 +142,31 @@ function MetricsTabs({collector, data}: CollectorProps) {
                 </Tabs.ListContainer>
 
                 <Tabs.Panel id={"cpu"}>
-                    <div className={className(2)}>
+                    <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
                         <CpuChart collector={collector} data={data}/>
                         <CpuChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"ram"}>
-                    <div className={className(2)}>
+                    <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
                         <RamChart collector={collector} data={data}/>
                         <RamChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"drives"}>
-                    <div className={className(3)}>
+                    <div className={className} style={{gridTemplateColumns: "repeat(3, 1fr)"}}>
                         <DriveChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"net"}>
-                    <div className={className(3)}>
+                    <div className={className} style={{gridTemplateColumns: "repeat(3, 1fr)"}}>
                         <NetworkChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
             </Tabs>
-
-
-
-            {/*<CollectorSection name={"CPU & RAM usage"} columns={2}>*/}
-            {/*    <CpuChart collector={collector} data={data}/>*/}
-            {/*    <RamChart collector={collector} data={data}/>*/}
-            {/*</CollectorSection>*/}
-
-            {/*<CollectorSection name={"Networks"} columns={4}>*/}
-            {/*    <NetworkChart collector={collector} data={data}/>*/}
-            {/*</CollectorSection>*/}
-
-            {/*<CollectorSection name={"Drives"} columns={4}>*/}
-            {/*    <DriveChart collector={collector} data={data}/>*/}
-            {/*</CollectorSection>*/}
         </>
-
-)
-
-}
-
-
-function CollectorSection(props: CollectionSectionProps) {
-    return (
-        <div>
-            <h3>{props.name}</h3>
-            <div
-                className={ `grid grid-flow-row gap-16`}
-                style={{gridTemplateColumns: `repeat(${props.columns}, 1fr)`}}
-            >
-                {
-                    props.children
-                }
-            </div>
-        </div>
     )
 }
-
 
 function CpuChart(props: CollectorProps) {
     return (

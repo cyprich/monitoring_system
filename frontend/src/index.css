@@ -32,3 +32,7 @@ h6 { @apply text-sm  mb-1 font-medium }
 .clickable {
     @apply cursor-pointer hover:scale-[102%] duration-100;
 }
+
+.custom-description {
+    @apply text-gray-800 font-light
+}

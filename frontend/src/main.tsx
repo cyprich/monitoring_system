@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import {BrowserRouter, Route, Routes} from 'react-router';
-// import {Footer} from "./components/Footer.tsx";
 import Home from "./pages/Home.tsx";
 import Collector from "./pages/Collector.tsx";
 import Sidebar from "./components/Sidebar.tsx";
