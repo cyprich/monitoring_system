@@ -8,14 +8,22 @@ pub enum MetricType {
     CpuUsage,
     UsedMemoryMb,
     UsedSwapMb,
+    DriveAvailableSpace,
+    NetworkDownload,
+    NetworkUpload,
 }
 
 impl Display for MetricType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            MetricType::CpuUsage => write!(f, "cpu_usage"),
-            MetricType::UsedMemoryMb => write!(f, "used_memory_mb"),
-            MetricType::UsedSwapMb => write!(f, "used_swap_mb"),
-        }
+        let val = match self {
+            MetricType::CpuUsage => "cpu_usage",
+            MetricType::UsedMemoryMb => "used_memory_mb",
+            MetricType::UsedSwapMb => "used_swap_mb",
+            MetricType::DriveAvailableSpace => "drive_available_space",
+            MetricType::NetworkDownload => "network_download",
+            MetricType::NetworkUpload => "network_upload",
+        };
+
+        write!(f, "{}", val)
     }
 }

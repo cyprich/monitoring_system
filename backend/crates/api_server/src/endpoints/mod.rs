@@ -10,7 +10,7 @@ pub use ws::*;
 
 enum ResponseBodyType {
     Json,
-    Body { value: String },
+    // Body { value: String },
     None,
 }
 
@@ -23,7 +23,7 @@ fn handle_query_error<T: serde::Serialize>(
             let mut r = HttpResponse::Ok();
             match body_type {
                 ResponseBodyType::Json => r.json(val),
-                ResponseBodyType::Body { value } => r.body(value),
+                // ResponseBodyType::Body { value } => r.body(value),
                 ResponseBodyType::None => r.finish(),
             }
         }

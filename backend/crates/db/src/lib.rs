@@ -6,7 +6,7 @@ use shared::structs::{
         metric_type::MetricType,
         tables::{CollectorTable, DriveTable, MetricsTable, NetworkInterfaceTable},
     },
-    metrics::Metrics,
+    metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
 };
 use sqlx::{Postgres, QueryBuilder, postgres::PgPoolOptions, types::chrono::NaiveDateTime};
 
@@ -22,29 +22,54 @@ pub async fn get_pool() -> Result<Pool, shared::Error> {
 }
 
 pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared::Error> {
-    // TODO add other
-    // TODO remake with QueryBuilder
-    let values_to_insert = [
-        (MetricType::CpuUsage, metrics.cpu_usage as f64),
-        (MetricType::UsedMemoryMb, metrics.used_memory_mb as f64),
-        (MetricType::UsedSwapMb, metrics.used_swap_mb as f64),
-    ]
-    .iter()
-    .map(|(t, v)| {
-        format!(
-            "('{}', {}, '{}'::metric_type, {}, '')",
-            metrics.timestamp, v, t, metrics.collector_id
-        )
-    })
-    .collect::<Vec<String>>()
-    .join(", ");
-
-    let sql = format!(
-        "insert into metrics (timestamp, value, metric_type, collector_id, component_name) values {}",
-        values_to_insert
+    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
+        "insert into metrics (timestamp, value, metric_type, collector_id, component_name) ",
     );
 
-    sqlx::query(&sql).execute(pool).await?;
+    let mut values = vec![
+        (
+            metrics.cpu_usage as f64,
+            MetricType::CpuUsage,
+            String::default(),
+        ),
+        (
+            metrics.used_memory_mb as f64,
+            MetricType::UsedMemoryMb,
+            String::default(),
+        ),
+        (
+            metrics.used_swap_mb as f64,
+            MetricType::UsedSwapMb,
+            String::default(),
+        ),
+    ];
+
+    for d in metrics.drives.clone() {
+        values.push((
+            d.available_space_gb as f64,
+            MetricType::DriveAvailableSpace,
+            d.mountpoint,
+        ));
+    }
+
+    for n in metrics.network_interfaces.clone() {
+        values.push((
+            n.download_kb as f64,
+            MetricType::NetworkDownload,
+            n.name.clone(),
+        ));
+        values.push((n.upload_kb as f64, MetricType::NetworkUpload, n.name));
+    }
+
+    builder.push_values(values, |mut b, val| {
+        b.push_bind(metrics.timestamp)
+            .push_bind(val.0)
+            .push_bind(val.1)
+            .push_bind(metrics.collector_id)
+            .push_bind(val.2);
+    });
+
+    builder.build().execute(pool).await?;
 
     Ok(())
 }
@@ -154,7 +179,7 @@ pub async fn get_collector_metrics(
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
-        let entry = map.entry(row.timestamp).or_insert(Metrics {
+        let mut entry = map.entry(row.timestamp).or_insert(Metrics {
             // TODO it's useless to carry collector id, too much overhead
             collector_id: id,
             timestamp: row.timestamp,
@@ -169,7 +194,67 @@ pub async fn get_collector_metrics(
             MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
             MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
             MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
+            MetricType::DriveAvailableSpace => {
+                entry.drives.push(DriveMetrics {
+                    mountpoint: row.component_name,
+                    available_space_gb: row.value as u64,
+                });
+            }
+            MetricType::NetworkDownload => {
+                let net = entry
+                    .network_interfaces
+                    .iter_mut()
+                    .find(|n| n.name == row.component_name);
+
+                match net {
+                    Some(val) => {
+                        val.download_kb = row.value as u64;
+                    }
+                    None => {
+                        entry.network_interfaces.push(NetworkInterfaceMetrics {
+                            name: row.component_name,
+                            upload_kb: 0,
+                            download_kb: row.value as u64,
+                        });
+                    }
+                }
+            }
+            MetricType::NetworkUpload => {
+                let net = entry
+                    .network_interfaces
+                    .iter_mut()
+                    .find(|n| n.name == row.component_name);
+
+                match net {
+                    Some(val) => {
+                        val.upload_kb = row.value as u64;
+                    }
+                    None => {
+                        entry.network_interfaces.push(NetworkInterfaceMetrics {
+                            name: row.component_name,
+                            upload_kb: row.value as u64,
+                            download_kb: 0,
+                        });
+                    }
+                }
+            }
         }
+
+        // MetricType::NetworkDownload => {
+        //     entry.network_interfaces.push(NetworkInterfaceMetrics {
+        //         name: row.component_name,
+        //         upload_kb: u64::MIN,
+        //         download_kb: row.value as u64,
+        //     });
+        // }
+        // MetricType::NetworkUpload => {
+        //     entry.network_interfaces.push(NetworkInterfaceMetrics {
+        //         name: row.component_name,
+        //         upload_kb: row.value as u64,
+        //         download_kb: u64::MIN,
+        //     });
+        // }
+        // TODO fix duplicate network interfaces
     }
 
     Ok(map.into_values().collect())

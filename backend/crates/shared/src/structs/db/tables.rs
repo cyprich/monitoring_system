@@ -1,4 +1,4 @@
-use crate::structs::{collectors, db::metric_type::MetricType};
+use crate::structs::db::metric_type::MetricType;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -22,16 +22,16 @@ pub struct DriveTable {
     pub file_system: String,
 }
 
-impl DriveTable {
-    fn from_drive(drive: &collectors::Drive, id: i32) -> Self {
-        Self {
-            mountpoint: drive.mountpoint.clone(),
-            collector_id: id,
-            capacity_gb: drive.capacity_gb as i32,
-            file_system: drive.file_system.clone(),
-        }
-    }
-}
+// impl DriveTable {
+//     fn from_drive(drive: &collectors::Drive, id: i32) -> Self {
+//         Self {
+//             mountpoint: drive.mountpoint.clone(),
+//             collector_id: id,
+//             capacity_gb: drive.capacity_gb as i32,
+//             file_system: drive.file_system.clone(),
+//         }
+//     }
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NetworkInterfaceTable {
@@ -40,15 +40,15 @@ pub struct NetworkInterfaceTable {
     pub collector_id: i32,
 }
 
-impl NetworkInterfaceTable {
-    fn from_network_interface(network_interface: &collectors::NetworkInterface, id: i32) -> Self {
-        Self {
-            name: network_interface.name.clone(),
-            mac: network_interface.mac.clone(),
-            collector_id: id,
-        }
-    }
-}
+// impl NetworkInterfaceTable {
+//     fn from_network_interface(network_interface: &collectors::NetworkInterface, id: i32) -> Self {
+//         Self {
+//             name: network_interface.name.clone(),
+//             mac: network_interface.mac.clone(),
+//             collector_id: id,
+//         }
+//     }
+// }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MetricsTable {

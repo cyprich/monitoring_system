@@ -46,7 +46,7 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold}: 
                     {
                         keys.map((k, i) => (
                             <linearGradient id={`grad-${k}`} x1={0} y1={0} x2={0} y2={1} key={i}>
-                                <stop offset={"10%"} stopColor={getColor(i)} stopOpacity={0.3}/>
+                                <stop offset={"10%"} stopColor={getColor(i)} stopOpacity={0.25}/>
                                 <stop offset={"90%"} stopColor={getColor(i)} stopOpacity={0.05}/>
                             </linearGradient>
                         ))

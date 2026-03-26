@@ -58,7 +58,6 @@ async fn collector_register(
     new_collector: web::Json<UnidentifiedCollector>,
 ) -> impl Responder {
     let result = db::register_collector(&state.pool, &new_collector.into_inner()).await;
-    dbg!(&result);
 
     match result {
         Ok(val) => HttpResponse::Created().body(val.to_string()),

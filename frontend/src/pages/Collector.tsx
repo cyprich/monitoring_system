@@ -287,7 +287,7 @@ function NetworkChart(props: CollectorProps) {
                             })
                         }
                         unit={"MB"}
-                        max_y={100}/>
+                        max_y={10}/>
                 ))
             }
         </>

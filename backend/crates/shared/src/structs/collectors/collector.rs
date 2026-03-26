@@ -87,10 +87,6 @@ impl Collector {
         self.sysinfo_drives.refresh(true);
         self.sysinfo_network_interfaces.refresh(true);
 
-        // dbg!(&self.sysinfo_network_interfaces);
-
-        // dbg!(&m);
-
         Metrics {
             collector_id: self.id,
             timestamp: chrono::Local::now().naive_local(),
