@@ -43,8 +43,10 @@ async fn main() -> std::io::Result<()> {
             .service(metrics_post)
             .service(collector_register)
             .service(collectors)
-            .service(get_collector_by_id)
+            .service(get_collector)
             .service(get_collector_metrics)
+            .service(get_collector_drives)
+            .service(get_collector_network_interfaces)
             .service(rename_collector)
     })
     .bind(("0.0.0.0", port))?

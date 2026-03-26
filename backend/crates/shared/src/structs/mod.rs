@@ -1,7 +1,7 @@
-pub mod collector;
-pub mod collector_config;
+mod collectors;
+pub use collectors::Collector;
+pub use collectors::CollectorConfig;
+pub use collectors::UnidentifiedCollector;
+
 pub mod db;
-pub mod disk;
 pub mod metrics;
-pub mod netword_interface;
-pub mod unidentified_collector;

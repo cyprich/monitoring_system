@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     UNKNOWN,
-    structs::{collector::Collector, collector_config::CollectorConfig},
+    structs::{Collector, CollectorConfig, collectors},
 };
 
 #[derive(Default, Serialize, Deserialize)]
@@ -17,6 +17,8 @@ pub struct UnidentifiedCollector {
     pub total_memory_mb: u64,
     pub total_swap_mb: u64,
     pub cpu_count: usize,
+    pub drives: Vec<collectors::Drive>,
+    pub network_interfaces: Vec<collectors::NetworkInterface>,
 }
 
 impl UnidentifiedCollector {
@@ -27,6 +29,23 @@ impl UnidentifiedCollector {
         let cpu_count = sysinfo.cpus().len();
         let host_name = sysinfo::System::host_name().unwrap_or(UNKNOWN.to_string());
 
+        let drives = sysinfo::Disks::new_with_refreshed_list()
+            .iter()
+            .map(|d| collectors::Drive {
+                mountpoint: d.mount_point().to_string_lossy().to_string(),
+                capacity_gb: (d.total_space() / 1_000_000_000) as u32,
+                file_system: d.file_system().to_string_lossy().to_string(),
+            })
+            .collect::<Vec<collectors::Drive>>();
+
+        let network_interfaces = sysinfo::Networks::new_with_refreshed_list()
+            .iter()
+            .map(|n| collectors::NetworkInterface {
+                name: n.0.to_string(),
+                mac: n.1.mac_address().to_string(),
+            })
+            .collect::<Vec<collectors::NetworkInterface>>();
+
         UnidentifiedCollector {
             name: host_name.clone(),
             system_name: sysinfo::System::name().unwrap_or(UNKNOWN.to_string()),
@@ -35,6 +54,8 @@ impl UnidentifiedCollector {
             total_memory_mb,
             total_swap_mb,
             cpu_count,
+            drives,
+            network_interfaces,
         }
     }
 
@@ -44,7 +65,7 @@ impl UnidentifiedCollector {
         if let Ok(c) = &config
             && let Some(val) = c.id
         {
-            return Ok(self.new_collector(val));
+            return Ok(Collector::from_unidentified(self, val));
         }
 
         // if loading from file fails, idetify from api
@@ -54,7 +75,7 @@ impl UnidentifiedCollector {
             Ok(val) => {
                 config.id = Some(val);
                 config.save()?;
-                Ok(self.new_collector(val))
+                Ok(Collector::from_unidentified(self, val))
             }
             Err(val) => Err(val),
         }
@@ -106,30 +127,13 @@ impl UnidentifiedCollector {
             tries
         )))
     }
-
-    fn new_collector(self, id: i32) -> Collector {
-        let sysinfo = sysinfo::System::new_all();
-        let disks = sysinfo::Disks::new();
-        let networks = sysinfo::Networks::new();
-
-        Collector {
-            id,
-            name: self.name,
-            system_name: self.system_name,
-            host_name: self.host_name,
-            kernel_version: self.kernel_version,
-            total_memory_mb: self.total_memory_mb,
-            total_swap_mb: self.total_swap_mb,
-            cpu_count: self.cpu_count,
-            sysinfo,
-            disks,
-            networks,
-        }
-    }
 }
 
 impl From<&Collector> for UnidentifiedCollector {
     fn from(value: &Collector) -> Self {
+        let drives = value.drives.clone();
+        let network_interfaces = value.network_interfaces.clone();
+
         Self {
             name: value.name.clone(),
             system_name: value.system_name.clone(),
@@ -138,6 +142,8 @@ impl From<&Collector> for UnidentifiedCollector {
             total_memory_mb: value.total_memory_mb,
             total_swap_mb: value.total_swap_mb,
             cpu_count: value.cpu_count,
+            drives,
+            network_interfaces,
         }
     }
 }

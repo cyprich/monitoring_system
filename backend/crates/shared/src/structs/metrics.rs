@@ -1,8 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use crate::structs::{disk::Disk, netword_interface::NetworkInterface};
-
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Metrics {
     pub collector_id: i32,
@@ -10,8 +8,8 @@ pub struct Metrics {
     pub used_memory_mb: u64,
     pub used_swap_mb: u64,
     pub cpu_usage: f32,
-    pub disks: Vec<Disk>,
-    pub networks: Vec<NetworkInterface>,
+    pub drives: Vec<DriveMetrics>,
+    pub network_interfaces: Vec<NetworkInterfaceMetrics>,
 }
 
 impl Metrics {
@@ -22,4 +20,17 @@ impl Metrics {
     pub fn json(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DriveMetrics {
+    pub mountpoint: String,
+    pub available_space_gb: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkInterfaceMetrics {
+    pub name: String,
+    pub upload_kb: u64,
+    pub download_kb: u64,
 }

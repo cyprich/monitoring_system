@@ -22,11 +22,23 @@ create table collectors (
     primary key (id)
 );
 
--- create table metric_type (
---     id serial,
---     name varchar not null,
---     primary key (id)
--- );
+create table drives (
+    mountpoint varchar, 
+    collector_id integer, 
+    capacity_gb integer not null, 
+    file_system varchar not null,
+    primary key (mountpoint, collector_id), 
+    foreign key (collector_id) references collectors(id)
+);
+
+create table network_interfaces (
+    name varchar, 
+    collector_id integer, 
+    mac varchar not null, 
+    primary key (name, collector_id), 
+    foreign key (collector_id) references collectors(id)
+);
+
 
 create type metric_type as enum (
     'cpu_usage',

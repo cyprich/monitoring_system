@@ -1,11 +1,14 @@
 use std::collections::BTreeMap;
 
 use shared::structs::{
-    db::{collector::CollectorDB, metric_type::MetricType, metrics::MetricsDB},
+    UnidentifiedCollector,
+    db::{
+        metric_type::MetricType,
+        tables::{CollectorTable, DriveTable, MetricsTable, NetworkInterfaceTable},
+    },
     metrics::Metrics,
-    unidentified_collector::UnidentifiedCollector,
 };
-use sqlx::{postgres::PgPoolOptions, types::chrono::NaiveDateTime};
+use sqlx::{Postgres, QueryBuilder, postgres::PgPoolOptions, types::chrono::NaiveDateTime};
 
 pub type Pool = sqlx::Pool<sqlx::Postgres>;
 
@@ -20,6 +23,7 @@ pub async fn get_pool() -> Result<Pool, shared::Error> {
 
 pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared::Error> {
     // TODO add other
+    // TODO remake with QueryBuilder
     let values_to_insert = [
         (MetricType::CpuUsage, metrics.cpu_usage as f64),
         (MetricType::UsedMemoryMb, metrics.used_memory_mb as f64),
@@ -49,7 +53,10 @@ pub async fn register_collector(
     pool: &Pool,
     collector: &UnidentifiedCollector,
 ) -> Result<i32, shared::Error> {
-    Ok(sqlx::query_scalar!(
+    let mut transaction = pool.begin().await?;
+
+    // collector
+    let id = sqlx::query_scalar!(
         "insert into collectors 
         (name, system_name, host_name, kernel_version, total_memory_mb, total_swap_mb, cpu_count) 
         values ($1, $2, $3, $4, $5, $6, $7) 
@@ -62,24 +69,53 @@ pub async fn register_collector(
         collector.total_swap_mb as i32,
         collector.cpu_count as i32
     )
-    .fetch_one(pool)
-    .await?)
+    .fetch_one(&mut *transaction)
+    .await?;
+
+    // drives
+    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
+        "insert into drives (mountpoint, collector_id, capacity_gb, file_system) ",
+    );
+
+    builder.push_values(collector.drives.clone(), |mut b, drive| {
+        b.push_bind(drive.mountpoint)
+            .push_bind(id)
+            .push_bind(drive.capacity_gb as i32)
+            .push_bind(drive.file_system);
+    });
+
+    builder.build().execute(&mut *transaction).await?;
+
+    let mut builder: QueryBuilder<Postgres> =
+        QueryBuilder::new("insert into network_interfaces (name, collector_id, mac) ");
+
+    builder.push_values(collector.network_interfaces.clone(), |mut b, net| {
+        b.push_bind(net.name).push_bind(id).push_bind(net.mac);
+    });
+
+    builder.build().execute(&mut *transaction).await?;
+
+    transaction.commit().await?;
+
+    Ok(id)
 }
 
-pub async fn get_collectors(pool: &Pool) -> Result<Vec<CollectorDB>, shared::Error> {
+pub async fn get_collectors(pool: &Pool) -> Result<Vec<CollectorTable>, shared::Error> {
     Ok(
-        sqlx::query_as!(CollectorDB, "select * from collectors order by id")
+        sqlx::query_as!(CollectorTable, "select * from collectors order by id")
             .fetch_all(pool)
             .await?,
     )
 }
 
-pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorDB, shared::Error> {
-    Ok(
-        sqlx::query_as!(CollectorDB, "select * from collectors where id = $1", id)
-            .fetch_one(pool)
-            .await?,
+pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorTable, shared::Error> {
+    Ok(sqlx::query_as!(
+        CollectorTable,
+        "select * from collectors where id = $1 order by id",
+        id
     )
+    .fetch_one(pool)
+    .await?)
 }
 
 pub async fn get_collector_metrics(
@@ -100,7 +136,7 @@ pub async fn get_collector_metrics(
                     limit $2)"
             );
 
-            sqlx::query_as::<_, MetricsDB>(&sql)
+            sqlx::query_as::<_, MetricsTable>(&sql)
                 .bind(id)
                 .bind(val)
                 .fetch_all(pool)
@@ -108,7 +144,7 @@ pub async fn get_collector_metrics(
         }
 
         None => {
-            sqlx::query_as::<_, MetricsDB>(sql)
+            sqlx::query_as::<_, MetricsTable>(sql)
                 .bind(id)
                 .fetch_all(pool)
                 .await?
@@ -125,8 +161,8 @@ pub async fn get_collector_metrics(
             used_memory_mb: 0,
             used_swap_mb: 0,
             cpu_usage: 0.0,
-            disks: vec![],
-            networks: vec![],
+            drives: vec![],
+            network_interfaces: vec![],
         });
 
         match row.metric_type {
@@ -150,4 +186,27 @@ pub async fn rename_collector(pool: &Pool, id: i32, name: String) -> Result<(), 
     } else {
         Ok(())
     }
+}
+
+pub async fn get_collector_drives(pool: &Pool, id: i32) -> Result<Vec<DriveTable>, shared::Error> {
+    Ok(sqlx::query_as!(
+        DriveTable,
+        "select * from drives where collector_id = $1",
+        id
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
+pub async fn get_collector_network_interfaces(
+    pool: &Pool,
+    id: i32,
+) -> Result<Vec<NetworkInterfaceTable>, shared::Error> {
+    Ok(sqlx::query_as!(
+        NetworkInterfaceTable,
+        "select * from network_interfaces where collector_id = $1",
+        id
+    )
+    .fetch_all(pool)
+    .await?)
 }

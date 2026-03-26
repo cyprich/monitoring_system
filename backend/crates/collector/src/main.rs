@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use shared::structs::unidentified_collector::UnidentifiedCollector;
+use shared::structs::UnidentifiedCollector;
 use tokio::time::sleep;
 
 // TODO make this user-configurable
-const DELAY: u64 = 5;
+const DELAY: u64 = 2;
 
 #[tokio::main]
 pub async fn main() -> Result<(), shared::Error> {

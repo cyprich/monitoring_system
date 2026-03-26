@@ -1,6 +1,6 @@
-import type {WebsocketData} from "../types/WebsocketData.ts";
+import type {Metrics} from "../types/Metrics.ts";
 import CustomChart from "../components/CustomChart.tsx";
-import type {Collector} from "../types/Collector.ts";
+import type {Collector, Drive, NetworkInterface} from "../types/Collector.ts";
 import axios from "axios";
 import {useParams} from "react-router";
 import CustomSurface from "../components/CustomSurface.tsx";
@@ -16,7 +16,7 @@ export default function Collector() {
     const id = params.id || "0";
 
     const [collector, setCollector] = useState<Collector | null>(null)
-    const [data, setData] = useState<WebsocketData[]>([])
+    const [data, setData] = useState<Metrics[]>([])
 
     // TODO link
     const url = `http://localhost:5000/collector/${id}`;
@@ -31,6 +31,38 @@ export default function Collector() {
                 setCollector(resp.data)
             })
 
+        // drives
+        axios.get(`${url}/drives`).then((resp) => {
+            const drives: Drive[] = (resp.data as any[]).map(
+                (d: Drive) => ({
+                    mountpoint: d.mountpoint,
+                    capacity_gb: d.capacity_gb,
+                    file_system: d.file_system
+                })
+            )
+
+            setCollector(
+                (old) => (
+                    old ? {...old, drives: drives} : old
+                )
+            )
+        });
+
+        // network interfaces
+        axios.get(`${url}/network_interfaces`).then((resp) => {
+            const network_interfaces: NetworkInterface[] = (
+                resp.data as any[]).map((n: NetworkInterface) => ({
+                    name: n.name, mac: n.mac
+                })
+            )
+
+            setCollector(
+                (old) => (
+                    old ? {...old, network_interfaces: network_interfaces} : old
+                )
+            )
+        });
+
         // historic metrics
         axios
             .get(`${url}/metrics`, {
@@ -39,13 +71,13 @@ export default function Collector() {
                 }
             })
             .then((resp) => {
-                const data: WebsocketData[] = resp.data.map((i: WebsocketData) => (
+                const data: Metrics[] = resp.data.map((i: Metrics) => (
                     {
                         ...i,
                         timestamp: new Date(i.timestamp)
                     }
                 ))
-                setData(data)
+                setData(data);
             })
 
         const socket = new WebSocket(`ws://localhost:5000/ws/metrics/${id}`);
@@ -55,7 +87,8 @@ export default function Collector() {
         })
 
         socket.addEventListener("message", (event) => {
-            const newData: WebsocketData = JSON.parse(event.data)
+            const newData: Metrics = JSON.parse(event.data)
+            console.log(event.data, newData)
             // https://howtodoinjava.com/typescript/typescript-date-object/
             newData.timestamp = new Date(newData.timestamp)
             setData(oldData => [...oldData, newData].slice(-LIMIT))
@@ -90,7 +123,6 @@ export default function Collector() {
                                 variant={"secondary"}
                                 onConfirm={(newName) => {
                                     if (collector === null) { return }
-                                    console.log(`${url}/rename`)
                                     axios
                                         .patch(`${url}/rename`, {"name": newName})
                                         .then(() => {
@@ -111,11 +143,11 @@ export default function Collector() {
 
 interface CollectorProps {
     collector: Collector | null,
-    data: WebsocketData[]
+    data: Metrics[]
 }
 
 function MetricsTabs({collector, data}: CollectorProps) {
-    const className = "grid mt-8"
+    const className = "grid gap-y-24 mt-8"
 
     return (
         <>
@@ -149,7 +181,8 @@ function MetricsTabs({collector, data}: CollectorProps) {
                 </Tabs.Panel>
                 <Tabs.Panel id={"mem"}>
                     <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
-                        <MemoryCharts collector={collector} data={data}/>
+                        <RamChart collector={collector} data={data}/>
+                        <SwapChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"drives"}>
@@ -179,80 +212,83 @@ function CpuChart(props: CollectorProps) {
 
 }
 
-function MemoryCharts(props: CollectorProps) {
-    const max_y = props.collector === null ? undefined : (
-        Math.max(props.collector.total_memory_mb || 0, props.collector.total_swap_mb || 0)
-    )
-
+function RamChart(props: CollectorProps) {
     return (
-        <>
-            <CustomChart name={"RAM"} keys={["RAM"]} data={
-                props.data.map((i) => ({
-                    timestamp: i.timestamp.toLocaleTimeString(),
-                    ram: i.used_memory_mb
-                }))
-            } unit={"MB"} max_y={max_y} />
-
-            <CustomChart name={"SWAP"} keys={["SWAP"]} data={
-                props.data.map((i) => ({
-                    timestamp: i.timestamp.toLocaleTimeString(),
-                    swap: i.used_swap_mb
-                }))
-            } unit={"MB"} max_y={max_y} />
-
-        </>
+        <CustomChart name={"RAM"} keys={["RAM"]} data={
+            props.data.map((i) => ({
+                timestamp: i.timestamp.toLocaleTimeString(),
+                ram: i.used_memory_mb
+            }))
+        } unit={"MB"} max_y={props.collector?.total_memory_mb || undefined} />
     )
 }
 
-function NetworkChart(props: CollectorProps) {
-    // TODO
-    const interfaceNames = ["wlan0", "tailscale0"];
+function SwapChart(props: CollectorProps) {
+    return (
+        <CustomChart name={"Swap"} keys={["Swap"]} data={
+            props.data.map((i) => ({
+                timestamp: i.timestamp.toLocaleTimeString(),
+                swap: i.used_swap_mb
+            }))
+        } unit={"MB"} max_y={props.collector?.total_swap_mb || undefined} />
+    )
+}
 
+function DriveChart(props: CollectorProps) {
     return (
         <>
             {
-                // TODO idk if this is the best - same with drives
-                interfaceNames.map((name) => {
-                    return (
-                        <CustomChart name={`Network (${name})`} keys={["Upload", "Download"]} data={
-                            props.data.map((i) => {
-                                const net = i.networks.find((n) => name === n.name);
+                props.collector?.drives?.map((drive, i) => (
+                    <CustomChart
+                        name={`Drive at '${drive.mountpoint}'`}
+                        key={i}
+                        keys={["available_space_gb"]}
+                        data={
+                            props.data.map((metric) => {
+                                const selected = metric.drives?.find(
+                                    (a) => a.mountpoint == drive.mountpoint
+                                )
 
                                 return {
-                                    timestamp: i.timestamp.toLocaleTimeString(),
-                                    upload: net?.upload_mb || 0,
-                                    download: net?.download_mb || 0,
+                                    timestamp: metric.timestamp.toLocaleTimeString(),
+                                    available_space_gb: selected?.available_space_gb || 0
                                 }
                             })
-                        } unit={"MB"} max_y={1000} />
-                    )
-                })
+                        }
+                        unit={"GB"}
+                        max_y={drive.capacity_gb}/>
+                ))
             }
         </>
     )
 }
 
-function DriveChart(props: CollectorProps) {
-    // TODO
-    const drives = props.data[0]?.disks.map((d) => (d.mountpoint));
-
+function NetworkChart(props: CollectorProps) {
+    // console.log(props)
     return (
         <>
             {
-                drives?.map((name) => {
-                    return (
-                        <CustomChart name={name} keys={["available_space"]} data={
-                            props.data.map((i) => {
-                                const drive = i.disks.find((d) => d.mountpoint == name);
+                props.collector?.network_interfaces?.map((network, i) => (
+                    <CustomChart
+                        name={network.name}
+                        key={i}
+                        keys={["Download", "Upload"]}
+                        data={
+                            props.data.map((metric) => {
+                                const selected = metric.network_interfaces?.find(
+                                    (a) => a.name == network.name
+                                )
 
                                 return {
-                                    timestamp: i.timestamp.toLocaleTimeString(),
-                                    available_space: (drive?.available_space_mb || 0) / 1000
+                                    timestamp: metric.timestamp.toLocaleTimeString(),
+                                    download: (selected?.download_kb || 0) / 1000,
+                                    upload: (selected?.upload_kb || 0) / 1000,
                                 }
                             })
-                        } unit={"GB"} max_y={1_000}/>
-                    )
-                })
+                        }
+                        unit={"MB"}
+                        max_y={100}/>
+                ))
             }
         </>
     )
