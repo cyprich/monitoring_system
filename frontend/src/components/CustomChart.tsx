@@ -16,7 +16,8 @@ interface LineChartProps {
     keys: string[],
     unit: string,
     max_y?: number | undefined,
-    threshold?: number | undefined
+    threshold?: number | undefined,
+    showTooltipPercent?: boolean
 }
 
 interface LineChartData {
@@ -35,12 +36,12 @@ function getColor(index: number): string {
 }
 
 
-export default function CustomChart({name, data, keys, unit, max_y, threshold}: LineChartProps) {
+export default function CustomChart({name, data, keys, unit, max_y, threshold, showTooltipPercent}: LineChartProps) {
     unit = unit || "";
 
     return (
         <div>
-            <h3 className={"text-center"}>{name}</h3>
+            <h3 className={"text-center wrap-anywhere mx-4"}>{name}</h3>
             <AreaChart style={{width: "90%", aspectRatio: "1.618"}} responsive data={data}>
                 <defs>
                     {
@@ -72,7 +73,16 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold}: 
                 {
                     keys.length > 1 && <Legend/>
                 }
-                <Tooltip formatter={(val) => (`${Number(val).toFixed(2)}${unit}`)}/>
+                <Tooltip formatter={(val) => {
+                    const formattedNumber = `${Number(val).toFixed(2)}`;
+
+                    const percentText =
+                        (showTooltipPercent && max_y && val !== undefined)
+                            ? `(${((Number(val) / max_y)*100).toFixed(0)}%)`
+                            : ""
+
+                    return `${formattedNumber}${unit} ${percentText}`
+                }}/>
                 <RechartsDevtools/>
             </AreaChart>
         </div>

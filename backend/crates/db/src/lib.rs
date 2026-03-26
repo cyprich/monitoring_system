@@ -148,38 +148,32 @@ pub async fn get_collector_metrics(
     id: i32,
     limit: Option<i32>,
 ) -> Result<Vec<Metrics>, shared::Error> {
-    let sql = "select * from metrics where collector_id = $1";
+    let mut builder: QueryBuilder<Postgres> =
+        QueryBuilder::new("select * from metrics where collector_id = ");
+    builder.push_bind(id);
 
-    let result = match limit {
-        Some(val) => {
-            let sql = format!(
-                "{sql} and timestamp in (
-                    select distinct timestamp
-                    from metrics
-                    where collector_id = $1
-                    order by timestamp desc
-                    limit $2)"
-            );
-
-            sqlx::query_as::<_, MetricsTable>(&sql)
-                .bind(id)
-                .bind(val)
-                .fetch_all(pool)
-                .await?
-        }
-
-        None => {
-            sqlx::query_as::<_, MetricsTable>(sql)
-                .bind(id)
-                .fetch_all(pool)
-                .await?
-        }
+    if let Some(val) = limit {
+        builder.push(
+            " and timestamp in (
+            select distinct timestamp
+            from metrics
+            where collector_id = ",
+        );
+        builder.push_bind(id);
+        builder.push(" order by timestamp desc limit ");
+        builder.push_bind(val);
+        builder.push(" )");
     };
+
+    let result = builder
+        .build_query_as::<MetricsTable>()
+        .fetch_all(pool)
+        .await?;
 
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
-        let mut entry = map.entry(row.timestamp).or_insert(Metrics {
+        let entry = map.entry(row.timestamp).or_insert(Metrics {
             // TODO it's useless to carry collector id, too much overhead
             collector_id: id,
             timestamp: row.timestamp,
@@ -239,22 +233,6 @@ pub async fn get_collector_metrics(
                 }
             }
         }
-
-        // MetricType::NetworkDownload => {
-        //     entry.network_interfaces.push(NetworkInterfaceMetrics {
-        //         name: row.component_name,
-        //         upload_kb: u64::MIN,
-        //         download_kb: row.value as u64,
-        //     });
-        // }
-        // MetricType::NetworkUpload => {
-        //     entry.network_interfaces.push(NetworkInterfaceMetrics {
-        //         name: row.component_name,
-        //         upload_kb: row.value as u64,
-        //         download_kb: u64::MIN,
-        //     });
-        // }
-        // TODO fix duplicate network interfaces
     }
 
     Ok(map.into_values().collect())

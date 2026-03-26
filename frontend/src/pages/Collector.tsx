@@ -11,6 +11,8 @@ import {SettingsMetricsCountSection} from "../components/settings/SettingsMetric
 import SettingsGeneralSection from "../components/settings/SettingsGeneralSection.tsx";
 import ConfirmableInput from "../components/ConfirmableInput.tsx";
 
+// TODO split into multiple files
+
 export default function Collector() {
     const params = useParams();
     const id = params.id || "0";
@@ -80,6 +82,10 @@ export default function Collector() {
                 setData(data);
             })
 
+
+    }, [LIMIT, id, url]);
+
+    useEffect(() => {
         const socket = new WebSocket(`ws://localhost:5000/ws/metrics/${id}`);
 
         socket.addEventListener("open", () => {
@@ -88,7 +94,6 @@ export default function Collector() {
 
         socket.addEventListener("message", (event) => {
             const newData: Metrics = JSON.parse(event.data)
-            console.log(event.data, newData)
             // https://howtodoinjava.com/typescript/typescript-date-object/
             newData.timestamp = new Date(newData.timestamp)
             setData(oldData => [...oldData, newData].slice(-LIMIT))
@@ -96,7 +101,7 @@ export default function Collector() {
 
         return () => socket.close()
 
-    }, [LIMIT, id, url]);
+    }, [LIMIT, id]);
 
     return (
         <main className={"flex flex-col gap-4"}>
@@ -214,23 +219,37 @@ function CpuChart(props: CollectorProps) {
 
 function RamChart(props: CollectorProps) {
     return (
-        <CustomChart name={"RAM"} keys={["RAM"]} data={
-            props.data.map((i) => ({
-                timestamp: i.timestamp.toLocaleTimeString(),
-                ram: i.used_memory_mb
-            }))
-        } unit={"MB"} max_y={props.collector?.total_memory_mb || undefined} />
+        <CustomChart
+            name={"RAM"}
+            keys={["RAM"]}
+            data={
+                props.data.map((i) => ({
+                    timestamp: i.timestamp.toLocaleTimeString(),
+                    ram: i.used_memory_mb
+                }))
+            }
+            unit={"MB"}
+            max_y={props.collector?.total_memory_mb || undefined}
+            showTooltipPercent={true}
+        />
     )
 }
 
 function SwapChart(props: CollectorProps) {
     return (
-        <CustomChart name={"Swap"} keys={["Swap"]} data={
-            props.data.map((i) => ({
-                timestamp: i.timestamp.toLocaleTimeString(),
-                swap: i.used_swap_mb
-            }))
-        } unit={"MB"} max_y={props.collector?.total_swap_mb || undefined} />
+        <CustomChart
+            name={"Swap"}
+            keys={["Swap"]}
+            data={
+                props.data.map((i) => ({
+                    timestamp: i.timestamp.toLocaleTimeString(),
+                    swap: i.used_swap_mb
+                }))
+            }
+            unit={"MB"}
+            max_y={props.collector?.total_swap_mb || undefined}
+            showTooltipPercent={true}
+        />
     )
 }
 
@@ -242,7 +261,7 @@ function DriveChart(props: CollectorProps) {
                     <CustomChart
                         name={`Drive at '${drive.mountpoint}'`}
                         key={i}
-                        keys={["available_space_gb"]}
+                        keys={["Used"]}
                         data={
                             props.data.map((metric) => {
                                 const selected = metric.drives?.find(
@@ -251,12 +270,14 @@ function DriveChart(props: CollectorProps) {
 
                                 return {
                                     timestamp: metric.timestamp.toLocaleTimeString(),
-                                    available_space_gb: selected?.available_space_gb || 0
+                                    used: selected?.available_space_gb || 0
                                 }
                             })
                         }
                         unit={"GB"}
-                        max_y={drive.capacity_gb}/>
+                        max_y={drive.capacity_gb}
+                        showTooltipPercent={true}
+                    />
                 ))
             }
         </>
@@ -264,7 +285,6 @@ function DriveChart(props: CollectorProps) {
 }
 
 function NetworkChart(props: CollectorProps) {
-    // console.log(props)
     return (
         <>
             {
