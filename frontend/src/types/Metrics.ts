@@ -1,10 +1,10 @@
-// TODO shouldt this be named Metrics?
 export interface Metrics {
     hostname: string,
     timestamp: Date,
     used_memory_mb: number,
     used_swap_mb: number,
-    cpu_usage: number,
+    cpu_usage_global: number,
+    cpu_usage_cores: number[],
     drives: DriveMetrics[],
     network_interfaces: NetworkInterfaceMetrics[],
 }

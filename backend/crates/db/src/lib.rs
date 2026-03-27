@@ -8,7 +8,9 @@ use shared::structs::{
     },
     metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
 };
-use sqlx::{Postgres, QueryBuilder, postgres::PgPoolOptions, types::chrono::NaiveDateTime};
+use sqlx::{
+    Postgres, QueryBuilder, postgres::PgPoolOptions, query_scalar, types::chrono::NaiveDateTime,
+};
 
 pub type Pool = sqlx::Pool<sqlx::Postgres>;
 
@@ -28,8 +30,8 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
 
     let mut values = vec![
         (
-            metrics.cpu_usage as f64,
-            MetricType::CpuUsage,
+            metrics.cpu_usage_global as f64,
+            MetricType::CpuUsageGlobal,
             String::default(),
         ),
         (
@@ -44,6 +46,12 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
         ),
     ];
 
+    // cpu cores
+    for (i, val) in metrics.cpu_usage_cores.iter().enumerate() {
+        values.push(((*val) as f64, MetricType::CpuUsageCores, i.to_string()));
+    }
+
+    // drives
     for d in metrics.drives.clone() {
         values.push((
             d.used_space_gb as f64,
@@ -52,6 +60,7 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
         ));
     }
 
+    // network_interfaces
     for n in metrics.network_interfaces.clone() {
         values.push((
             n.download_kb as f64,
@@ -171,6 +180,10 @@ pub async fn get_collector_metrics(
         .fetch_all(pool)
         .await?;
 
+    let cpu_count = query_scalar!("select cpu_count from collectors where id = $1", id)
+        .fetch_one(pool)
+        .await?;
+
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
@@ -180,15 +193,22 @@ pub async fn get_collector_metrics(
             timestamp: row.timestamp,
             used_memory_mb: 0,
             used_swap_mb: 0,
-            cpu_usage: 0.0,
+            cpu_usage_global: 0.0,
+            cpu_usage_cores: vec![0.0; cpu_count as usize],
             drives: vec![],
             network_interfaces: vec![],
         });
 
         match row.metric_type {
-            MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
+            MetricType::CpuUsageGlobal => entry.cpu_usage_global = row.value as f32,
             MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
             MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
+            MetricType::CpuUsageCores => {
+                let index = row.component_name.parse::<usize>();
+                if let Ok(i) = index {
+                    entry.cpu_usage_cores.insert(i, row.value as f32);
+                }
+            }
             MetricType::DriveUsedSpace => {
                 entry.drives.push(DriveMetrics {
                     mountpoint: row.component_name,

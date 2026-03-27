@@ -17,7 +17,9 @@ interface LineChartProps {
     unit: string,
     max_y?: number | undefined,
     threshold?: number | undefined,
-    showTooltipPercent?: boolean
+    showTooltipPercent?: boolean,
+    lighter?: boolean,
+    farColors?: boolean
 }
 
 interface LineChartData {
@@ -26,9 +28,24 @@ interface LineChartData {
     [value: string]: number | string
 }
 
+// TODO more colors, move to separate file
 const lineColors = [
     colors.blue[500],
-    colors.orange[400]
+    colors.blue[300],
+    colors.orange[500],
+    colors.orange[300],
+    colors.green[500],
+    colors.green[300],
+    colors.yellow[500],
+    colors.yellow[300],
+    colors.teal[500],
+    colors.teal[300],
+    colors.fuchsia[500],
+    colors.fuchsia[300],
+    colors.violet[500],
+    colors.violet[300],
+    colors.rose[500],
+    colors.rose[300],
 ]
 
 function getColor(index: number): string {
@@ -36,8 +53,11 @@ function getColor(index: number): string {
 }
 
 
-export default function CustomChart({name, data, keys, unit, max_y, threshold, showTooltipPercent}: LineChartProps) {
+export default function CustomChart({name, data, keys, unit, max_y, threshold, showTooltipPercent, lighter, farColors}: LineChartProps) {
     unit = unit || "";
+    
+    const opacities: [number, number] = lighter ? [0.20, 0.01] : [0.30, 0.05]
+    const coef = farColors ? 2 : 1
 
     return (
         <div>
@@ -47,8 +67,8 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold, s
                     {
                         keys.map((k, i) => (
                             <linearGradient id={`grad-${k}`} x1={0} y1={0} x2={0} y2={1} key={i}>
-                                <stop offset={"10%"} stopColor={getColor(i)} stopOpacity={0.25}/>
-                                <stop offset={"90%"} stopColor={getColor(i)} stopOpacity={0.05}/>
+                                <stop offset={"10%"} stopColor={getColor(i * coef)} stopOpacity={opacities[0]}/>
+                                <stop offset={"90%"} stopColor={getColor(i * coef)} stopOpacity={opacities[1]}/>
                             </linearGradient>
                         ))
                     }
@@ -57,7 +77,7 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold, s
                 {
                     keys.map((k, i) => (
                         <Area name={k} dataKey={k.toLowerCase()} type={"monotone"} animationDuration={0} dot={false}
-                              fill={`url(#grad-${k})`} stroke={getColor(i)} strokeWidth={1.5}/>
+                              fill={`url(#grad-${k})`} stroke={getColor(i * coef)} stopOpacity={lighter ? 0.8 : 1} strokeWidth={1.5}/>
                     ))
                 }
 

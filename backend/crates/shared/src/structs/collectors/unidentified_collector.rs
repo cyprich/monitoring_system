@@ -50,7 +50,7 @@ impl UnidentifiedCollector {
             name: host_name.clone(),
             system_name: sysinfo::System::name().unwrap_or(UNKNOWN.to_string()),
             host_name,
-            kernel_version: sysinfo::System::kernel_version().unwrap_or(UNKNOWN.to_string()),
+            kernel_version: sysinfo::System::kernel_long_version(),
             total_memory_mb,
             total_swap_mb,
             cpu_count,

@@ -41,7 +41,8 @@ create table network_interfaces (
 
 
 create type metric_type as enum (
-    'cpu_usage',
+    'cpu_usage_global',
+    'cpu_usage_cores',
     'used_memory_mb', 
     'used_swap_mb', 
     'drive_used_space', 

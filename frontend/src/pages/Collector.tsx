@@ -180,8 +180,8 @@ function MetricsTabs({collector, data}: CollectorProps) {
 
                 <Tabs.Panel id={"cpu"}>
                     <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
-                        <CpuChart collector={collector} data={data}/>
-                        <CpuChart collector={collector} data={data}/>
+                        <CpuChartGlobal collector={collector} data={data}/>
+                        <CpuChartCores collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"mem"}>
@@ -205,16 +205,47 @@ function MetricsTabs({collector, data}: CollectorProps) {
     )
 }
 
-function CpuChart(props: CollectorProps) {
+function CpuChartGlobal(props: CollectorProps) {
     return (
-        <CustomChart name={"CPU"} keys={["CPU"]} data={
+        <CustomChart name={"CPU Total Usage"} keys={["CPU"]} data={
             props.data.map((i) => ({
                 timestamp: i.timestamp.toLocaleTimeString(),
-                cpu: i.cpu_usage
+                cpu: i.cpu_usage_global
             }))
         } unit={"%"} max_y={100} />
     )
 
+}
+
+function CpuChartCores(props: CollectorProps) {
+    const arr: number[] = Array(props.collector?.cpu_count || 0);
+    // const keys = arr.map((_, index) => index.toString())
+    const cpu_count = props.collector?.cpu_count || 0;
+    const keys = Array.from({length: cpu_count}, (_, index) => index.toString())
+    console.log(arr, keys)
+
+    return (
+        <CustomChart
+            name={"CPU Usage Per Core"}
+            keys={keys}
+            data={
+                props.data.map((i) => {
+                    const result: {timestamp: string, [index: string]: number | string} = {
+                        timestamp: i.timestamp.toLocaleTimeString()
+                    }
+
+                    i.cpu_usage_cores.forEach((value, index) => {
+                        result[index.toString()] = value
+                    })
+
+                    return result
+                })
+            }
+            unit={"%"}
+            max_y={100}
+            lighter={true}
+        />
+    )
 }
 
 function RamChart(props: CollectorProps) {
@@ -307,7 +338,9 @@ function NetworkChart(props: CollectorProps) {
                             })
                         }
                         unit={"MB"}
-                        max_y={10}/>
+                        max_y={10}
+                        farColors={true}
+                    />
                 ))
             }
         </>
