@@ -11,7 +11,7 @@ export interface Metrics {
 
 export interface DriveMetrics {
     mountpoint: string,
-    available_space_gb: number,
+    used_space_gb: number,
 }
 
 export interface NetworkInterfaceMetrics {

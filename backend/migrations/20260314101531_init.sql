@@ -44,7 +44,7 @@ create type metric_type as enum (
     'cpu_usage',
     'used_memory_mb', 
     'used_swap_mb', 
-    'drive_available_space', 
+    'drive_used_space', 
     'network_download', 
     'network_upload'
 );

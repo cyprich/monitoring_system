@@ -25,7 +25,7 @@ impl Metrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DriveMetrics {
     pub mountpoint: String,
-    pub available_space_gb: u64,
+    pub used_space_gb: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

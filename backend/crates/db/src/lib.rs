@@ -46,8 +46,8 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
 
     for d in metrics.drives.clone() {
         values.push((
-            d.available_space_gb as f64,
-            MetricType::DriveAvailableSpace,
+            d.used_space_gb as f64,
+            MetricType::DriveUsedSpace,
             d.mountpoint,
         ));
     }
@@ -111,6 +111,7 @@ pub async fn register_collector(
 
     builder.build().execute(&mut *transaction).await?;
 
+    // network interfaces
     let mut builder: QueryBuilder<Postgres> =
         QueryBuilder::new("insert into network_interfaces (name, collector_id, mac) ");
 
@@ -188,10 +189,10 @@ pub async fn get_collector_metrics(
             MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
             MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
             MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
-            MetricType::DriveAvailableSpace => {
+            MetricType::DriveUsedSpace => {
                 entry.drives.push(DriveMetrics {
                     mountpoint: row.component_name,
-                    available_space_gb: row.value as u64,
+                    used_space_gb: row.value as u64,
                 });
             }
             MetricType::NetworkDownload => {

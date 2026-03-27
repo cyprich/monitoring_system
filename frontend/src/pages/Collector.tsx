@@ -270,7 +270,7 @@ function DriveChart(props: CollectorProps) {
 
                                 return {
                                     timestamp: metric.timestamp.toLocaleTimeString(),
-                                    used: selected?.available_space_gb || 0
+                                    used: selected?.used_space_gb || 0
                                 }
                             })
                         }

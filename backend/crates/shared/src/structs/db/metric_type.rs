@@ -8,7 +8,7 @@ pub enum MetricType {
     CpuUsage,
     UsedMemoryMb,
     UsedSwapMb,
-    DriveAvailableSpace,
+    DriveUsedSpace,
     NetworkDownload,
     NetworkUpload,
 }
@@ -19,7 +19,7 @@ impl Display for MetricType {
             MetricType::CpuUsage => "cpu_usage",
             MetricType::UsedMemoryMb => "used_memory_mb",
             MetricType::UsedSwapMb => "used_swap_mb",
-            MetricType::DriveAvailableSpace => "drive_available_space",
+            MetricType::DriveUsedSpace => "drive_used_space",
             MetricType::NetworkDownload => "network_download",
             MetricType::NetworkUpload => "network_upload",
         };

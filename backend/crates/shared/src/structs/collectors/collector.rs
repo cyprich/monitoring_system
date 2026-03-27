@@ -98,7 +98,7 @@ impl Collector {
                 .iter()
                 .map(|d| DriveMetrics {
                     mountpoint: d.mount_point().to_string_lossy().to_string(),
-                    available_space_gb: d.available_space() / 1_000_000_000,
+                    used_space_gb: (d.total_space() - d.available_space()) / 1_000_000_000,
                 })
                 .collect(),
             network_interfaces: self
