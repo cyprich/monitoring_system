@@ -7,7 +7,7 @@ use crate::{
 };
 
 use actix_web::{post, web};
-use shared::structs::UnidentifiedCollector;
+use shared::structs::{UnidentifiedCollector, endpoints::EndpointResult};
 
 #[derive(Deserialize)]
 struct QueryLimit {
@@ -50,6 +50,32 @@ async fn get_collector_network_interfaces(
 ) -> impl Responder {
     let result = db::get_collector_network_interfaces(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[get("/collector/{id}/endpoints")]
+async fn get_collector_endpoints(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
+    let result = db::get_collector_endpoints(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[get("/collector/{id}/endpoint_results")]
+async fn get_collector_endpoint_results(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_collector_endpoints_results(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[post("/collector/{id}/endpoint_results")]
+async fn post_collector_endpoint_results(
+    state: web::Data<AppState>,
+    endpoint_results: web::Json<Vec<EndpointResult>>,
+) -> impl Responder {
+    let result =
+        db::insert_collector_endpoints_results(&state.pool, endpoint_results.into_inner()).await;
+
+    handle_query_error(result, ResponseBodyType::None)
 }
 
 #[post("/collector/register")]

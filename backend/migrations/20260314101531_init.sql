@@ -39,7 +39,6 @@ create table network_interfaces (
     foreign key (collector_id) references collectors(id)
 );
 
-
 create type metric_type as enum (
     'cpu_usage_global',
     'cpu_usage_cores',
@@ -57,6 +56,20 @@ create table metrics (
     collector_id integer,
     component_name varchar,  -- used when we have multiple disks/network interfaces
     primary key (timestamp, value, type, collector_id, component_name),
+    foreign key (collector_id) references collectors(id)
+);
+
+-- create type request_method as enum (
+--     'get', 
+-- );
+
+create table endpoints (
+    collector_id integer, 
+    -- method request_method, 
+    url varchar, 
+    port integer,
+    expected_code integer[],
+    primary key (collector_id, url, port),
     foreign key (collector_id) references collectors(id)
 );
 

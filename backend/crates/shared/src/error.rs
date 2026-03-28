@@ -5,20 +5,27 @@ use crate::UNKNOWN;
 #[derive(Debug)]
 pub enum Error {
     Env(dotenvy::Error),
+
     IoGeneral(std::io::Error),
     IoNotFound(std::io::Error),
-    Reqwest(reqwest::Error),
+
+    ReqwestGeneral(reqwest::Error),
     ReqwestFromString(String),
+    ReqwestUnreachable(String),
     HTTPResponse(u16),
+
     ParseInt(std::num::ParseIntError),
+
     DbGeneral(sqlx::Error),
     DbForeignKey(sqlx::Error),
     DbPool(sqlx::Error),
     DbMigration(Box<sqlx::migrate::MigrateError>),
     DbConfig(String),
     DbNothingChanged,
+
     TomlSer(toml::ser::Error),
     TomlDe(toml::de::Error),
+
     UnsupportedSystem,
 }
 
@@ -38,7 +45,7 @@ impl Display for Error {
             Error::IoNotFound(error) => {
                 write!(f, "IO Error: Not found - {}", error)
             }
-            Error::Reqwest(error) => {
+            Error::ReqwestGeneral(error) => {
                 write!(
                     f,
                     "Reqwest error, URL: {}, reponse code: {}, error: {}",
@@ -52,6 +59,9 @@ impl Display for Error {
             }
             Error::ReqwestFromString(error) => {
                 write!(f, "Reqwest error: {}", error)
+            }
+            Error::ReqwestUnreachable(error) => {
+                write!(f, "Reqwest error - unreachable: {}", error)
             }
             Error::HTTPResponse(error) => write!(f, "Error - HTTP Response code: {}", error),
             Error::ParseInt(error) => write!(f, "Error parsing integer: {}", error),
@@ -87,7 +97,7 @@ impl From<std::io::Error> for Error {
 
 impl From<reqwest::Error> for Error {
     fn from(value: reqwest::Error) -> Self {
-        Error::Reqwest(value)
+        Error::ReqwestGeneral(value)
     }
 }
 

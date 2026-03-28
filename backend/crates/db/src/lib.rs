@@ -4,8 +4,9 @@ use shared::structs::{
     UnidentifiedCollector,
     db::{
         metric_type::MetricType,
-        tables::{CollectorTable, DriveTable, MetricsTable, NetworkInterfaceTable},
+        tables::{CollectorTable, DriveTable, EndpointTable, MetricsTable, NetworkInterfaceTable},
     },
+    endpoints::{Endpoint, EndpointResult},
     metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
 };
 use sqlx::{
@@ -293,4 +294,54 @@ pub async fn get_collector_network_interfaces(
     )
     .fetch_all(pool)
     .await?)
+}
+
+pub async fn get_collector_endpoints(pool: &Pool, id: i32) -> Result<Vec<Endpoint>, shared::Error> {
+    let result = sqlx::query_as!(
+        EndpointTable,
+        "select * from endpoints where collector_id = $1 order by id",
+        id
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let result = result.into_iter().map(Endpoint::from);
+
+    Ok(result.collect())
+}
+
+pub async fn get_collector_endpoints_results(
+    pool: &Pool,
+    id: i32,
+) -> Result<Vec<EndpointResult>, shared::Error> {
+    let result = sqlx::query_as!(
+        EndpointResult,
+        "select * 
+        from endpoints_results 
+        where endpoint_id in (
+        select id from endpoints where collector_id = $1)",
+        id
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(result)
+}
+
+pub async fn insert_collector_endpoints_results(
+    pool: &Pool,
+    endpoint_results: Vec<EndpointResult>,
+) -> Result<(), shared::Error> {
+    let mut builder: QueryBuilder<Postgres> =
+        QueryBuilder::new("insert into endpoints_results (endpoint_id, timestamp, result) ");
+
+    builder.push_values(endpoint_results, |mut b, val| {
+        b.push_bind(val.endpoint_id)
+            .push_bind(val.timestamp)
+            .push_bind(val.result);
+    });
+
+    builder.build().execute(pool).await?;
+
+    Ok(())
 }

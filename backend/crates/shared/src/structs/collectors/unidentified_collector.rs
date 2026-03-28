@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -19,6 +19,9 @@ pub struct UnidentifiedCollector {
     pub cpu_count: usize,
     pub drives: Vec<collectors::Drive>,
     pub network_interfaces: Vec<collectors::NetworkInterface>,
+
+    #[serde(skip)]
+    pub client: reqwest::Client,
 }
 
 impl UnidentifiedCollector {
@@ -56,6 +59,7 @@ impl UnidentifiedCollector {
             cpu_count,
             drives,
             network_interfaces,
+            client: reqwest::Client::new(),
         }
     }
 
@@ -82,8 +86,7 @@ impl UnidentifiedCollector {
     }
 
     pub async fn register_to_api(&self) -> Result<i32, crate::Error> {
-        let url = format!("{}/collector/register", crate::env::api_address()?);
-        let client = Client::new();
+        let url = format!("{}/collector/register", crate::env::base_url()?);
 
         async fn handle_register_api_response(
             resp: Result<reqwest::Response, reqwest::Error>,
@@ -106,7 +109,7 @@ impl UnidentifiedCollector {
 
         let tries = 10;
         for i in 0..tries {
-            let resp = client.post(&url).json(self).send().await;
+            let resp = self.client.post(&url).json(self).send().await;
             let result = handle_register_api_response(resp).await;
             match result {
                 Ok(val) => return Ok(val),
@@ -144,6 +147,7 @@ impl From<&Collector> for UnidentifiedCollector {
             cpu_count: value.cpu_count,
             drives,
             network_interfaces,
+            client: value.client.clone(),
         }
     }
 }

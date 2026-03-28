@@ -10,7 +10,7 @@ interface CustomSurfaceProps {
 
 export default function CustomSurface(props: CustomSurfaceProps) {
     return (
-        <Surface className={`p-8 rounded-3xl`} variant={props.variant}>
+        <Surface className={`p-8 rounded-3xl drop-shadow-black-50 drop-shadow-lg`} variant={props.variant}>
             {
                 props.title && <h3 className={"mb-4"}>{props.title}</h3>
             }

@@ -4,4 +4,5 @@ pub use collectors::CollectorConfig;
 pub use collectors::UnidentifiedCollector;
 
 pub mod db;
+pub mod endpoints;
 pub mod metrics;

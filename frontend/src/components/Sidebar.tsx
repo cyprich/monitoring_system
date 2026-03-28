@@ -9,45 +9,45 @@ import {useState} from "react";
 import {Link} from "react-router";
 
 export default function Sidebar() {
-    const [expanded, setExpanded] = useState<boolean>(false)
+    const [isExpanded, setIsExpanded] = useState<boolean>(false)
 
     return (
         <>
             <aside
-                className={`sticky top-0 left-0 ${expanded ? "w-56" : "w-16"} h-screen flex flex-col gap-2 items-start px-5 py-4 bg-background-secondary z-40 duration-100`}>
+                className={`sticky top-0 left-0 ${isExpanded ? "w-56" : "w-16"} h-screen max-h-screen flex flex-col gap-2 items-start px-5 py-4 bg-background-secondary z-40 duration-100`}>
                 <SidebarItem
                     name={""}
                     icon={LayoutSideContentLeftIcon}
-                    expanded={expanded}
-                    onClick={() => setExpanded(!expanded)}
-                    className={`mb-8 ${expanded ? "cursor-w-resize!" : "cursor-e-resize!"}`}/>
+                    expanded={isExpanded}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className={`mb-8 ${isExpanded ? "cursor-w-resize!" : "cursor-e-resize!"}`}/>
                 <SidebarItem
                     name={"Home"}
                     link={"/"}
                     icon={HouseIcon}
-                    expanded={expanded}/>
+                    expanded={isExpanded}/>
                 <SidebarItem
                     name={"Account"}
                     link={"/account"}
                     icon={PersonIcon}
-                    expanded={expanded}/>
+                    expanded={isExpanded}/>
                 <SidebarItem
                     name={"Notifications"}
                     link={"/notifications"}
                     icon={BellIcon}
-                    expanded={expanded}/>
+                    expanded={isExpanded}/>
                 <SidebarItem
                     name={"Settings"}
                     link={"/settings"}
                     icon={GearIcon}
-                    expanded={expanded}/>
+                    expanded={isExpanded}/>
 
                 <div className={"size-full"}/>
                 <SidebarItem
                     name={"About"}
                     link={"/about"}
                     icon={CircleInfoIcon}
-                    expanded={expanded}/>
+                    expanded={isExpanded}/>
             </aside>
         </>
     )
@@ -66,9 +66,9 @@ function SidebarItem(props: SidebarItemProps) {
     const globalClassName = `${props.className} w-full py-2 z-50 clickable`
 
     const content = (
-        <div onClick={props.onClick} className={`${globalClassName} flex gap-4`} title={props.name}>
+        <div onClick={props.onClick} className={`${globalClassName} flex gap-4 group`} title={props.name}>
             <img src={props.icon} alt={""} className={"size-6"}/>
-            <p className={`${props.expanded ? "block opacity-100" : "hidden opacity-0"}`}>{props.name}</p>
+            <p className={`${props.expanded ? "block opacity-100" : "hidden opacity-0"} group-hover:underline underline-offset-4`}>{props.name}</p>
         </div>
     )
 

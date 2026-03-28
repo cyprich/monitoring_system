@@ -1,14 +1,14 @@
 use std::time::Duration;
 
-use shared::structs::UnidentifiedCollector;
+use reqwest::StatusCode;
+use shared::structs::{Collector, UnidentifiedCollector, endpoints::Endpoint};
 use tokio::time::sleep;
 
 // TODO make this user-configurable
-const DELAY: u64 = 5;
+const DELAY: u64 = 10;
 
 #[tokio::main]
 pub async fn main() -> Result<(), shared::Error> {
-    // TODO
     if !sysinfo::IS_SUPPORTED_SYSTEM {
         eprintln!("System is not supported!");
         eprintln!("These systems are supported: ");
@@ -20,29 +20,72 @@ pub async fn main() -> Result<(), shared::Error> {
 
     let uc = UnidentifiedCollector::new();
     let mut collector = uc.identify().await?;
+    let endpoints = collector.get_endpoints().await?;
 
+    let base_url = shared::env::base_url()?;
+    let metrics_url = format!("{}/metrics", base_url);
+    let endpoints_url = format!("{}/collector/{}/endpoint_results", base_url, collector.id);
+
+    // TODO use only this client
     let client = reqwest::Client::new();
-    let url = format!("{}/metrics", shared::env::api_address()?);
 
     loop {
-        let metrics = collector.get_metrics();
-        let resp = client.post(&url).json(&metrics).send().await;
+        handle_metrics(&mut collector, &metrics_url).await;
+        handle_endpoints(&endpoints, &endpoints_url, &client).await;
+        // TODO different delay for endpoints
+        sleep(Duration::from_secs(DELAY)).await;
+    }
+}
 
-        match resp {
-            Ok(val) => {
-                if val.status() == reqwest::StatusCode::UNAUTHORIZED {
-                    let result = collector.try_get_new_id().await;
-                    if let Err(val) = result {
-                        eprintln!("Error while getting collector ID: {}", val)
-                    }
+async fn handle_metrics(collector: &mut Collector, url: &str) {
+    let metrics = collector.get_metrics();
+    let resp = collector.client.post(url).json(&metrics).send().await;
+
+    match resp {
+        Ok(val) => {
+            if val.status() == reqwest::StatusCode::UNAUTHORIZED {
+                let result = collector.try_get_new_id().await;
+                if let Err(val) = result {
+                    eprintln!("Error while getting collector ID: {}", val)
                 }
             }
-            Err(val) => {
-                eprintln!("Error: {}", val);
-            }
         }
+        Err(val) => {
+            eprintln!("Error: {}", val);
+        }
+    }
+}
 
-        sleep(Duration::from_secs(DELAY)).await;
+async fn handle_endpoints(endpoints: &Vec<Endpoint>, url: &str, client: &reqwest::Client) {
+    let mut endpoint_results = vec![];
+
+    for e in endpoints {
+        let response = e.send(client).await;
+        let result = match response {
+            Ok(val) => val,
+            Err(val) => {
+                eprintln!("Error while checking endpoint: {}", val);
+                continue;
+            }
+        };
+
+        endpoint_results.push(result);
+    }
+
+    let resp = client.post(url).json(&endpoint_results).send().await;
+    match resp {
+        Ok(val) => match val.status().as_u16() {
+            400 | 404 | 500 => {
+                eprintln!(
+                    "Unexpected error happened while sending endpoint results: {}",
+                    val.status()
+                )
+            }
+            _ => (),
+        },
+        Err(val) => {
+            eprintln!("Error sending endpoint results: {}", val);
+        }
     }
 }
 

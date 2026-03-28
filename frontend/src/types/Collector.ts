@@ -1,3 +1,4 @@
+// remove nulls here
 export interface Collector {
     id: number,
     name: string,

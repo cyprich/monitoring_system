@@ -4,6 +4,7 @@ use crate::structs::collectors;
 use crate::structs::db::tables::CollectorTable;
 use crate::structs::db::tables::DriveTable;
 use crate::structs::db::tables::NetworkInterfaceTable;
+use crate::structs::endpoints::Endpoint;
 use serde::{Deserialize, Serialize};
 
 use crate::structs::metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics};
@@ -22,11 +23,13 @@ pub struct Collector {
     pub network_interfaces: Vec<collectors::NetworkInterface>,
 
     #[serde(skip)]
-    pub sysinfo_system: sysinfo::System,
+    pub client: reqwest::Client,
     #[serde(skip)]
-    pub sysinfo_drives: sysinfo::Disks,
+    sysinfo_system: sysinfo::System,
     #[serde(skip)]
-    pub sysinfo_network_interfaces: sysinfo::Networks,
+    sysinfo_drives: sysinfo::Disks,
+    #[serde(skip)]
+    sysinfo_network_interfaces: sysinfo::Networks,
 }
 
 impl Collector {
@@ -49,6 +52,7 @@ impl Collector {
             sysinfo_system,
             sysinfo_drives,
             sysinfo_network_interfaces,
+            client: u.client,
         }
     }
 
@@ -78,6 +82,7 @@ impl Collector {
             sysinfo_system,
             sysinfo_drives,
             sysinfo_network_interfaces,
+            client: reqwest::Client::new(),
         }
     }
 
@@ -113,7 +118,6 @@ impl Collector {
                 .iter()
                 .map(|(name, data)| NetworkInterfaceMetrics {
                     name: name.to_string(),
-                    // TODO temp to KB
                     upload_kb: data.transmitted() / 1_000,
                     download_kb: data.received() / 1_000,
                 })
@@ -140,5 +144,17 @@ impl Collector {
             sysinfo::Disks::new(),
             sysinfo::Networks::new(),
         )
+    }
+
+    pub async fn get_endpoints(&self) -> Result<Vec<Endpoint>, crate::Error> {
+        let url = format!(
+            "{}/collector/{}/endpoints",
+            crate::env::base_url()?,
+            self.id
+        );
+
+        let resp = self.client.get(url).send().await?;
+        let endpoints = resp.json::<Vec<Endpoint>>().await?;
+        Ok(endpoints)
     }
 }

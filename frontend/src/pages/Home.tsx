@@ -34,12 +34,12 @@ function Collectors() {
                 {
                     collectors.map((c, i) => (
                         <Link to={`/collector/${c.id}`} key={i}>
-                            <Card className={"clickable min-w-80"}>
+                            <Card className={"clickable-small min-w-80"}>
                                 <Card.Header>
                                     <Card.Title>{c.name}</Card.Title>
                                     <Card.Description className={"flex flex-col"}>
                                         {
-                                            c.host_name != c.name && <span>{c.host_name}</span>
+                                            c.host_name != c.name && <span className={"-mt-2! font-bold"}>{c.host_name}</span>
                                         }
                                         <span className={"flex items-center"}>
                                             <span>{c.system_name}</span>

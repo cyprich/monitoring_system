@@ -2,14 +2,28 @@ import type {Metrics} from "../types/Metrics.ts";
 import CustomChart from "../components/CustomChart.tsx";
 import type {Collector, Drive, NetworkInterface} from "../types/Collector.ts";
 import axios from "axios";
-import {useParams} from "react-router";
+import {Link, useParams} from "react-router";
 import CustomSurface from "../components/CustomSurface.tsx";
-import {Tabs} from "@heroui/react";
+import {
+    AlertDialog,
+    Button,
+    Description, EmptyState,
+    FieldError,
+    Fieldset,
+    Form,
+    Input,
+    Label,
+    Table,
+    Tabs,
+    TextField
+} from "@heroui/react";
 import {useEffect, useState} from "react";
 import {getMetricsLimit} from "../helpFunctions.ts";
 import {SettingsMetricsCountSection} from "../components/settings/SettingsMetricsCountSection.tsx";
 import SettingsGeneralSection from "../components/settings/SettingsGeneralSection.tsx";
 import ConfirmableInput from "../components/ConfirmableInput.tsx";
+import type {Endpoint} from "../types/Endpoints.ts";
+import {ChevronLeft, Plus, TrashBin, Tray} from "@gravity-ui/icons";
 
 // TODO split into multiple files
 
@@ -105,13 +119,22 @@ export default function Collector() {
 
     return (
         <main className={"flex flex-col gap-4"}>
-            <h1>{collector?.name}</h1>
+            <Link to={"/"} className={"flex items-center custom-description hover:underline w-max"}>
+                <ChevronLeft/>Home
+            </Link>
+            {
+                collector && <CollectorHeader {...collector} />
+            }
             <CustomSurface title={"Metrics"}>
                 <MetricsTabs collector={collector} data={data}/>
             </CustomSurface>
 
+            <CustomSurface title={"Notifications"}>
+                <NotificationsTab/>
+            </CustomSurface>
+
             <CustomSurface title={"API Endpoints"}>
-                <p className={"custom-description"}>//TODO</p>
+                <EndpointsTab collector_id={collector?.id || 0}/>
             </CustomSurface>
 
             <CustomSurface title={"Security stuff?"}>
@@ -143,6 +166,35 @@ export default function Collector() {
                 </div>
             </CustomSurface>
         </main>
+    )
+}
+
+function CollectorHeader(collector: Collector) {
+    const total_capacity = collector.drives?.reduce((acc, d) => acc + d.capacity_gb, 0) || 0;
+
+    // TODO hidden
+
+    return (
+        <div className={"flex flex-col gap-1"}>
+            <h1>{collector.name}</h1>
+            {
+                collector.name !== collector.host_name && <h3 className={"mb-0! -mt-2!"}>{collector.host_name}</h3>
+            }
+            <p className={"flex items-center"}>
+                {collector.system_name}
+                <span className={"w-0.5 h-5 mx-2 bg-black/40"}/>
+                {collector.kernel_version}
+            </p>
+            <p>{collector.total_memory_mb} MB RAM</p>
+            <p>{collector.total_swap_mb} MB Swap</p>
+            <p>{collector.cpu_count} CPU Cores</p>
+            <p>
+                {collector.drives?.length || 0} drives
+                <span className={"font-extralight"}> with total capacity of </span>
+                {total_capacity}GB
+            </p>
+            <p>{collector.network_interfaces?.length || 0} network interfaces</p>
+        </div>
     )
 }
 
@@ -218,11 +270,8 @@ function CpuChartGlobal(props: CollectorProps) {
 }
 
 function CpuChartCores(props: CollectorProps) {
-    const arr: number[] = Array(props.collector?.cpu_count || 0);
-    // const keys = arr.map((_, index) => index.toString())
     const cpu_count = props.collector?.cpu_count || 0;
     const keys = Array.from({length: cpu_count}, (_, index) => index.toString())
-    console.log(arr, keys)
 
     return (
         <CustomChart
@@ -230,12 +279,12 @@ function CpuChartCores(props: CollectorProps) {
             keys={keys}
             data={
                 props.data.map((i) => {
-                    const result: {timestamp: string, [index: string]: number | string} = {
+                    const result: {timestamp: string, [index: number]: number | string} = {
                         timestamp: i.timestamp.toLocaleTimeString()
                     }
 
                     i.cpu_usage_cores.forEach((value, index) => {
-                        result[index.toString()] = value
+                        result[`${index}`] = value
                     })
 
                     return result
@@ -344,5 +393,188 @@ function NetworkChart(props: CollectorProps) {
                 ))
             }
         </>
+    )
+}
+
+function NotificationsTab() {
+    return (
+        <p className={"custom-description"}>//TODO</p>
+    )
+}
+
+interface EndpointsTabProps {
+    collector_id: number,
+}
+
+function EndpointsTab(props: EndpointsTabProps) {
+    const [endpoints, setEndpoints] = useState<Array<Endpoint> | null>(null)
+    const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
+    const [deletingEndpointId, setDeletingEndpointId] = useState<number>(0)
+
+    const [formResponseInputValue, setFormResponseInputValue] = useState<string>("")
+    const [formResponseCodes, setFormResponseCodes] = useState<number[]>([])
+
+    // TODO url
+    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints`
+
+    useEffect(() => {
+        axios.get(url).then((resp) => {
+            console.log(resp.data)
+            const endpoints: Array<Endpoint> = resp.data.map((e) => {
+                const val: Endpoint = e
+                return val
+            })
+            setEndpoints(endpoints)
+        })
+    }, [url]);
+
+    function deleteEndpoint() {
+        axios
+            .delete(`${url}/${deletingEndpointId}`)
+            .then(() => {})
+            .catch((e) => console.log(e))
+    }
+
+
+    return (
+        <div className={"flex flex-col gap-4"}>
+            <Table>
+                <Table.ScrollContainer>
+                    <Table.Content aria-label="Team members" >
+                        <Table.Header>
+                            {/*<Table.Column isRowHeader>Method</Table.Column>*/}
+                            <Table.Column isRowHeader>URL</Table.Column>
+                            <Table.Column>Expected Response Codes</Table.Column>
+                            <Table.Column>Actions</Table.Column>
+                        </Table.Header>
+                        <Table.Body renderEmptyState={() => (
+                            <EmptyState className={"flex flex-col justify-center items-center bg-background  rounded-2xl py-8"}>
+                                <Tray className={"size-16 opacity-80 mb-2"}/>
+                                <span>No results found</span>
+                                <span>Start by adding your first endpoint</span>
+                            </EmptyState>
+                        )}>
+                            {
+                                endpoints?.map((e, i) => (
+                                    <Table.Row key={i}>
+                                        {/*<Table.Cell>{e.method}</Table.Cell>*/}
+                                        <Table.Cell>
+                                            <ConfirmableInput
+                                                value={e.url}
+                                                onConfirm={() => {}}
+                                                variant={"primary"}
+                                                className={"w-64"}
+                                            />
+                                        </Table.Cell>
+                                        <Table.Cell>{e.expected_codes.join(", ")}</Table.Cell>
+                                        <Table.Cell>
+                                            <div
+                                                className={"bg-red-100 hover:bg-red-200 " +
+                                                    "rounded-lg w-max h-max p-2 transition-all cursor-pointer " +
+                                                    "active:scale-105 hover:*:text-red-600 hover:*:scale-105 "}
+                                                onClick={() => {
+                                                    setDeletingEndpointId(e.id)
+                                                    setIsDeleteOpen(true)
+                                                }}
+                                            >
+                                                <TrashBin className={"size-5 text-red-500"}/>
+                                            </div>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))
+                            }
+                        </Table.Body>
+                    </Table.Content>
+                </Table.ScrollContainer>
+                <Table.Footer>
+                    <p className={"font-light text-sm"}>{endpoints?.length || 0} result{endpoints?.length !== 1 && "s"}</p>
+                </Table.Footer>
+            </Table>
+            <Form className={"flex flex-col gap-2 mt-2"}>
+                <Fieldset>
+                    <Fieldset.Legend>Add new Endpoint</Fieldset.Legend>
+                    <Description>Create new Endpoint that will be monitored by this Collector</Description>
+                    <TextField isRequired name={"url"} type={"text"} validate={() => true}>
+                        <Label>URL</Label>
+                        <Input placeholder={"http://192.168.10.10:80/api"} variant={"secondary"}/>
+                        <FieldError/>
+                    </TextField>
+                    <TextField name={"responsecodes"} type={"text"} validate={() => true}>
+                        <Label>Expected Response Codes</Label>
+                        <div className={"flex flex-col gap-2"}>
+                            <div className={"flex gap-2"}>
+                                <Input
+                                    variant={"secondary"}
+                                    type={"number"}
+                                    className={"w-48"}
+                                    value={formResponseInputValue}
+                                    onChange={(e) => setFormResponseInputValue(e.target.value)}
+                                    placeholder={"200"}
+                                />
+                                <Button
+                                    variant={"tertiary"}
+                                    className={"aspect-square"}
+                                    onClick={() => {
+                                        const val = Number(formResponseInputValue)
+                                        if (val === 0 || formResponseCodes.find(
+                                            (c) => (c === val)
+                                        )) { return }
+
+                                        setFormResponseCodes(
+                                            (prev) => [ ...prev, Number(val) ]
+                                        )
+                                    }
+                                }>
+                                    <Plus/>
+                                </Button>
+                            </div>
+                            <div className={"flex gap-1"}>
+                                {
+                                    formResponseCodes.map((c, i) => (
+                                        <div
+                                            className={"bg-background p-2 w-max rounded-xl relative cursor-pointer group min-w-10"}
+                                            key={i}
+                                            onClick={() => {
+                                                const newList = formResponseCodes.filter((x) => x !== c)
+                                                setFormResponseCodes(newList)
+                                            }}
+                                        >
+                                            <p className={"group-hover:opacity-0 transition-opacity text-center"}>{c}</p>
+                                            <TrashBin className={"absolute top-[50%] left-[50%] translate-[-50%] " +
+                                                "size-6 bg-background text-red-600 " +
+                                                "opacity-0 group-hover:opacity-100 transition-opacity "}/>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    </TextField>
+
+                    <div className={"flex gap-2"}>
+                        <Button type={"submit"}>Add</Button>
+                        <Button type={"reset"} variant={"secondary"} onClick={() => {setFormResponseCodes([])}}>Reset</Button>
+                    </div>
+                </Fieldset>
+            </Form>
+            {
+                isDeleteOpen && <AlertDialog>
+                    <AlertDialog.Backdrop isOpen={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                        <AlertDialog.Dialog>
+                            <AlertDialog.Header>
+                                <p>Delete Endpoint?</p>
+                            </AlertDialog.Header>
+                            <AlertDialog.Body>
+                                <p>Collector will no longer send requests to this endpoint</p>
+                                <p>This action is not reversible</p>
+                            </AlertDialog.Body>
+                            <AlertDialog.Footer>
+                                <Button slot={"close"} variant={"tertiary"}>Cancel</Button>
+                                <Button slot={"close"} variant={"danger"} onClick={() => deleteEndpoint()}>Delete</Button>
+                            </AlertDialog.Footer>
+                        </AlertDialog.Dialog>
+                    </AlertDialog.Backdrop>
+                </AlertDialog>
+            }
+        </div>
     )
 }

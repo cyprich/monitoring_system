@@ -5,7 +5,7 @@ pub fn get(variable_name: &str) -> Result<String, crate::Error> {
     Ok(dotenvy::var(variable_name)?)
 }
 
-pub fn api_address() -> Result<String, crate::Error> {
+pub fn base_url() -> Result<String, crate::Error> {
     dotenv()?;
     let addr = get("API_ADDRESS")?;
     let port = get("API_PORT")?;

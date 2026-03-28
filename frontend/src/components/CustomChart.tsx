@@ -52,6 +52,8 @@ function getColor(index: number): string {
     return lineColors[index % lineColors.length]
 }
 
+// TODO format of tooltips, when i have too much cores it does not look good and it's not ordered numerically
+
 
 export default function CustomChart({name, data, keys, unit, max_y, threshold, showTooltipPercent, lighter, farColors}: LineChartProps) {
     unit = unit || "";
@@ -89,7 +91,7 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold, s
 
                 <CartesianGrid stroke={colors.gray[500]} opacity={0.25} vertical={false}/>
                 <XAxis dataKey={"timestamp"} niceTicks={'adaptive'} tickLine={false} minTickGap={60} />
-                <YAxis domain={max_y ? [0, max_y] : undefined} tickLine={false} width={80} axisLine={false} unit={unit} />
+                <YAxis domain={max_y ? [0, max_y] : undefined} tickLine={false} width={100} axisLine={false} unit={unit} />
                 {
                     keys.length > 1 && <Legend/>
                 }
