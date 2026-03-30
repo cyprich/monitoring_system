@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import {BrowserRouter, Route, Routes} from 'react-router';
 import Home from "./pages/Home.tsx";
-import Collector from "./pages/Collector.tsx";
+import Collector from "./pages/collector/Collector.tsx";
 import Sidebar from "./components/Sidebar.tsx";
 import Account from "./pages/Account.tsx";
 import Notifications from "./pages/Notifications.tsx";

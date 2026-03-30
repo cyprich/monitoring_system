@@ -17,7 +17,7 @@ enum ResponseBodyType {
 fn handle_query_error<T: serde::Serialize>(
     result: Result<T, shared::Error>,
     body_type: ResponseBodyType,
-) -> impl Responder {
+) -> HttpResponse {
     match result {
         Ok(val) => {
             let mut r = HttpResponse::Ok();

@@ -49,14 +49,12 @@ pub async fn ws_metrics(
                     }
                 }
 
-                // TODO maybe if needed in the future, make it able to receive multiple different
-                // messages with some kind of enum
-
-                // metrics from broadcast
-                metrics = rx.recv() => {
-                    if let Ok(metrics) = metrics && metrics.collector_id == id {
-                            send.text(metrics.json()).await.unwrap();
-                        }
+                // messages from broadcast
+                broadcast_recv = rx.recv() => {
+                    if let Ok((websocket_type, collector_id)) = broadcast_recv && collector_id == id {
+                        let val = serde_json::to_string(&websocket_type).unwrap();
+                        send.text(val).await.unwrap();
+                    }
                 }
             }
         }

@@ -1,13 +1,16 @@
-use actix_web::{HttpResponse, Responder, get, patch};
+use actix_web::{HttpResponse, Responder, delete, get, patch, put};
 use serde::Deserialize;
 
 use crate::{
-    AppState,
+    AppState, WebSocketType,
     endpoints::{ResponseBodyType, handle_query_error},
 };
 
 use actix_web::{post, web};
-use shared::structs::{UnidentifiedCollector, endpoints::EndpointResult};
+use shared::structs::{
+    UnidentifiedCollector,
+    endpoints::{Endpoint, EndpointInsert, EndpointResult},
+};
 
 #[derive(Deserialize)]
 struct QueryLimit {
@@ -58,7 +61,42 @@ async fn get_collector_endpoints(state: web::Data<AppState>, id: web::Path<i32>)
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[get("/collector/{id}/endpoint_results")]
+// post = create new
+#[post("/collector/{id}/endpoints")]
+async fn post_collector_endpoints(
+    state: web::Data<AppState>,
+    endpoint: web::Json<EndpointInsert>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::insert_collector_endpoints(&state.pool, id.into_inner(), &endpoint).await;
+    if result.is_err() {
+        handle_query_error(result, ResponseBodyType::Json)
+    } else {
+        HttpResponse::Created().finish()
+    }
+}
+
+// put = update existing
+#[put("/collector/{id}/endpoints")]
+async fn put_collector_endpoints(
+    state: web::Data<AppState>,
+    endpoint: web::Json<Endpoint>,
+    _id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::update_collector_endpoints(&state.pool, &endpoint).await;
+    handle_query_error(result, ResponseBodyType::None)
+}
+
+#[delete("/collector/{id_collector}/endpoints/{id_endpoint}")]
+async fn delete_collector_endpoints(
+    state: web::Data<AppState>,
+    id: web::Path<(i32, i32)>,
+) -> impl Responder {
+    let result = db::delete_collector_endpoint(&state.pool, id.1).await;
+    handle_query_error(result, ResponseBodyType::None)
+}
+
+#[get("/collector/{id}/endpoints_results")]
 async fn get_collector_endpoint_results(
     state: web::Data<AppState>,
     id: web::Path<i32>,
@@ -67,13 +105,33 @@ async fn get_collector_endpoint_results(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[post("/collector/{id}/endpoint_results")]
+#[get("/collector/{id}/endpoints_results/last")]
+async fn get_collector_endpoint_results_last(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_collector_endpoints_results_last(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[post("/collector/{id}/endpoints_results")]
 async fn post_collector_endpoint_results(
     state: web::Data<AppState>,
     endpoint_results: web::Json<Vec<EndpointResult>>,
+    id: web::Path<i32>,
 ) -> impl Responder {
+    if endpoint_results.is_empty() {
+        return HttpResponse::NotModified().finish();
+    }
     let result =
-        db::insert_collector_endpoints_results(&state.pool, endpoint_results.into_inner()).await;
+        db::insert_collector_endpoints_results(&state.pool, endpoint_results.clone()).await;
+
+    if result.is_ok() {
+        let _ = state.tx.send((
+            WebSocketType::EndpointResult(endpoint_results.into_inner()),
+            id.into_inner(),
+        ));
+    }
 
     handle_query_error(result, ResponseBodyType::None)
 }

@@ -1,11 +1,15 @@
 use std::time::Duration;
 
-use reqwest::StatusCode;
-use shared::structs::{Collector, UnidentifiedCollector, endpoints::Endpoint};
-use tokio::time::sleep;
+use shared::structs::{
+    Collector, UnidentifiedCollector,
+    endpoints::{Endpoint, EndpointResult},
+};
+use tokio::time::{sleep, timeout};
 
 // TODO make this user-configurable
-const DELAY: u64 = 10;
+const METRICS_DELAY: u64 = 5;
+const ENDPOINTS_DELAY: u64 = 10;
+const ENDPOINT_TIMEOUT: u64 = 5;
 
 #[tokio::main]
 pub async fn main() -> Result<(), shared::Error> {
@@ -24,16 +28,24 @@ pub async fn main() -> Result<(), shared::Error> {
 
     let base_url = shared::env::base_url()?;
     let metrics_url = format!("{}/metrics", base_url);
-    let endpoints_url = format!("{}/collector/{}/endpoint_results", base_url, collector.id);
+    let endpoints_url = format!("{}/collector/{}/endpoints", base_url, collector.id);
+    let endpoints_results_url =
+        format!("{}/collector/{}/endpoints_results", base_url, collector.id);
 
     // TODO use only this client
     let client = reqwest::Client::new();
 
+    // separate task
+    tokio::spawn(async move {
+        loop {
+            handle_metrics(&mut collector, &metrics_url).await;
+            sleep(Duration::from_secs(METRICS_DELAY)).await;
+        }
+    });
+
     loop {
-        handle_metrics(&mut collector, &metrics_url).await;
-        handle_endpoints(&endpoints, &endpoints_url, &client).await;
-        // TODO different delay for endpoints
-        sleep(Duration::from_secs(DELAY)).await;
+        handle_endpoints(&endpoints_url, &endpoints_results_url, &client).await;
+        sleep(Duration::from_secs(ENDPOINTS_DELAY)).await;
     }
 }
 
@@ -56,23 +68,46 @@ async fn handle_metrics(collector: &mut Collector, url: &str) {
     }
 }
 
-async fn handle_endpoints(endpoints: &Vec<Endpoint>, url: &str, client: &reqwest::Client) {
+async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwest::Client) {
+    let endpoints = match client.get(endpoints_url).send().await {
+        Ok(val) => match val.json::<Vec<Endpoint>>().await {
+            Ok(val) => val,
+            Err(_) => return,
+        },
+        Err(_) => return,
+    };
+
     let mut endpoint_results = vec![];
 
+    // send requests to user-specifiend endpoints
     for e in endpoints {
-        let response = e.send(client).await;
+        // if timeout passes
+        let response = timeout(Duration::from_secs(ENDPOINT_TIMEOUT), e.send(client))
+            .await
+            .unwrap_or(Err(shared::Error::Elapsed));
+
         let result = match response {
             Ok(val) => val,
             Err(val) => {
                 eprintln!("Error while checking endpoint: {}", val);
-                continue;
+                EndpointResult {
+                    endpoint_id: e.id,
+                    timestamp: chrono::Local::now().naive_local(),
+                    result: false,
+                    latency_microseconds: None,
+                }
             }
         };
 
         endpoint_results.push(result);
     }
 
-    let resp = client.post(url).json(&endpoint_results).send().await;
+    // send results to backend
+    let resp = client
+        .post(results_url)
+        .json(&endpoint_results)
+        .send()
+        .await;
     match resp {
         Ok(val) => match val.status().as_u16() {
             400 | 404 | 500 => {

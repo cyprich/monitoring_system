@@ -27,6 +27,7 @@ pub enum Error {
     TomlDe(toml::de::Error),
 
     UnsupportedSystem,
+    Elapsed,
 }
 
 impl Display for Error {
@@ -76,6 +77,7 @@ impl Display for Error {
             Error::TomlSer(error) => write!(f, "Error serializing TOML: {}", error),
             Error::TomlDe(error) => write!(f, "Error deserializing TOML: {}", error),
             Error::UnsupportedSystem => write!(f, "System not supported"),
+            Error::Elapsed => write!(f, "Time elapsed - couldn't reach in specified time"),
         }
     }
 }

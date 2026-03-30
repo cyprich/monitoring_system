@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Instant};
 
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
@@ -36,6 +36,8 @@ impl Endpoint {
 
     pub async fn send(&self, client: &reqwest::Client) -> Result<EndpointResult, crate::Error> {
         let url = &self.url;
+
+        let latency = Instant::now();
         let req = match self.method {
             RequestMethod::Get => client.get(url),
             RequestMethod::Post => client.post(url),
@@ -45,24 +47,21 @@ impl Endpoint {
         };
 
         let resp = req.send().await;
+        let latency = latency.elapsed().as_micros();
 
         let is_success = match resp {
             Ok(val) => self.expected_codes.contains(&val.status().as_u16()),
-            Err(val) => match val.status() {
-                Some(val) => {
-                    return Err(crate::Error::ReqwestFromString(format!(
-                        "Error sending request: {}",
-                        val
-                    )))?;
-                }
-                None => return Err(crate::Error::ReqwestUnreachable(val.to_string()))?,
-            },
+            Err(val) => {
+                eprintln!("Error reaching endpoint: {}", val);
+                false
+            }
         };
 
         let result = EndpointResult {
             endpoint_id: self.id,
             timestamp: chrono::Local::now().naive_local(),
             result: is_success,
+            latency_microseconds: Some(latency as i64),
         };
 
         Ok(result)
@@ -71,7 +70,7 @@ impl Endpoint {
 
 impl From<EndpointTable> for Endpoint {
     fn from(value: EndpointTable) -> Self {
-        let codes = value.expected_code.iter().map(|c| *c as u16);
+        let codes = value.expected_codes.iter().map(|c| *c as u16);
 
         Self::new(
             value.id,
@@ -82,9 +81,18 @@ impl From<EndpointTable> for Endpoint {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointResult {
     pub endpoint_id: i32,
     pub timestamp: NaiveDateTime,
     pub result: bool,
+    pub latency_microseconds: Option<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+// used when inserting new endpoint to database
+pub struct EndpointInsert {
+    pub url: String,
+    pub method: RequestMethod,
+    pub expected_codes: HashSet<u16>,
 }

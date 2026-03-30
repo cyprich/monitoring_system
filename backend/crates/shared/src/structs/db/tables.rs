@@ -1,4 +1,4 @@
-use crate::structs::{db::metric_type::MetricType, endpoints::RequestMethod};
+use crate::structs::db::metric_type::MetricType;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -65,7 +65,7 @@ pub struct EndpointTable {
     pub collector_id: i32,
     pub url: String,
     // pub method: RequestMethod,
-    pub expected_code: Vec<i32>,
+    pub expected_codes: Vec<i32>,
 }
 
 // it has the same fields, only here for compatibility

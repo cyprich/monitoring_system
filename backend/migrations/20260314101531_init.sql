@@ -64,14 +64,24 @@ create table metrics (
 -- );
 
 create table endpoints (
+    id serial, 
     collector_id integer, 
     -- method request_method, 
     url varchar, 
-    port integer,
-    expected_code integer[],
-    primary key (collector_id, url, port),
-    foreign key (collector_id) references collectors(id)
+    expected_codes integer[],
+    primary key (id),
+    foreign key (collector_id) references collectors(id),
+    unique(collector_id, url)
 );
+
+create table endpoints_result (
+    endpoint_id integer, 
+    timestamp timestamp,
+    result boolean not null, 
+    latency_microseconds bigint,
+    primary key (endpoint_id, timestamp), 
+    foreign key (endpoint_id) references endpoints(id)
+)
 
 -- create table users (
 --     id serial,

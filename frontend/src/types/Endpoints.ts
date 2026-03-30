@@ -7,3 +7,10 @@ export interface Endpoint {
     method: string,
     expected_codes: number[]
 }
+
+export interface EndpointResult {
+    endpoint_id: number,
+    timestamp: string,
+    result: boolean,
+    latency_microseconds: number | null
+}

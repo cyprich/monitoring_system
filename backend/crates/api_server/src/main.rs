@@ -1,6 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use actix_web::{middleware, web};
+use serde::Serialize;
+use shared::structs::endpoints::EndpointResult;
 use shared::structs::metrics::Metrics;
 use tokio::sync::broadcast;
 
@@ -9,10 +11,20 @@ use db::Pool;
 
 mod endpoints;
 
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "type", content = "data")]
+enum WebSocketType {
+    #[serde(rename = "metrics")]
+    Metrics(Metrics),
+    #[serde(rename = "endpoints_results")]
+    EndpointResult(Vec<EndpointResult>),
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pool: Pool,
-    tx: broadcast::Sender<Metrics>,
+    // type of data transferred, collector id
+    tx: broadcast::Sender<(WebSocketType, i32)>,
 }
 
 #[actix_web::main]
@@ -28,7 +40,7 @@ async fn main() -> std::io::Result<()> {
     // TODO why couldnt
     let pool = db::get_pool().await.expect("Couldn't create database pool");
 
-    let (tx, _) = broadcast::channel::<Metrics>(128);
+    let (tx, _) = broadcast::channel::<(WebSocketType, i32)>(128);
 
     let state = AppState { pool, tx };
 
@@ -48,7 +60,11 @@ async fn main() -> std::io::Result<()> {
             .service(get_collector_drives)
             .service(get_collector_network_interfaces)
             .service(get_collector_endpoints)
+            .service(post_collector_endpoints)
+            .service(put_collector_endpoints)
+            .service(delete_collector_endpoints)
             .service(get_collector_endpoint_results)
+            .service(get_collector_endpoint_results_last)
             .service(post_collector_endpoint_results)
             .service(rename_collector)
     })

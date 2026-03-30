@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Responder, post, web};
 use shared::structs::metrics::Metrics;
 
-use crate::AppState;
+use crate::{AppState, WebSocketType};
 
 #[post("/metrics")]
 pub async fn metrics_post(
@@ -20,7 +20,8 @@ pub async fn metrics_post(
         };
     }
 
-    let _ = state.tx.send(metrics);
+    let id = metrics.collector_id;
+    let _ = state.tx.send((WebSocketType::Metrics(metrics), id));
 
     // todo
     HttpResponse::Ok().finish()
