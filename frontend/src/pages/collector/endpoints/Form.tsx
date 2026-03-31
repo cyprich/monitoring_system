@@ -1,7 +1,7 @@
 import type {Endpoint} from "../../../types/Endpoints.ts";
 import {useState} from "react";
 import {Button, FieldError, Fieldset, Form, Input, TextField, Label, Description} from "@heroui/react";
-import {Plus, TrashBin} from "@gravity-ui/icons";
+import {CircleExclamationFill, ExclamationShapeFill, Plus, TrashBin} from "@gravity-ui/icons";
 import axios from "axios";
 import * as React from "react";
 
@@ -70,16 +70,21 @@ export function EndpointsForm(props: EndpointsFormProps) {
                 </TextField>
                 <TextField name={"responsecodes"} type={"text"} validate={() => true}>
                     <Label>Expected Response Codes</Label>
-                    <Description>Endpoint without Specified response Codes will always fail</Description>
+                    {
+                        responseCodes.length === 0 && <span className={"flex gap-1 items-center my-1"}>
+                            <ExclamationShapeFill className={"text-danger size-4"}/>
+                            <p>Endpoint without Response Codes will always fail</p>
+                        </span>
+                    }
                     <div className={"flex flex-col gap-2"}>
                         <div className={"flex gap-2"}>
                             <Input
                                 variant={"secondary"}
                                 type={"number"}
-                                className={"w-48"}
+                                className={"w-56"}
                                 value={responseCodeInput}
                                 onChange={(e) => setResponseCodeInput(e.target.value)}
-                                placeholder={"200"}
+                                placeholder={"Response Code Number"}
                             />
                             <Button
                                 variant={"tertiary"}

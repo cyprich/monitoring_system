@@ -116,10 +116,10 @@ function Empty(name: string) {
     return (
         <div className={"flex items-center justify-center p-8"}>
 
-            <div className={"flex flex-col gap-2 items-center justify-center w-full aspect-[1.618] bg-gray-100 p-8 rounded-xl"}>
+            <div className={"flex flex-col gap-2 items-center justify-center w-full aspect-[1.618] bg-zinc-100 p-8 rounded-xl"}>
                 <p className={"wrap-anywhere text-lg text-center font-semibold"}>{name}</p>
-                <Tray className={"size-16 text-gray-500 font-light"}/>
-                <p>No data to show</p>
+                <Tray className={"size-16 text-zinc-500/90"}/>
+                <p className={"font-light"}>No data to show</p>
             </div>
         </div>
     )
