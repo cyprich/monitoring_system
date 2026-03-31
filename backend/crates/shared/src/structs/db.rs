@@ -1,5 +1,9 @@
+use std::collections::HashSet;
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+
+use crate::structs::endpoints::RequestMethod;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CollectorTable {
@@ -21,33 +25,12 @@ pub struct DriveTable {
     pub file_system: String,
 }
 
-// impl DriveTable {
-//     fn from_drive(drive: &collectors::Drive, id: i32) -> Self {
-//         Self {
-//             mountpoint: drive.mountpoint.clone(),
-//             collector_id: id,
-//             capacity_gb: drive.capacity_gb as i32,
-//             file_system: drive.file_system.clone(),
-//         }
-//     }
-// }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NetworkInterfaceTable {
     pub name: String,
     pub mac: String,
     pub collector_id: i32,
 }
-
-// impl NetworkInterfaceTable {
-//     fn from_network_interface(network_interface: &collectors::NetworkInterface, id: i32) -> Self {
-//         Self {
-//             name: network_interface.name.clone(),
-//             mac: network_interface.mac.clone(),
-//             collector_id: id,
-//         }
-//     }
-// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MetricTypeTable {
@@ -64,8 +47,8 @@ pub struct MetricsTable {
     pub component_name: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct EndpointTable {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EndpointsTable {
     pub id: i32,
     pub collector_id: i32,
     pub url: String,
@@ -74,4 +57,22 @@ pub struct EndpointTable {
 }
 
 // it has the same fields, only here for compatibility
-pub type EndpointResultTable = crate::structs::endpoints::EndpointResult;
+pub type EndpointsResultsTable = crate::structs::endpoints::EndpointResult;
+pub type NotificationsTable = crate::structs::notifications::Notification;
+pub type ThresholdsTable = crate::structs::thresholds::Threshold;
+
+// used when inserting new values to database, when ID is not known yet
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EndpointInsert {
+    pub url: String,
+    pub method: RequestMethod,
+    pub expected_codes: HashSet<u16>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NotificationInsert {
+    pub collector_id: i32,
+    pub description: String,
+    pub timestamp: NaiveDateTime,
+    pub viewed: bool,
+}

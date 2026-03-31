@@ -9,10 +9,14 @@ use crate::Pool;
 mod endpoints;
 mod endpoints_results;
 mod metrics;
+mod notifications;
+mod thresholds;
 
 pub use endpoints::*;
 pub use endpoints_results::*;
 pub use metrics::*;
+pub use notifications::*;
+pub use thresholds::*;
 
 pub async fn register_collector(
     pool: &Pool,
@@ -118,4 +122,12 @@ pub async fn get_collector_network_interfaces(
     )
     .fetch_all(pool)
     .await?)
+}
+
+pub async fn get_collector_name(pool: &Pool, collector_id: i32) -> Result<String, shared::Error> {
+    let result = sqlx::query_scalar!("select name from collectors where id = $1", collector_id)
+        .fetch_one(pool)
+        .await?;
+
+    Ok(result)
 }

@@ -1,13 +1,13 @@
 use shared::structs::{
-    db::EndpointTable,
-    endpoints::{Endpoint, EndpointInsert},
+    db::{EndpointInsert, EndpointsTable},
+    endpoints::Endpoint,
 };
 
 use crate::Pool;
 
 pub async fn get_collector_endpoints(pool: &Pool, id: i32) -> Result<Vec<Endpoint>, shared::Error> {
     let result = sqlx::query_as!(
-        EndpointTable,
+        EndpointsTable,
         "select * from endpoints where collector_id = $1 order by id",
         id
     )

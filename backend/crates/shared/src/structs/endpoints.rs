@@ -3,7 +3,7 @@ use std::{collections::HashSet, time::Instant};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use crate::structs::db::EndpointTable;
+use crate::structs::db::EndpointsTable;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum RequestMethod {
@@ -68,8 +68,8 @@ impl Endpoint {
     }
 }
 
-impl From<EndpointTable> for Endpoint {
-    fn from(value: EndpointTable) -> Self {
+impl From<EndpointsTable> for Endpoint {
+    fn from(value: EndpointsTable) -> Self {
         let codes = value.expected_codes.iter().map(|c| *c as u16);
 
         Self::new(
@@ -87,12 +87,4 @@ pub struct EndpointResult {
     pub timestamp: NaiveDateTime,
     pub result: bool,
     pub latency_microseconds: Option<i64>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-// used when inserting new endpoint to database
-pub struct EndpointInsert {
-    pub url: String,
-    pub method: RequestMethod,
-    pub expected_codes: HashSet<u16>,
 }

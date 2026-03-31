@@ -7,3 +7,5 @@ pub mod db;
 pub mod endpoints;
 pub mod metric_type_enum;
 pub mod metrics;
+pub mod notifications;
+pub mod thresholds;

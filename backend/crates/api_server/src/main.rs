@@ -9,8 +9,9 @@ use tokio::sync::broadcast;
 use crate::endpoints::*;
 use db::Pool;
 
-mod endpoints;
 mod db;
+mod endpoints;
+mod notifications;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "type", content = "data")]
@@ -31,15 +32,23 @@ pub struct AppState {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let port =
-    // TODO temp
-        shared::env::get("API_PORT").map_err(|val| std::io::Error::other(format!("{:?}", val)))?;
+        shared::env::get("API_PORT").map_err(|val| std::io::Error::other(val.to_string()))?;
 
-    let port: u16 = port
-        .parse()
-        .expect("Couldn't convert API_PORT environment variable to u16 type ");
+    let port: u16 = match port.parse() {
+        Ok(val) => val,
+        Err(val) => {
+            eprintln!("Couldn't convert API_PORT environment variable to u16 type");
+            return Err(std::io::Error::other(val));
+        }
+    };
 
-    // TODO why couldnt
-    let pool = db::get_pool().await.expect("Couldn't create database pool");
+    let pool = match db::get_pool().await {
+        Ok(val) => val,
+        Err(val) => {
+            eprintln!("Couldn't create database pool: {}", val);
+            return Err(std::io::Error::other(val.to_string()));
+        }
+    };
 
     let (tx, _) = broadcast::channel::<(WebSocketType, i32)>(128);
 

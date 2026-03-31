@@ -10,7 +10,8 @@ use crate::{
 use actix_web::{post, web};
 use shared::structs::{
     UnidentifiedCollector,
-    endpoints::{Endpoint, EndpointInsert, EndpointResult},
+    db::EndpointInsert,
+    endpoints::{Endpoint, EndpointResult},
 };
 
 #[derive(Deserialize)]

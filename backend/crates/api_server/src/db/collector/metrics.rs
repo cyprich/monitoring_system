@@ -9,14 +9,14 @@ use sqlx::{Postgres, QueryBuilder, types::chrono::NaiveDateTime};
 
 use crate::Pool;
 
-pub async fn get_collector_metrics(
+pub async fn get_collector_metrics_table(
     pool: &Pool,
-    id: i32,
+    collector_id: i32,
     limit: Option<i32>,
-) -> Result<Vec<Metrics>, shared::Error> {
+) -> Result<Vec<MetricsTable>, shared::Error> {
     let mut builder: QueryBuilder<Postgres> =
         QueryBuilder::new("select * from metrics where collector_id = ");
-    builder.push_bind(id);
+    builder.push_bind(collector_id);
 
     if let Some(val) = limit {
         builder.push(
@@ -25,7 +25,7 @@ pub async fn get_collector_metrics(
             from metrics
             where collector_id = ",
         );
-        builder.push_bind(id);
+        builder.push_bind(collector_id);
         builder.push(" order by timestamp desc limit ");
         builder.push_bind(val);
         builder.push(" )");
@@ -36,12 +36,22 @@ pub async fn get_collector_metrics(
         .fetch_all(pool)
         .await?;
 
+    Ok(result)
+}
+
+pub async fn get_collector_metrics(
+    pool: &Pool,
+    collector_id: i32,
+    limit: Option<i32>,
+) -> Result<Vec<Metrics>, shared::Error> {
+    let result = get_collector_metrics_table(pool, collector_id, limit).await?;
+
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
         let entry = map.entry(row.timestamp).or_insert(Metrics {
             // TODO it's useless to carry collector id, too much overhead
-            collector_id: id,
+            collector_id,
             timestamp: row.timestamp,
             used_memory_mb: 0,
             used_swap_mb: 0,

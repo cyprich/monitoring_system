@@ -10,6 +10,21 @@ pub enum MetricTypeEnum {
     NetworkUpload,
 }
 
+impl MetricTypeEnum {
+    pub fn to_string_pretty(self) -> Option<String> {
+        let val = match self {
+            Self::CpuUsage => "CPU Usage",
+            Self::UsedMemoryMb => "Used Memory",
+            Self::UsedSwapMb => "Used Swap",
+            Self::DriveUsedSpace => "Used Drive Space",
+            Self::NetworkDownload => "Network Download",
+            Self::NetworkUpload => "Network Upload",
+        };
+
+        String::from_str(val).ok()
+    }
+}
+
 impl FromStr for MetricTypeEnum {
     type Err = String;
 
