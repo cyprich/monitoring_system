@@ -39,23 +39,18 @@ create table network_interfaces (
     foreign key (collector_id) references collectors(id)
 );
 
-create type metric_type as enum (
-    'cpu_usage_global',
-    'cpu_usage_cores',
-    'used_memory_mb', 
-    'used_swap_mb', 
-    'drive_used_space', 
-    'network_download', 
-    'network_upload'
+create table metric_type (
+    name varchar primary key
 );
 
 create table metrics (
     timestamp timestamp,
     value double precision,
-    metric_type metric_type,
+    metric_type varchar,
     collector_id integer,
     component_name varchar,  -- used when we have multiple disks/network interfaces
-    primary key (timestamp, value, type, collector_id, component_name),
+    primary key (timestamp, value, metric_type, collector_id, component_name),
+    foreign key (metric_type) references metric_type(name),
     foreign key (collector_id) references collectors(id)
 );
 
@@ -107,3 +102,14 @@ create table notifications (
     foreign key (collector_id) references collectors(id)
     -- foreign key (severity) references notification_severity(id)
 );
+
+--------------------- insert metric types ---------------------
+
+insert into metric_type (name) values 
+   ('cpu_usage'), 
+   ('used_memory_mb'), 
+   ('used_swap_mb'), 
+   ('drive_used_space'), 
+   ('network_download'), 
+   ('network_upload')
+;

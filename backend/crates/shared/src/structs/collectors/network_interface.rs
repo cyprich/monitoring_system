@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::structs::db::tables::NetworkInterfaceTable;
+use crate::structs::db::NetworkInterfaceTable;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct NetworkInterface {

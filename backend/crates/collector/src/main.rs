@@ -24,7 +24,6 @@ pub async fn main() -> Result<(), shared::Error> {
 
     let uc = UnidentifiedCollector::new();
     let mut collector = uc.identify().await?;
-    let endpoints = collector.get_endpoints().await?;
 
     let base_url = shared::env::base_url()?;
     let metrics_url = format!("{}/metrics", base_url);

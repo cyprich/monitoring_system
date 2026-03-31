@@ -3,8 +3,7 @@ export interface Metrics {
     timestamp: Date,
     used_memory_mb: number,
     used_swap_mb: number,
-    cpu_usage_global: number,
-    cpu_usage_cores: number[],
+    cpu_usage: number,
     drives: DriveMetrics[],
     network_interfaces: NetworkInterfaceMetrics[],
 }

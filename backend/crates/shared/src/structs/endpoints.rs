@@ -3,7 +3,7 @@ use std::{collections::HashSet, time::Instant};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-use crate::structs::db::tables::EndpointTable;
+use crate::structs::db::EndpointTable;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub enum RequestMethod {

@@ -1,10 +1,8 @@
-use crate::structs::CollectorConfig;
-use crate::structs::UnidentifiedCollector;
-use crate::structs::collectors;
-use crate::structs::db::tables::CollectorTable;
-use crate::structs::db::tables::DriveTable;
-use crate::structs::db::tables::NetworkInterfaceTable;
-use crate::structs::endpoints::Endpoint;
+use crate::structs::{
+    CollectorConfig, UnidentifiedCollector, collectors,
+    db::{CollectorTable, DriveTable, NetworkInterfaceTable},
+    endpoints::Endpoint,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::structs::metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics};
@@ -97,14 +95,8 @@ impl Collector {
             timestamp: chrono::Local::now().naive_local(),
             used_memory_mb: self.sysinfo_system.used_memory() / 1_000_000,
             used_swap_mb: self.sysinfo_system.used_swap() / 1_000_000,
-            cpu_usage_global: self.sysinfo_system.global_cpu_usage(),
+            cpu_usage: self.sysinfo_system.global_cpu_usage(),
             // TODO
-            cpu_usage_cores: self
-                .sysinfo_system
-                .cpus()
-                .iter()
-                .map(|c| c.cpu_usage())
-                .collect(),
             drives: self
                 .sysinfo_drives
                 .iter()

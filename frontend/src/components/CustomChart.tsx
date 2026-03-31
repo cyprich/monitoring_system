@@ -9,6 +9,8 @@ import {
 } from "recharts";
 import {RechartsDevtools} from "@recharts/devtools";
 import colors from "tailwindcss/colors"
+import {disclosureVariants} from "@heroui/styles";
+import {Tray} from "@gravity-ui/icons";
 
 interface LineChartProps {
     name: string,
@@ -52,10 +54,9 @@ function getColor(index: number): string {
     return lineColors[index % lineColors.length]
 }
 
-// TODO format of tooltips, when i have too much cores it does not look good and it's not ordered numerically
-
-
 export default function CustomChart({name, data, keys, unit, max_y, threshold, showTooltipPercent, lighter, farColors}: LineChartProps) {
+    if (data.length === 0) return Empty(name)
+
     unit = unit || "";
     
     const opacities: [number, number] = lighter ? [0.20, 0.01] : [0.30, 0.05]
@@ -107,6 +108,19 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold, s
                 }}/>
                 <RechartsDevtools/>
             </AreaChart>
+        </div>
+    )
+}
+
+function Empty(name: string) {
+    return (
+        <div className={"flex items-center justify-center p-8"}>
+
+            <div className={"flex flex-col gap-2 items-center justify-center w-full aspect-[1.618] bg-gray-100 p-8 rounded-xl"}>
+                <p className={"wrap-anywhere text-lg text-center font-semibold"}>{name}</p>
+                <Tray className={"size-16 text-gray-500 font-light"}/>
+                <p>No data to show</p>
+            </div>
         </div>
     )
 }

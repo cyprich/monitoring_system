@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::structs::db::tables::DriveTable;
+use crate::structs::db::DriveTable;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Drive {

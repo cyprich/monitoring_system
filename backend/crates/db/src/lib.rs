@@ -1,17 +1,13 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, str::FromStr};
 
 use shared::structs::{
     UnidentifiedCollector,
-    db::{
-        metric_type::MetricType,
-        tables::{CollectorTable, DriveTable, EndpointTable, MetricsTable, NetworkInterfaceTable},
-    },
+    db::{CollectorTable, DriveTable, EndpointTable, MetricsTable, NetworkInterfaceTable},
     endpoints::{Endpoint, EndpointInsert, EndpointResult},
+    metric_type_enum::MetricTypeEnum,
     metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
 };
-use sqlx::{
-    Postgres, QueryBuilder, postgres::PgPoolOptions, query_scalar, types::chrono::NaiveDateTime,
-};
+use sqlx::{Postgres, QueryBuilder, postgres::PgPoolOptions, types::chrono::NaiveDateTime};
 
 pub type Pool = sqlx::Pool<sqlx::Postgres>;
 
@@ -31,32 +27,27 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
 
     let mut values = vec![
         (
-            metrics.cpu_usage_global as f64,
-            MetricType::CpuUsageGlobal,
+            metrics.cpu_usage as f64,
+            MetricTypeEnum::CpuUsage,
             String::default(),
         ),
         (
             metrics.used_memory_mb as f64,
-            MetricType::UsedMemoryMb,
+            MetricTypeEnum::UsedMemoryMb,
             String::default(),
         ),
         (
             metrics.used_swap_mb as f64,
-            MetricType::UsedSwapMb,
+            MetricTypeEnum::UsedSwapMb,
             String::default(),
         ),
     ];
-
-    // cpu cores
-    for (i, val) in metrics.cpu_usage_cores.iter().enumerate() {
-        values.push(((*val) as f64, MetricType::CpuUsageCores, i.to_string()));
-    }
 
     // drives
     for d in metrics.drives.clone() {
         values.push((
             d.used_space_gb as f64,
-            MetricType::DriveUsedSpace,
+            MetricTypeEnum::DriveUsedSpace,
             d.mountpoint,
         ));
     }
@@ -65,16 +56,16 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
     for n in metrics.network_interfaces.clone() {
         values.push((
             n.download_kb as f64,
-            MetricType::NetworkDownload,
+            MetricTypeEnum::NetworkDownload,
             n.name.clone(),
         ));
-        values.push((n.upload_kb as f64, MetricType::NetworkUpload, n.name));
+        values.push((n.upload_kb as f64, MetricTypeEnum::NetworkUpload, n.name));
     }
 
     builder.push_values(values, |mut b, val| {
         b.push_bind(metrics.timestamp)
             .push_bind(val.0)
-            .push_bind(val.1)
+            .push_bind(val.1.to_string())
             .push_bind(metrics.collector_id)
             .push_bind(val.2);
     });
@@ -181,10 +172,6 @@ pub async fn get_collector_metrics(
         .fetch_all(pool)
         .await?;
 
-    let cpu_count = query_scalar!("select cpu_count from collectors where id = $1", id)
-        .fetch_one(pool)
-        .await?;
-
     let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
 
     for row in result {
@@ -194,29 +181,30 @@ pub async fn get_collector_metrics(
             timestamp: row.timestamp,
             used_memory_mb: 0,
             used_swap_mb: 0,
-            cpu_usage_global: 0.0,
-            cpu_usage_cores: vec![0.0; cpu_count as usize],
+            cpu_usage: 0.0,
             drives: vec![],
             network_interfaces: vec![],
         });
 
-        match row.metric_type {
-            MetricType::CpuUsageGlobal => entry.cpu_usage_global = row.value as f32,
-            MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
-            MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
-            MetricType::CpuUsageCores => {
-                let index = row.component_name.parse::<usize>();
-                if let Ok(i) = index {
-                    entry.cpu_usage_cores.insert(i, row.value as f32);
-                }
+        let metric_type = match MetricTypeEnum::from_str(&row.metric_type) {
+            Ok(val) => val,
+            Err(val) => {
+                eprintln!("Invalid Metric Type value: {}", val);
+                continue;
             }
-            MetricType::DriveUsedSpace => {
+        };
+
+        match metric_type {
+            MetricTypeEnum::CpuUsage => entry.cpu_usage = row.value as f32,
+            MetricTypeEnum::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
+            MetricTypeEnum::UsedSwapMb => entry.used_swap_mb = row.value as u64,
+            MetricTypeEnum::DriveUsedSpace => {
                 entry.drives.push(DriveMetrics {
                     mountpoint: row.component_name,
                     used_space_gb: row.value as u64,
                 });
             }
-            MetricType::NetworkDownload => {
+            MetricTypeEnum::NetworkDownload => {
                 let net = entry
                     .network_interfaces
                     .iter_mut()
@@ -235,7 +223,7 @@ pub async fn get_collector_metrics(
                     }
                 }
             }
-            MetricType::NetworkUpload => {
+            MetricTypeEnum::NetworkUpload => {
                 let net = entry
                     .network_interfaces
                     .iter_mut()

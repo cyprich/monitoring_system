@@ -7,8 +7,7 @@ pub struct Metrics {
     pub timestamp: NaiveDateTime,
     pub used_memory_mb: u64,
     pub used_swap_mb: u64,
-    pub cpu_usage_global: f32,
-    pub cpu_usage_cores: Vec<f32>,
+    pub cpu_usage: f32,
     pub drives: Vec<DriveMetrics>,
     pub network_interfaces: Vec<NetworkInterfaceMetrics>,
 }

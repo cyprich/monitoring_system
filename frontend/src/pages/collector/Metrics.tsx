@@ -5,6 +5,9 @@ import CustomChart from "../../components/CustomChart.tsx";
 export default function Metrics({collector, data}: CollectorProps) {
     const className = "grid gap-y-24 mt-8"
 
+    const drives_cols = (collector?.drives?.length || 0) > 4 ? 3 : 2
+    const nets_cols = (collector?.network_interfaces?.length || 0) > 4 ? 3 : 2
+
     return (
         <>
             <Tabs>
@@ -30,24 +33,25 @@ export default function Metrics({collector, data}: CollectorProps) {
                 </Tabs.ListContainer>
 
                 <Tabs.Panel id={"cpu"}>
-                    <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
-                        <CpuChartGlobal collector={collector} data={data}/>
-                        <CpuChartCores collector={collector} data={data}/>
+                    <div className={"grid grid-cols-4 mt-8"}>
+                        <div className={"col-span-2 col-start-2"}>
+                            <CpuChart collector={collector} data={data}/>
+                        </div>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"mem"}>
-                    <div className={className} style={{gridTemplateColumns: "repeat(2, 1fr)"}}>
+                    <div className={className} style={{gridTemplateColumns: `repeat(2, 1fr`}}>
                         <RamChart collector={collector} data={data}/>
                         <SwapChart collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"drives"}>
-                    <div className={className} style={{gridTemplateColumns: "repeat(3, 1fr)"}}>
+                    <div className={className} style={{gridTemplateColumns: `repeat(${drives_cols}, 1fr)`}}>
                         <DriveCharts collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
                 <Tabs.Panel id={"net"}>
-                    <div className={className} style={{gridTemplateColumns: "repeat(3, 1fr)"}}>
+                    <div className={className} style={{gridTemplateColumns: `repeat(${nets_cols}, 1fr)`}}>
                         <NetworkCharts collector={collector} data={data}/>
                     </div>
                 </Tabs.Panel>
@@ -55,44 +59,16 @@ export default function Metrics({collector, data}: CollectorProps) {
         </>
     )
 }
-function CpuChartGlobal(props: CollectorProps) {
+function CpuChart(props: CollectorProps) {
     return (
-        <CustomChart name={"CPU Total Usage"} keys={["CPU"]} data={
+        <CustomChart name={"CPU Usage"} keys={["CPU"]} data={
             props.data.map((i) => ({
                 timestamp: i.timestamp.toLocaleTimeString(),
-                cpu: i.cpu_usage_global
+                cpu: i.cpu_usage
             }))
         } unit={"%"} max_y={100} />
     )
 
-}
-
-function CpuChartCores(props: CollectorProps) {
-    const cpu_count = props.collector?.cpu_count || 0;
-    const keys = Array.from({length: cpu_count}, (_, index) => index.toString())
-
-    return (
-        <CustomChart
-            name={"CPU Usage Per Core"}
-            keys={keys}
-            data={
-                props.data.map((i) => {
-                    const result: {timestamp: string, [index: number]: number | string} = {
-                        timestamp: i.timestamp.toLocaleTimeString()
-                    }
-
-                    i.cpu_usage_cores.forEach((value, index) => {
-                        result[`${index}`] = value
-                    })
-
-                    return result
-                })
-            }
-            unit={"%"}
-            max_y={100}
-            lighter={true}
-        />
-    )
 }
 
 function RamChart(props: CollectorProps) {
