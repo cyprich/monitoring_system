@@ -1,3 +1,4 @@
+use crate::db;
 use actix_web::{HttpResponse, Responder, post, web};
 use shared::structs::metrics::Metrics;
 

@@ -1,3 +1,4 @@
+use crate::db;
 use actix_web::{HttpResponse, Responder, delete, get, patch, put};
 use serde::Deserialize;
 

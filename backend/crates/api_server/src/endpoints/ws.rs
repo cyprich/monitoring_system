@@ -11,7 +11,7 @@ pub async fn ws_metrics(
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<HttpResponse, Error> {
-    let (res, mut send, mut receive) = actix_ws::handle(&req, stream)?;
+    let (resp, mut send, mut receive) = actix_ws::handle(&req, stream)?;
     let id = path.into_inner();
 
     rt::spawn(async move {
@@ -60,5 +60,5 @@ pub async fn ws_metrics(
         }
     });
 
-    Ok(res)
+    Ok(resp)
 }

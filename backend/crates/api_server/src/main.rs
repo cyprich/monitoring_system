@@ -10,6 +10,7 @@ use crate::endpoints::*;
 use db::Pool;
 
 mod endpoints;
+mod db;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "type", content = "data")]
