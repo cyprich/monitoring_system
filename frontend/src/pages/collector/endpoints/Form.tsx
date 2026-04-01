@@ -103,8 +103,10 @@ export function EndpointsForm(props: EndpointsFormProps) {
                                 <Plus/>
                             </Button>
                         </div>
-                        <div className={"flex gap-1"}>
+                        <div className={"flex items-center gap-1"}>
+                            <p className={"pr-2"}>Selected Codes:</p>
                             {
+                                responseCodes.length === 0 ? "None" :
                                 responseCodes.map((c, i) => (
                                     <div
                                         className={"bg-background p-2 w-max rounded-xl relative cursor-pointer group min-w-10"}

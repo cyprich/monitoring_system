@@ -10,7 +10,7 @@ pub async fn metrics_post(
     metrics: web::Json<Metrics>,
 ) -> impl Responder {
     let metrics = metrics.into_inner();
-    let result = db::insert_metrics(&state.pool, &metrics).await;
+    let result = db::insert_metrics(&state, &metrics).await;
 
     if let Err(val) = result {
         return match val {

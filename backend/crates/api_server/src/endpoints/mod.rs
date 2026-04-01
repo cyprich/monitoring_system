@@ -8,6 +8,9 @@ pub use collectors::*;
 pub use metrics::*;
 pub use ws::*;
 
+// TODO make all pub mod, rename endpoint functions
+pub mod notifications;
+
 enum ResponseBodyType {
     Json,
     // Body { value: String },

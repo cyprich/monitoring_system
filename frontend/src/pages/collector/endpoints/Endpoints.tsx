@@ -6,7 +6,7 @@ import {
     EmptyState,
     Table,
 } from "@heroui/react";
-import {CircleCheckFill, CircleXmarkFill, Pencil, TrashBin, Tray} from "@gravity-ui/icons";
+import {CircleCheckFill, CircleXmarkFill, TriangleExclamationFill, Pencil, TrashBin, Tray} from "@gravity-ui/icons";
 import {Dialog} from "./Dialog.tsx";
 
 export interface EndpointsProps {
@@ -50,19 +50,33 @@ export default function Endpoints(props: EndpointsProps) {
     return (
         <div className={"flex flex-col gap-4"}>
             <Table>
-                <Table.ScrollContainer>
+                {/*<Table.ScrollContainer>*/}
+                <Table.ResizableContainer>
                     <Table.Content aria-label="Endpoints">
                         <Table.Header>
                             {/*<Table.Column isRowHeader>Method</Table.Column>*/}
-                            <Table.Column isRowHeader>URL</Table.Column>
-                            <Table.Column>Last Request</Table.Column>
-                            <Table.Column>Actions</Table.Column>
+                            <Table.Column isRowHeader>
+                                URL
+                                <Table.ColumnResizer/>
+                            </Table.Column>
+                            <Table.Column>
+                                Last Request
+                                <Table.ColumnResizer/>
+                            </Table.Column>
+                            <Table.Column>
+                                Expected Response Codes
+                                <Table.ColumnResizer/>
+                            </Table.Column>
+                            <Table.Column>
+                                Actions
+                                <Table.ColumnResizer/>
+                            </Table.Column>
                         </Table.Header>
                         <Table.Body renderEmptyState={() => (
                             <EmptyState
                                 className={"flex flex-col justify-center items-center bg-background  rounded-2xl py-8"}>
                                 <Tray className={"size-16 opacity-80 mb-2"}/>
-                                <span>No results found</span>
+                                <span>No Endpoints found</span>
                                 <span>Start by adding your first endpoint</span>
                             </EmptyState>
                         )}>
@@ -85,6 +99,15 @@ export default function Endpoints(props: EndpointsProps) {
                                                 }</div>
                                                 <p>Latency: {latency || "-"} ms</p>
                                             </div>
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            {
+                                                e.expected_codes.join(", ") ||
+                                                <p className={"flex gap-2"}>
+                                                    None
+                                                    <TriangleExclamationFill className={"text-amber-400 size-5"}/>
+                                                </p>
+                                            }
                                         </Table.Cell>
                                         <Table.Cell
                                             className={"flex gap-4 items-center *:transition-all " +
@@ -115,7 +138,8 @@ export default function Endpoints(props: EndpointsProps) {
                             }
                         </Table.Body>
                     </Table.Content>
-                </Table.ScrollContainer>
+                {/*</Table.ScrollContainer>*/}
+                </Table.ResizableContainer>
                 <Table.Footer>
                     <p className={"font-light text-sm"}>{endpoints?.length || 0} result{endpoints?.length !== 1 && "s"}</p>
                 </Table.Footer>

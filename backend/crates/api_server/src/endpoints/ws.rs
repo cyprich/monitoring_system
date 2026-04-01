@@ -4,7 +4,7 @@ use futures_util::StreamExt as _;
 
 use crate::AppState;
 
-#[get("/ws/metrics/{id}")]
+#[get("/ws/collector/{id}")]
 pub async fn ws_metrics(
     state: web::Data<AppState>,
     path: web::Path<i32>,

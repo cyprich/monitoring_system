@@ -1,9 +1,9 @@
 use shared::structs::{metric_type_enum::MetricTypeEnum, metrics::Metrics};
 use sqlx::{Postgres, QueryBuilder};
 
-use crate::{Pool, notifications};
+use crate::{AppState, notifications};
 
-pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared::Error> {
+pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), shared::Error> {
     let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
         "insert into metrics (timestamp, value, metric_type, collector_id, component_name) ",
     );
@@ -53,9 +53,9 @@ pub async fn insert_metrics(pool: &Pool, metrics: &Metrics) -> Result<(), shared
             .push_bind(val.2);
     });
 
-    builder.build().execute(pool).await?;
+    builder.build().execute(&state.pool).await?;
 
-    let notifications = notifications::handle_metrics(pool, metrics.collector_id).await;
+    let notifications = notifications::handle_metrics(&state, metrics.collector_id).await;
     if let Err(val) = notifications {
         eprintln!("Error with metrics notifications: {}", val);
     }

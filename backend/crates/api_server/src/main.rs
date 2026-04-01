@@ -4,8 +4,12 @@ use actix_web::{middleware, web};
 use serde::Serialize;
 use shared::structs::endpoints::EndpointResult;
 use shared::structs::metrics::Metrics;
+use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
 
+use crate::endpoints::notifications::{
+    delete_collector_notifications, delete_collector_notifications_all, get_collector_notifications,
+};
 use crate::endpoints::*;
 use db::Pool;
 
@@ -20,6 +24,8 @@ enum WebSocketType {
     Metrics(Metrics),
     #[serde(rename = "endpoints_results")]
     EndpointResult(Vec<EndpointResult>),
+    #[serde(rename = "notifications")]
+    Notifications(Vec<Notification>),
 }
 
 #[derive(Clone)]
@@ -76,6 +82,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_collector_endpoint_results)
             .service(get_collector_endpoint_results_last)
             .service(post_collector_endpoint_results)
+            .service(get_collector_notifications)
+            .service(delete_collector_notifications)
+            .service(delete_collector_notifications_all)
             .service(rename_collector)
     })
     .bind(("0.0.0.0", port))?

@@ -13,8 +13,7 @@ import Notifications from "./Notifications.tsx";
 import Endpoints from "./endpoints/Endpoints.tsx";
 import Metrics from "./Metrics.tsx"
 import type {EndpointResult} from "../../types/Endpoints.ts";
-
-// TODO split into multiple files
+import type {Notification} from "../../types/Notifications.ts";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -23,11 +22,12 @@ export interface CollectorProps {
 
 export default function Collector() {
     const params = useParams();
-    const id = params.id || "0";
+    const id = Number(params.id || "0");
 
     const [collector, setCollector] = useState<Collector | null>(null)
     const [metrics, setMetrics] = useState<MetricsInterface[]>([])
     const [lastEndpointsResults, setLastEndpointsResults] = useState<EndpointResult[]>([])
+    const [notifications, setNotifications] = useState<Notification[]>([])
 
     // TODO link
     const url = `http://localhost:5000/collector/${id}`;
@@ -89,6 +89,18 @@ export default function Collector() {
                 setMetrics(data);
             })
 
+        // historic notifications
+        axios
+            .get(`${url}/notifications`)
+            .then((resp) => {
+                let newData: Notification[] = resp.data;
+                newData = newData.map((n) => ({
+                    ...n,
+                    timestamp: new Date(n.timestamp).toLocaleTimeString()
+                }))
+                setNotifications(newData)
+            })
+
         // last endpoints results
         axios
             .get(`${url}/endpoints_results/last`)
@@ -104,7 +116,7 @@ export default function Collector() {
     }, [LIMIT, id, url]);
 
     useEffect(() => {
-        const socket = new WebSocket(`ws://localhost:5000/ws/metrics/${id}`);
+        const socket = new WebSocket(`ws://localhost:5000/ws/collector/${id}`);
 
         socket.addEventListener("open", () => {
             console.log("Websocket opened")
@@ -124,6 +136,13 @@ export default function Collector() {
                     timestamp: new Date(r.timestamp).toLocaleTimeString()
                 }))
                 setLastEndpointsResults(newData)
+            } else if (recv.type === 'notifications') {
+                let newData: Notification[] = recv.data;
+                newData = newData.map((n) => ({
+                    ...n,
+                    timestamp: new Date(n.timestamp).toLocaleTimeString()
+                }))
+                setNotifications((prev) => [...prev, ...newData])
             }
         })
 
@@ -144,7 +163,7 @@ export default function Collector() {
             </CustomSurface>
 
             <CustomSurface title={"Notifications"}>
-                <Notifications/>
+                <Notifications notifications={notifications} collector_id={id} setNotifications={setNotifications}/>
             </CustomSurface>
 
             <CustomSurface title={"API Endpoints"}>
