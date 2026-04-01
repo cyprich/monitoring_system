@@ -8,7 +8,7 @@ use crate::{
     db::{self, Pool},
 };
 
-// HashMap<(component name, metric type), (threshold value, actual values)>
+// HashMap<(component name, metric type), (threshold value, measured values)>
 type MetricsMap = HashMap<(String, String), (f64, Vec<f64>)>;
 
 pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), shared::Error> {
@@ -74,42 +74,52 @@ async fn create_notifications(
     map: MetricsMap,
 ) -> Vec<NotificationInsert> {
     let mut notifications: Vec<NotificationInsert> = vec![];
-    let collector_name = db::get_collector_name(pool, collector_id)
-        .await
-        .unwrap_or(format!("#{collector_id}"));
+    // let collector_name = db::get_collector_name(pool, collector_id)
+    //     .await
+    //     .unwrap_or(format!("#{collector_id}"));
 
-    'outer: for ((component_name, metric_type), (threshold_value, actual_values)) in map {
-        for val in &actual_values {
+    'outer: for ((component_name, metric_type), (threshold_value, measured_values)) in map {
+        for val in &measured_values {
             if val < &threshold_value {
                 continue 'outer;
             }
         }
 
-        let mut cause_name = match MetricTypeEnum::from_str(&metric_type) {
-            Ok(val) => val.to_string_pretty().unwrap_or(metric_type),
-            Err(_) => metric_type,
+        // let pretty_component_name = match component_name.is_empty() {
+        //     true => match MetricTypeEnum::from_str(&metric_type) {
+        //         Ok(val) => val.to_string_pretty().unwrap_or(metric_type.clone()),
+        //         Err(_) => metric_type.clone(),
+        //     },
+        //     false => component_name,
+        // };
+
+        let pretty_component_name = match MetricTypeEnum::from_str(&metric_type) {
+            Ok(val) => match val {
+                MetricTypeEnum::CpuUsage
+                | MetricTypeEnum::UsedMemoryMb
+                | MetricTypeEnum::UsedSwapMb => {
+                    val.to_string_pretty().unwrap_or(metric_type.clone())
+                }
+                MetricTypeEnum::DriveUsedSpace => {
+                    format!("Used Space (GB) on Drive '{}'", component_name)
+                }
+                MetricTypeEnum::NetworkDownload => {
+                    format!("Download (KB) on Network Interface {}", component_name)
+                }
+                MetricTypeEnum::NetworkUpload => {
+                    format!("Upload (KB) on Network Interface {}", component_name)
+                }
+            },
+            Err(_) => metric_type.clone(),
         };
-
-        if !component_name.is_empty() {
-            cause_name.push_str(&component_name);
-        }
-
-        let values = actual_values
-            .into_iter()
-            .map(|i| i.to_string())
-            .collect::<Vec<String>>()
-            .join(", ");
-
-        let description = format!(
-            "Value of '{}' of collector '{}' exceeded threshold of '{}'! Measured values: {}",
-            cause_name, collector_name, threshold_value, values
-        );
 
         notifications.push(NotificationInsert {
             collector_id,
-            description,
             timestamp: chrono::Local::now().naive_local(),
-            viewed: false,
+            metric_type,
+            component_name: pretty_component_name,
+            threshold_value,
+            measured_values,
         });
     }
 

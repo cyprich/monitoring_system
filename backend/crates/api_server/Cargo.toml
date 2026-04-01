@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 collector = { path = "../collector/" }
 actix-web = "4.13.0"
-log = "0.4.29"
 actix-cors = "0.7.1"
 actix-ws = "0.4.0"
 futures-util = "0.3.32"

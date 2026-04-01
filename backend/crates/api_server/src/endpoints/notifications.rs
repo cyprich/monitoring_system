@@ -23,34 +23,11 @@ pub async fn delete_collector_notifications_all(
     handle_query_error(result, ResponseBodyType::None)
 }
 
-// #[delete("/collector/{collector_id}/notifications/{notification_id}")]
-// pub async fn delete_collector_notifications(
-//     state: web::Data<AppState>,
-//     collector_id: web::Path<i32>,
-//     notification_id: web::Path<i32>,
-// ) -> impl Responder {
-//     let result = db::remove_collector_notifications(
-//         &state.pool,
-//         collector_id.into_inner(),
-//         Some(notification_id.into_inner()),
-//     )
-//     .await;
-//     handle_query_error(result, ResponseBodyType::Json)
-// }
-
 #[delete("/collector/{collector_id}/notifications/{notification_id}")]
 pub async fn delete_collector_notifications(
     state: web::Data<AppState>,
     id: web::Path<(i32, i32)>,
 ) -> impl Responder {
     let result = db::remove_collector_notifications(&state.pool, id.0, Some(id.1)).await;
-
-    // let result = db::remove_collector_notifications(
-    //     &state.pool,
-    //     collector_id.into_inner(),
-    //     Some(notification_id.into_inner()),
-    // )
-    // .await;
-
     handle_query_error(result, ResponseBodyType::None)
 }

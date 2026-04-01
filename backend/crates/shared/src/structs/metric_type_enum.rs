@@ -13,12 +13,12 @@ pub enum MetricTypeEnum {
 impl MetricTypeEnum {
     pub fn to_string_pretty(self) -> Option<String> {
         let val = match self {
-            Self::CpuUsage => "CPU Usage",
-            Self::UsedMemoryMb => "Used Memory",
-            Self::UsedSwapMb => "Used Swap",
-            Self::DriveUsedSpace => "Used Drive Space",
-            Self::NetworkDownload => "Network Download",
-            Self::NetworkUpload => "Network Upload",
+            Self::CpuUsage => "CPU Usage (%)",
+            Self::UsedMemoryMb => "Used Memory (MB)",
+            Self::UsedSwapMb => "Used Swap (MB)",
+            Self::DriveUsedSpace => "Used Drive Space (GB)",
+            Self::NetworkDownload => "Network Download (KB)",
+            Self::NetworkUpload => "Network Upload (KB)",
         };
 
         String::from_str(val).ok()

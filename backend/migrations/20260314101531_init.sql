@@ -60,7 +60,7 @@ create table metrics (
     value double precision,
     metric_type varchar,
     collector_id integer,
-    component_name integer,  -- used when we have multiple disks/network interfaces
+    component_name varchar ,  -- used when we have multiple disks/network interfaces
     primary key (timestamp, value, metric_type, collector_id, component_name),
     foreign key (metric_type) references metric_type(name),
     foreign key (collector_id) references collectors(id)
@@ -106,12 +106,15 @@ create table endpoints_result (
 create table notifications (
     id serial,
     collector_id integer not null,
+    metric_type varchar not null, 
+    component_name varchar not null, 
+    threshold_value double precision not null, 
+    measured_values double precision[] not null,
     -- severity integer,
-    description varchar not null,
     timestamp timestamp not null,
-    viewed boolean not null default false,
     primary key (id),
-    foreign key (collector_id) references collectors(id)
+    foreign key (collector_id) references collectors(id),
+    foreign key (metric_type) references metric_type(name)
     -- foreign key (severity) references notification_severity(id)
 );
 

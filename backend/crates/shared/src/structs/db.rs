@@ -72,7 +72,9 @@ pub struct EndpointInsert {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotificationInsert {
     pub collector_id: i32,
-    pub description: String,
+    pub metric_type: String,
+    pub component_name: String,
+    pub threshold_value: f64,
+    pub measured_values: Vec<f64>,
     pub timestamp: NaiveDateTime,
-    pub viewed: bool,
 }

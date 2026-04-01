@@ -55,7 +55,7 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
 
     builder.build().execute(&state.pool).await?;
 
-    let notifications = notifications::handle_metrics(&state, metrics.collector_id).await;
+    let notifications = notifications::handle_metrics(state, metrics.collector_id).await;
     if let Err(val) = notifications {
         eprintln!("Error with metrics notifications: {}", val);
     }
