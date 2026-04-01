@@ -1,7 +1,9 @@
 export interface Notification {
     id: number,
     collector_id: number,
-    description: string,
+    metric_type: string,
+    component_name: string,
+    threshold_value: number,
+    measured_values: number[],
     timestamp: string,
-    viewed: boolean
 }

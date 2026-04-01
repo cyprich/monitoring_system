@@ -33,6 +33,8 @@ export default function Notifications(props: NotificationProps) {
         props.setNotifications(newNotifications)
     }
 
+    // TODO show when user does not have any registered thresholds = no notifications
+
     return (
         <div className={"flex flex-col gap-4"}>
             <Table>
@@ -40,11 +42,19 @@ export default function Notifications(props: NotificationProps) {
                     <Table.Content aria-label="Notifications">
                         <Table.Header>
                             <Table.Column isRowHeader>
-                                Description
+                                Cause
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
                                 Timestamp
+                                <Table.ColumnResizer/>
+                            </Table.Column>
+                            <Table.Column>
+                                Threshold
+                                <Table.ColumnResizer/>
+                            </Table.Column>
+                            <Table.Column>
+                                Measured Values
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
@@ -61,12 +71,23 @@ export default function Notifications(props: NotificationProps) {
                         )}>
                             {
                                 paginatedItems.map((n, i) => {
+                                    const threshold = Math.floor(n.threshold_value) === n.threshold_value ? n.threshold_value : n.threshold_value.toFixed(2)
+                                    const measured = n.measured_values.map((val) => (
+                                        Math.floor(val) === val ? val : val.toFixed(2)
+                                    ))
+
                                     return <Table.Row key={i}>
                                         <Table.Cell>
-                                            <p>{n.description}</p>
+                                            <p>{n.component_name}</p>
                                         </Table.Cell>
                                         <Table.Cell>
                                             <p>{n.timestamp}</p>
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <p>{threshold}</p>
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <p>{measured.join(", ")}</p>
                                         </Table.Cell>
                                         <Table.Cell
                                             className={"flex gap-4 items-center *:transition-all " +

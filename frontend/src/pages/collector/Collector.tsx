@@ -33,6 +33,9 @@ export default function Collector() {
     const url = `http://localhost:5000/collector/${id}`;
     const LIMIT = getMetricsLimit();
 
+    // TODO move the corresponding useEffect get to it's component
+    // TODO not sure about the websocket tho, it would be nice to have just one
+
     useEffect(() => {
         // collector
         axios
