@@ -38,7 +38,7 @@ async fn get_collector_metrics(
     id: web::Path<i32>,
     query: web::Query<QueryLimit>,
 ) -> impl Responder {
-    let result = db::get_collector_metrics(&state.pool, id.into_inner(), query.limit).await;
+    let result = db::get_metrics(&state.pool, id.into_inner(), query.limit).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
@@ -59,7 +59,7 @@ async fn get_collector_network_interfaces(
 
 #[get("/collector/{id}/endpoints")]
 async fn get_collector_endpoints(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
-    let result = db::get_collector_endpoints(&state.pool, id.into_inner()).await;
+    let result = db::get_endpoints(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
@@ -70,7 +70,7 @@ async fn post_collector_endpoints(
     endpoint: web::Json<EndpointInsert>,
     id: web::Path<i32>,
 ) -> impl Responder {
-    let result = db::insert_collector_endpoints(&state.pool, id.into_inner(), &endpoint).await;
+    let result = db::insert_endpoint(&state.pool, id.into_inner(), &endpoint).await;
     if result.is_err() {
         handle_query_error(result, ResponseBodyType::Json)
     } else {
@@ -85,7 +85,7 @@ async fn put_collector_endpoints(
     endpoint: web::Json<Endpoint>,
     _id: web::Path<i32>,
 ) -> impl Responder {
-    let result = db::update_collector_endpoints(&state.pool, &endpoint).await;
+    let result = db::update_endpoint(&state.pool, &endpoint).await;
     handle_query_error(result, ResponseBodyType::None)
 }
 
@@ -94,7 +94,7 @@ async fn delete_collector_endpoints(
     state: web::Data<AppState>,
     id: web::Path<(i32, i32)>,
 ) -> impl Responder {
-    let result = db::delete_collector_endpoint(&state.pool, id.1).await;
+    let result = db::delete_endpoint(&state.pool, id.1).await;
     handle_query_error(result, ResponseBodyType::None)
 }
 
@@ -103,7 +103,7 @@ async fn get_collector_endpoint_results(
     state: web::Data<AppState>,
     id: web::Path<i32>,
 ) -> impl Responder {
-    let result = db::get_collector_endpoints_results(&state.pool, id.into_inner(), None).await;
+    let result = db::get_endpoints_results(&state.pool, id.into_inner(), None).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
@@ -129,8 +129,7 @@ async fn post_collector_endpoint_results(
     let id = id.into_inner();
 
     // intsert into db
-    let result =
-        db::insert_collector_endpoints_results(&state.pool, endpoint_results.clone()).await;
+    let result = db::insert_endpoints_results(&state.pool, endpoint_results.clone()).await;
 
     if result.is_ok() {
         // send to websocket

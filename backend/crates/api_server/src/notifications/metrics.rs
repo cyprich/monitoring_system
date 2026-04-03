@@ -23,8 +23,7 @@ pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), s
     }
 
     // send to db, which returns whole notifications with IDs
-    let notifications =
-        db::insert_collector_notifications(&state.pool, collector_id, notif_inserts).await?;
+    let notifications = db::insert_notifications(&state.pool, collector_id, notif_inserts).await?;
 
     // send to broadcast to websocket
     let _ = state
@@ -40,7 +39,7 @@ async fn evaluate(
 ) -> Result<Option<NotificationsMap>, shared::Error> {
     let mut map: NotificationsMap = NotificationsMap::new();
 
-    let thresholds = crate::db::get_collector_metrics_thresholds(pool, collector_id).await?;
+    let thresholds = crate::db::get_metrics_thresholds(pool, collector_id).await?;
     if thresholds.is_empty() {
         return Ok(None);
     }
@@ -51,7 +50,7 @@ async fn evaluate(
     }
 
     // TODO each metric chould have different value (limit), idk how to fix this rn
-    let metrics = crate::db::get_collector_metrics_table(pool, collector_id, Some(5)).await?;
+    let metrics = crate::db::get_metrics_table(pool, collector_id, Some(5)).await?;
     if metrics.is_empty() {
         return Ok(None);
     }

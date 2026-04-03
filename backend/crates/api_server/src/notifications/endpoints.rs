@@ -4,10 +4,7 @@ use shared::structs::db::NotificationInsert;
 
 use crate::{
     AppState, WebSocketType,
-    db::{
-        Pool, get_collector_endpoints_thresholds, get_endpoints_by_id,
-        insert_collector_notifications,
-    },
+    db::{Pool, get_endpoints_by_id, get_endpoints_thresholds, insert_notifications},
 };
 
 // HashMap<endpoint id, (threshold value, measured values)>
@@ -26,8 +23,7 @@ pub async fn handle_endpoints(state: &AppState, collector_id: i32) -> Result<(),
     }
 
     // send to db, which returns whole notifications with IDs
-    let notifications =
-        insert_collector_notifications(&state.pool, collector_id, notif_inserts).await?;
+    let notifications = insert_notifications(&state.pool, collector_id, notif_inserts).await?;
 
     // send to broadcast to websocket
     let _ = state
@@ -46,7 +42,7 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
     //     return Ok(None);
     // }
 
-    let thresholds = get_collector_endpoints_thresholds(pool, collector_id).await?;
+    let thresholds = get_endpoints_thresholds(pool, collector_id).await?;
 
     // insert key and threshold values to the map
     for t in thresholds {
@@ -55,8 +51,7 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
 
     // TODO each metric chould have different value (limit), idk how to fix this rn - needs another
     // field in db
-    let endpoints_results =
-        crate::db::get_collector_endpoints_results(pool, collector_id, Some(5)).await?;
+    let endpoints_results = crate::db::get_endpoints_results(pool, collector_id, Some(5)).await?;
 
     if endpoints_results.is_empty() {
         return Ok(None);

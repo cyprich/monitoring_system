@@ -4,15 +4,14 @@ use shared::structs::{
     db::{EndpointInsert, EndpointsTable},
     endpoints::Endpoint,
 };
-use sqlx::{Postgres, QueryBuilder};
 
-use crate::Pool;
+use crate::{Pool, db::Builder};
 
-pub async fn get_collector_endpoints(pool: &Pool, id: i32) -> Result<Vec<Endpoint>, shared::Error> {
+pub async fn get_endpoints(pool: &Pool, collector_id: i32) -> Result<Vec<Endpoint>, shared::Error> {
     let result = sqlx::query_as!(
         EndpointsTable,
         "select * from endpoints where collector_id = $1 order by id",
-        id
+        collector_id
     )
     .fetch_all(pool)
     .await?;
@@ -22,7 +21,7 @@ pub async fn get_collector_endpoints(pool: &Pool, id: i32) -> Result<Vec<Endpoin
     Ok(result.collect())
 }
 
-pub async fn insert_collector_endpoints(
+pub async fn insert_endpoint(
     pool: &Pool,
     collector_id: i32,
     endpoint: &EndpointInsert,
@@ -45,10 +44,7 @@ pub async fn insert_collector_endpoints(
     Ok(())
 }
 
-pub async fn update_collector_endpoints(
-    pool: &Pool,
-    endpoint: &Endpoint,
-) -> Result<(), shared::Error> {
+pub async fn update_endpoint(pool: &Pool, endpoint: &Endpoint) -> Result<(), shared::Error> {
     // TODO remove duplicity
     let codes = endpoint
         .expected_codes
@@ -68,14 +64,17 @@ pub async fn update_collector_endpoints(
     Ok(())
 }
 
-pub async fn delete_collector_endpoint(pool: &Pool, id: i32) -> Result<(), shared::Error> {
+pub async fn delete_endpoint(pool: &Pool, endpoint_id: i32) -> Result<(), shared::Error> {
     let mut transaction = pool.begin().await?;
 
-    sqlx::query!("delete from endpoints_results where endpoint_id = $1", id)
-        .execute(&mut *transaction)
-        .await?;
+    sqlx::query!(
+        "delete from endpoints_results where endpoint_id = $1",
+        endpoint_id
+    )
+    .execute(&mut *transaction)
+    .await?;
 
-    sqlx::query!("delete from endpoints where id = $1", id)
+    sqlx::query!("delete from endpoints where id = $1", endpoint_id)
         .execute(&mut *transaction)
         .await?;
 
@@ -88,7 +87,7 @@ pub async fn get_endpoints_by_id(
     pool: &Pool,
     collector_id: Option<i32>,
 ) -> Result<HashMap<i32, Endpoint>, shared::Error> {
-    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new("select * from endpoints ");
+    let mut builder = Builder::new("select * from endpoints ");
 
     if let Some(val) = collector_id {
         builder.push(" where collector_id = ");

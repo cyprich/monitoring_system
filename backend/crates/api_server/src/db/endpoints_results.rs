@@ -1,39 +1,14 @@
+use crate::db::Builder;
 use shared::structs::endpoints::EndpointResult;
-use sqlx::{Postgres, QueryBuilder};
 
 use crate::Pool;
 
-pub async fn get_collector_endpoints_results(
+pub async fn get_endpoints_results(
     pool: &Pool,
     collector_id: i32,
     limit: Option<i32>,
 ) -> Result<Vec<EndpointResult>, shared::Error> {
-    // let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
-    //     "select *
-    //     from endpoints_results
-    //     where endpoint_id in (
-    //         select id
-    //         from endpoints
-    //         where collector_id = ",
-    // );
-    // builder.push_bind(collector_id);
-    // builder.push(" )");
-    //
-    // if let Some(val) = limit {
-    //     builder.push(
-    //         " and timestamp in (
-    //         select distinct timestamp
-    //         from endpoints_results
-    //         where endpoint_id in (
-    //             select id
-    //             from endpoints
-    //             where collector_id = ",
-    //     );
-    //     builder.push_bind(val);
-    //     builder.push(" ))");
-    // }
-
-    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
+    let mut builder = Builder::new(
         "select r.*
         from endpoints_results r
         join endpoints e on e.id = r.endpoint_id
@@ -82,11 +57,11 @@ pub async fn get_collector_endpoints_results_last(
     Ok(result)
 }
 
-pub async fn insert_collector_endpoints_results(
+pub async fn insert_endpoints_results(
     pool: &Pool,
     endpoint_results: Vec<EndpointResult>,
 ) -> Result<(), shared::Error> {
-    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
+    let mut builder = Builder::new(
         "insert into endpoints_results (endpoint_id, timestamp, result, latency_microseconds) ",
     );
 

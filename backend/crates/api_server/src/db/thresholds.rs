@@ -2,7 +2,7 @@ use shared::structs::{db::MetricsThresholdsTable, thresholds::EndpointsThreshold
 
 use crate::db::Pool;
 
-pub async fn get_collector_metrics_thresholds(
+pub async fn get_metrics_thresholds(
     pool: &Pool,
     collector_id: i32,
 ) -> Result<Vec<MetricsThresholdsTable>, shared::Error> {
@@ -17,7 +17,7 @@ pub async fn get_collector_metrics_thresholds(
     Ok(result)
 }
 
-pub async fn get_collector_endpoints_thresholds(
+pub async fn get_endpoints_thresholds(
     pool: &Pool,
     collector_id: i32,
 ) -> Result<Vec<EndpointsThresholds>, shared::Error> {

@@ -2,21 +2,8 @@ use shared::structs::{
     collector_info::CollectorInfo,
     db::{CollectorTable, DriveTable, NetworkInterfaceTable},
 };
-use sqlx::{Postgres, QueryBuilder};
 
-use crate::Pool;
-
-mod endpoints;
-mod endpoints_results;
-mod metrics;
-mod notifications;
-mod thresholds;
-
-pub use endpoints::*;
-pub use endpoints_results::*;
-pub use metrics::*;
-pub use notifications::*;
-pub use thresholds::*;
+use crate::{Pool, db::Builder};
 
 pub async fn register_collector(
     pool: &Pool,
@@ -43,9 +30,8 @@ pub async fn register_collector(
     .await?;
 
     // drives
-    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
-        "insert into drives (mountpoint, collector_id, capacity_gb, file_system) ",
-    );
+    let mut builder =
+        Builder::new("insert into drives (mountpoint, collector_id, capacity_gb, file_system) ");
 
     builder.push_values(c.drives.clone(), |mut b, drive| {
         b.push_bind(drive.mountpoint)
@@ -57,8 +43,7 @@ pub async fn register_collector(
     builder.build().execute(&mut *transaction).await?;
 
     // network interfaces
-    let mut builder: QueryBuilder<Postgres> =
-        QueryBuilder::new("insert into network_interfaces (name, collector_id, mac) ");
+    let mut builder = Builder::new("insert into network_interfaces (name, collector_id, mac) ");
 
     builder.push_values(c.network_interfaces.clone(), |mut b, net| {
         b.push_bind(net.name).push_bind(id).push_bind(net.mac);
@@ -79,20 +64,31 @@ pub async fn get_collectors(pool: &Pool) -> Result<Vec<CollectorTable>, shared::
     )
 }
 
-pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorTable, shared::Error> {
+pub async fn get_collector_by_id(
+    pool: &Pool,
+    collector_id: i32,
+) -> Result<CollectorTable, shared::Error> {
     Ok(sqlx::query_as!(
         CollectorTable,
         "select * from collectors where id = $1 order by id",
-        id
+        collector_id
     )
     .fetch_one(pool)
     .await?)
 }
 
-pub async fn rename_collector(pool: &Pool, id: i32, name: String) -> Result<(), shared::Error> {
-    let result = sqlx::query_scalar!("update collectors set name = $1 where id = $2", name, id)
-        .execute(pool)
-        .await?;
+pub async fn rename_collector(
+    pool: &Pool,
+    collector_id: i32,
+    name: String,
+) -> Result<(), shared::Error> {
+    let result = sqlx::query_scalar!(
+        "update collectors set name = $1 where id = $2",
+        name,
+        collector_id
+    )
+    .execute(pool)
+    .await?;
 
     if result.rows_affected() == 0 {
         Err(shared::Error::DbNothingChanged)
@@ -101,11 +97,14 @@ pub async fn rename_collector(pool: &Pool, id: i32, name: String) -> Result<(), 
     }
 }
 
-pub async fn get_collector_drives(pool: &Pool, id: i32) -> Result<Vec<DriveTable>, shared::Error> {
+pub async fn get_collector_drives(
+    pool: &Pool,
+    collector_id: i32,
+) -> Result<Vec<DriveTable>, shared::Error> {
     Ok(sqlx::query_as!(
         DriveTable,
         "select * from drives where collector_id = $1",
-        id
+        collector_id
     )
     .fetch_all(pool)
     .await?)
@@ -113,21 +112,21 @@ pub async fn get_collector_drives(pool: &Pool, id: i32) -> Result<Vec<DriveTable
 
 pub async fn get_collector_network_interfaces(
     pool: &Pool,
-    id: i32,
+    collector_id: i32,
 ) -> Result<Vec<NetworkInterfaceTable>, shared::Error> {
     Ok(sqlx::query_as!(
         NetworkInterfaceTable,
         "select * from network_interfaces where collector_id = $1",
-        id
+        collector_id
     )
     .fetch_all(pool)
     .await?)
 }
 
-pub async fn get_collector_name(pool: &Pool, collector_id: i32) -> Result<String, shared::Error> {
-    let result = sqlx::query_scalar!("select name from collectors where id = $1", collector_id)
-        .fetch_one(pool)
-        .await?;
-
-    Ok(result)
-}
+// pub async fn get_collector_name(pool: &Pool, collector_id: i32) -> Result<String, shared::Error> {
+//     let result = sqlx::query_scalar!("select name from collectors where id = $1", collector_id)
+//         .fetch_one(pool)
+//         .await?;
+//
+//     Ok(result)
+// }

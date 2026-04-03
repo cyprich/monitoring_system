@@ -1,9 +1,8 @@
 use shared::structs::{db::NotificationInsert, notifications::Notification};
-use sqlx::{Postgres, QueryBuilder};
 
-use crate::db::Pool;
+use crate::db::{Builder, Pool};
 
-pub async fn insert_collector_notifications(
+pub async fn insert_notifications(
     pool: &Pool,
     collector_id: i32,
     notifications: Vec<NotificationInsert>,
@@ -12,7 +11,7 @@ pub async fn insert_collector_notifications(
         return Ok(vec![]);
     }
 
-    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new(
+    let mut builder = Builder::new(
         "insert into notifications (collector_id, metric_type, component_name, threshold_value, measured_values, timestamp) ",
     );
 
@@ -38,7 +37,7 @@ pub async fn insert_collector_notifications(
     Ok(result)
 }
 
-pub async fn get_collector_notifications(
+pub async fn get_notifications(
     pool: &Pool,
     collector_id: i32,
 ) -> Result<Vec<Notification>, shared::Error> {
@@ -53,13 +52,12 @@ pub async fn get_collector_notifications(
     Ok(result)
 }
 
-pub async fn remove_collector_notifications(
+pub async fn delete_notification(
     pool: &Pool,
     collector_id: i32,
     notification_id: Option<i32>,
 ) -> Result<(), shared::Error> {
-    let mut builder: QueryBuilder<Postgres> =
-        QueryBuilder::new("delete from notifications where collector_id = ");
+    let mut builder = Builder::new("delete from notifications where collector_id = ");
     builder.push_bind(collector_id);
 
     if let Some(val) = notification_id {
