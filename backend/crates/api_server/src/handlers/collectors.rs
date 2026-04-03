@@ -9,7 +9,7 @@ use crate::{
 
 use actix_web::{post, web};
 use shared::structs::{
-    UnidentifiedCollector,
+    collector_info::CollectorInfo,
     db::EndpointInsert,
     endpoints::{Endpoint, EndpointResult},
 };
@@ -140,7 +140,7 @@ async fn post_collector_endpoint_results(
         ));
 
         // evaluate notifications
-        let x = handle_endpoints(&state, id).await;
+        let _ = handle_endpoints(&state, id).await;
     }
 
     handle_query_error(result, ResponseBodyType::None)
@@ -149,7 +149,7 @@ async fn post_collector_endpoint_results(
 #[post("/collector/register")]
 async fn collector_register(
     state: web::Data<AppState>,
-    new_collector: web::Json<UnidentifiedCollector>,
+    new_collector: web::Json<CollectorInfo>,
 ) -> impl Responder {
     let result = db::register_collector(&state.pool, &new_collector.into_inner()).await;
 

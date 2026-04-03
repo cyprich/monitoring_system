@@ -1,5 +1,5 @@
 use shared::structs::{
-    UnidentifiedCollector,
+    collector_info::CollectorInfo,
     db::{CollectorTable, DriveTable, NetworkInterfaceTable},
 };
 use sqlx::{Postgres, QueryBuilder};
@@ -20,9 +20,10 @@ pub use thresholds::*;
 
 pub async fn register_collector(
     pool: &Pool,
-    collector: &UnidentifiedCollector,
+    collector_info: &CollectorInfo,
 ) -> Result<i32, shared::Error> {
     let mut transaction = pool.begin().await?;
+    let c = collector_info;
 
     // collector
     let id = sqlx::query_scalar!(
@@ -30,13 +31,13 @@ pub async fn register_collector(
         (name, system_name, host_name, kernel_version, total_memory_mb, total_swap_mb, cpu_count) 
         values ($1, $2, $3, $4, $5, $6, $7) 
         returning id",
-        collector.name,
-        collector.system_name,
-        collector.host_name,
-        collector.kernel_version,
-        collector.total_memory_mb as i32,
-        collector.total_swap_mb as i32,
-        collector.cpu_count as i32
+        c.name,
+        c.system_name,
+        c.host_name,
+        c.kernel_version,
+        c.total_memory_mb as i32,
+        c.total_swap_mb as i32,
+        c.cpu_count as i32
     )
     .fetch_one(&mut *transaction)
     .await?;
@@ -46,7 +47,7 @@ pub async fn register_collector(
         "insert into drives (mountpoint, collector_id, capacity_gb, file_system) ",
     );
 
-    builder.push_values(collector.drives.clone(), |mut b, drive| {
+    builder.push_values(c.drives.clone(), |mut b, drive| {
         b.push_bind(drive.mountpoint)
             .push_bind(id)
             .push_bind(drive.capacity_gb as i32)
@@ -59,7 +60,7 @@ pub async fn register_collector(
     let mut builder: QueryBuilder<Postgres> =
         QueryBuilder::new("insert into network_interfaces (name, collector_id, mac) ");
 
-    builder.push_values(collector.network_interfaces.clone(), |mut b, net| {
+    builder.push_values(c.network_interfaces.clone(), |mut b, net| {
         b.push_bind(net.name).push_bind(id).push_bind(net.mac);
     });
 
@@ -89,7 +90,6 @@ pub async fn get_collector_by_id(pool: &Pool, id: i32) -> Result<CollectorTable,
 }
 
 pub async fn rename_collector(pool: &Pool, id: i32, name: String) -> Result<(), shared::Error> {
-    // TODO should i return the name?
     let result = sqlx::query_scalar!("update collectors set name = $1 where id = $2", name, id)
         .execute(pool)
         .await?;

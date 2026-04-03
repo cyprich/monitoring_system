@@ -1,11 +1,14 @@
 use std::time::Duration;
 
-use chrono::NaiveDateTime;
-use shared::structs::{
-    Collector, UnidentifiedCollector, db,
-    endpoints::{Endpoint, EndpointResult},
+use shared::{
+    structs::endpoints::{Endpoint, EndpointResult},
+    traits::Collector,
 };
 use tokio::time::{sleep, timeout};
+
+use crate::local_collector::LocalCollector;
+
+mod local_collector;
 
 // TODO make this user-configurable
 const METRICS_DELAY: u64 = 5;
@@ -14,31 +17,23 @@ const ENDPOINT_TIMEOUT: u64 = 5;
 
 #[tokio::main]
 pub async fn main() -> Result<(), shared::Error> {
-    if !sysinfo::IS_SUPPORTED_SYSTEM {
-        eprintln!("System is not supported!");
-        eprintln!("These systems are supported: ");
-        get_supported_systems()
-            .iter()
-            .for_each(|s| eprintln!("  {}", s));
-        return Err(shared::Error::UnsupportedSystem);
-    }
-
-    let uc = UnidentifiedCollector::new();
-    let mut collector = uc.identify().await?;
+    let mut collector = LocalCollector::new().unwrap();
+    collector.try_get_id().await.unwrap();
 
     let base_url = shared::env::base_url()?;
-    let metrics_url = format!("{}/metrics", base_url);
-    let endpoints_url = format!("{}/collector/{}/endpoints", base_url, collector.id);
-    let endpoints_results_url =
-        format!("{}/collector/{}/endpoints_results", base_url, collector.id);
+    let endpoints_url = format!("{}/collector/{}/endpoints", base_url, collector.id.unwrap());
+    let endpoints_results_url = format!(
+        "{}/collector/{}/endpoints_results",
+        base_url,
+        collector.id.unwrap()
+    );
 
-    // TODO use only this client
     let client = reqwest::Client::new();
 
-    // separate task
+    // separate task for metrics
     tokio::spawn(async move {
         loop {
-            handle_metrics(&mut collector, &metrics_url).await;
+            handle_metrics(&mut collector).await;
             sleep(Duration::from_secs(METRICS_DELAY)).await;
         }
     });
@@ -49,22 +44,31 @@ pub async fn main() -> Result<(), shared::Error> {
     }
 }
 
-async fn handle_metrics(collector: &mut Collector, url: &str) {
+async fn handle_metrics(collector: &mut impl Collector) {
     let metrics = collector.get_metrics();
-    let resp = collector.client.post(url).json(&metrics).send().await;
 
-    match resp {
-        Ok(val) => {
-            if val.status() == reqwest::StatusCode::UNAUTHORIZED {
-                let result = collector.try_get_new_id().await;
-                if let Err(val) = result {
-                    eprintln!("Error while getting collector ID: {}", val)
+    let mut tries = 3;
+    while tries > 0 {
+        let resp = collector.send_metrics(&metrics).await;
+        if let Err(val) = resp {
+            tries -= 1;
+            eprint!("Error sending metrics: ");
+
+            match val {
+                shared::Error::CollectorRequiresID => {
+                    eprint!("New ID required, trying... ");
+                    match collector.try_get_id().await {
+                        Ok(_) => eprintln!("Success"),
+                        Err(val) => eprintln!("Failed: {}", val),
+                    }
                 }
+                _ => eprintln!("{}", val),
             }
+
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            continue;
         }
-        Err(val) => {
-            eprintln!("Error: {}", val);
-        }
+        break;
     }
 }
 
@@ -80,7 +84,7 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
     let mut endpoint_results = vec![];
     let timestamp = chrono::Local::now().naive_local();
 
-    // send requests to user-specified endpoints
+    // test if services on endpoints are available, generate results
     for e in endpoints {
         // if timeout passes
         let response = timeout(Duration::from_secs(ENDPOINT_TIMEOUT), e.send(client))
@@ -89,10 +93,12 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
 
         let result = match response {
             Ok(mut val) => {
+                // set the same timestamp to all
                 val.timestamp = timestamp;
                 val
             }
             Err(val) => {
+                // TODO maybe add this to db also
                 eprintln!("Error while checking endpoint: {}", val);
                 EndpointResult {
                     endpoint_id: e.id,
@@ -112,6 +118,7 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
         .json(&endpoint_results)
         .send()
         .await;
+
     match resp {
         Ok(val) => match val.status().as_u16() {
             400 | 404 | 500 => {
@@ -126,17 +133,4 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
             eprintln!("Error sending endpoint results: {}", val);
         }
     }
-}
-
-pub fn get_supported_systems() -> Vec<String> {
-    vec![
-        "Android".to_string(),
-        "FreeBSD".to_string(),
-        "NetBSD".to_string(),
-        "iOS".to_string(),
-        "Linux".to_string(),
-        "macOS".to_string(),
-        "Raspberry Pi".to_string(),
-        "Windows".to_string(),
-    ]
 }

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
-use shared::structs::{db::NotificationInsert, metric_type_enum::MetricTypeEnum};
+use shared::{enums::metric_type::MetricType, structs::db::NotificationInsert};
 
 use crate::{
     AppState, WebSocketType,
@@ -77,20 +77,18 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
             }
         }
 
-        let pretty_component_name = match MetricTypeEnum::from_str(&metric_type) {
+        let pretty_component_name = match MetricType::from_str(&metric_type) {
             Ok(val) => match val {
-                MetricTypeEnum::CpuUsage
-                | MetricTypeEnum::UsedMemoryMb
-                | MetricTypeEnum::UsedSwapMb => {
+                MetricType::CpuUsage | MetricType::UsedMemoryMb | MetricType::UsedSwapMb => {
                     val.to_string_pretty().unwrap_or(metric_type.clone())
                 }
-                MetricTypeEnum::DriveUsedSpace => {
+                MetricType::DriveUsedSpace => {
                     format!("Used Space (GB) on Drive '{}'", component_name)
                 }
-                MetricTypeEnum::NetworkDownload => {
+                MetricType::NetworkDownload => {
                     format!("Download (KB) on Network Interface {}", component_name)
                 }
-                MetricTypeEnum::NetworkUpload => {
+                MetricType::NetworkUpload => {
                     format!("Upload (KB) on Network Interface {}", component_name)
                 }
             },

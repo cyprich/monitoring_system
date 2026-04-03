@@ -1,4 +1,4 @@
-use std::fmt::{Display, write};
+use std::fmt::Display;
 
 use crate::UNKNOWN;
 
@@ -6,6 +6,8 @@ use crate::UNKNOWN;
 pub enum Error {
     Env(dotenvy::Error),
 
+    CollectorRequiresID,
+    // CollectorRequresSettings,
     IoGeneral(std::io::Error),
     IoNotFound(std::io::Error),
 
@@ -28,7 +30,7 @@ pub enum Error {
 
     UnsupportedSystem,
     Elapsed,
-    NotImplemented(Option<String>),
+    General(String),
 }
 
 impl Display for Error {
@@ -40,6 +42,9 @@ impl Display for Error {
                     true => write!(f, "{msg} variable {error} not found",),
                     false => write!(f, "{msg} {error}"),
                 }
+            }
+            Error::CollectorRequiresID => {
+                write!(f, "Collector requires new ID from API")
             }
             Error::IoGeneral(error) => {
                 write!(f, "General IO Error: {} - {}", error.kind(), error)
@@ -79,10 +84,7 @@ impl Display for Error {
             Error::TomlDe(error) => write!(f, "Error deserializing TOML: {}", error),
             Error::UnsupportedSystem => write!(f, "System not supported"),
             Error::Elapsed => write!(f, "Time elapsed - couldn't reach in specified time"),
-            Error::NotImplemented(val) => match val {
-                Some(val) => write!(f, "Feature not implemented yet: {}", val),
-                None => write!(f, "Feature not implemented yet"),
-            },
+            Error::General(val) => write!(f, "General Error: {}", val),
         }
     }
 }

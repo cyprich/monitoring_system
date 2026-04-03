@@ -1,11 +1,7 @@
-mod collectors;
-pub use collectors::Collector;
-pub use collectors::CollectorConfig;
-pub use collectors::UnidentifiedCollector;
-
+pub mod collector_config;
+pub mod collector_info;
 pub mod db;
 pub mod endpoints;
-pub mod metric_type_enum;
 pub mod metrics;
 pub mod notifications;
 pub mod thresholds;

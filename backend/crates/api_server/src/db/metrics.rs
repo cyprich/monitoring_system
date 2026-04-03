@@ -1,4 +1,4 @@
-use shared::structs::{metric_type_enum::MetricTypeEnum, metrics::Metrics};
+use shared::{enums::metric_type::MetricType, structs::metrics::Metrics};
 use sqlx::{Postgres, QueryBuilder};
 
 use crate::{AppState, notifications};
@@ -11,17 +11,17 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
     let mut values = vec![
         (
             metrics.cpu_usage as f64,
-            MetricTypeEnum::CpuUsage,
+            MetricType::CpuUsage,
             String::default(),
         ),
         (
             metrics.used_memory_mb as f64,
-            MetricTypeEnum::UsedMemoryMb,
+            MetricType::UsedMemoryMb,
             String::default(),
         ),
         (
             metrics.used_swap_mb as f64,
-            MetricTypeEnum::UsedSwapMb,
+            MetricType::UsedSwapMb,
             String::default(),
         ),
     ];
@@ -30,7 +30,7 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
     for d in metrics.drives.clone() {
         values.push((
             d.used_space_gb as f64,
-            MetricTypeEnum::DriveUsedSpace,
+            MetricType::DriveUsedSpace,
             d.mountpoint,
         ));
     }
@@ -39,10 +39,10 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
     for n in metrics.network_interfaces.clone() {
         values.push((
             n.download_kb as f64,
-            MetricTypeEnum::NetworkDownload,
+            MetricType::NetworkDownload,
             n.name.clone(),
         ));
-        values.push((n.upload_kb as f64, MetricTypeEnum::NetworkUpload, n.name));
+        values.push((n.upload_kb as f64, MetricType::NetworkUpload, n.name));
     }
 
     builder.push_values(values, |mut b, val| {

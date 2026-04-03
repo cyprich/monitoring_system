@@ -1,9 +1,11 @@
 use std::{collections::BTreeMap, str::FromStr};
 
-use shared::structs::{
-    db::MetricsTable,
-    metric_type_enum::MetricTypeEnum,
-    metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
+use shared::{
+    enums::metric_type::MetricType,
+    structs::{
+        db::MetricsTable,
+        metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
+    },
 };
 use sqlx::{Postgres, QueryBuilder, types::chrono::NaiveDateTime};
 
@@ -60,7 +62,7 @@ pub async fn get_collector_metrics(
             network_interfaces: vec![],
         });
 
-        let metric_type = match MetricTypeEnum::from_str(&row.metric_type) {
+        let metric_type = match MetricType::from_str(&row.metric_type) {
             Ok(val) => val,
             Err(val) => {
                 eprintln!("Invalid Metric Type value: {}", val);
@@ -69,16 +71,16 @@ pub async fn get_collector_metrics(
         };
 
         match metric_type {
-            MetricTypeEnum::CpuUsage => entry.cpu_usage = row.value as f32,
-            MetricTypeEnum::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
-            MetricTypeEnum::UsedSwapMb => entry.used_swap_mb = row.value as u64,
-            MetricTypeEnum::DriveUsedSpace => {
+            MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
+            MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
+            MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
+            MetricType::DriveUsedSpace => {
                 entry.drives.push(DriveMetrics {
                     mountpoint: row.component_name,
                     used_space_gb: row.value as u64,
                 });
             }
-            MetricTypeEnum::NetworkDownload => {
+            MetricType::NetworkDownload => {
                 let net = entry
                     .network_interfaces
                     .iter_mut()
@@ -97,7 +99,7 @@ pub async fn get_collector_metrics(
                     }
                 }
             }
-            MetricTypeEnum::NetworkUpload => {
+            MetricType::NetworkUpload => {
                 let net = entry
                     .network_interfaces
                     .iter_mut()

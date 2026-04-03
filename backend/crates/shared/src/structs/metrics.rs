@@ -28,9 +28,28 @@ pub struct DriveMetrics {
     pub used_space_gb: u64,
 }
 
+impl From<&sysinfo::Disk> for DriveMetrics {
+    fn from(value: &sysinfo::Disk) -> Self {
+        Self {
+            mountpoint: value.mount_point().to_string_lossy().to_string(),
+            used_space_gb: (value.total_space() - value.available_space()) / 1_000_000_000,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkInterfaceMetrics {
     pub name: String,
     pub upload_kb: u64,
     pub download_kb: u64,
+}
+
+impl From<(&str, &sysinfo::NetworkData)> for NetworkInterfaceMetrics {
+    fn from(value: (&str, &sysinfo::NetworkData)) -> Self {
+        Self {
+            name: value.0.to_string(),
+            upload_kb: value.1.transmitted() / 1_000,
+            download_kb: value.1.received() / 1_000,
+        }
+    }
 }

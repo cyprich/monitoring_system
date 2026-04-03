@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug)]
-pub enum MetricTypeEnum {
+pub enum MetricType {
     CpuUsage,
     UsedMemoryMb,
     UsedSwapMb,
@@ -10,7 +10,7 @@ pub enum MetricTypeEnum {
     NetworkUpload,
 }
 
-impl MetricTypeEnum {
+impl MetricType {
     pub fn to_string_pretty(self) -> Option<String> {
         let val = match self {
             Self::CpuUsage => "CPU Usage (%)",
@@ -25,7 +25,7 @@ impl MetricTypeEnum {
     }
 }
 
-impl FromStr for MetricTypeEnum {
+impl FromStr for MetricType {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -41,15 +41,15 @@ impl FromStr for MetricTypeEnum {
     }
 }
 
-impl Display for MetricTypeEnum {
+impl Display for MetricType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let value = match self {
-            MetricTypeEnum::CpuUsage => "cpu_usage",
-            MetricTypeEnum::UsedMemoryMb => "used_memory_mb",
-            MetricTypeEnum::UsedSwapMb => "used_swap_mb",
-            MetricTypeEnum::DriveUsedSpace => "drive_used_space",
-            MetricTypeEnum::NetworkDownload => "network_download",
-            MetricTypeEnum::NetworkUpload => "network_upload",
+            MetricType::CpuUsage => "cpu_usage",
+            MetricType::UsedMemoryMb => "used_memory_mb",
+            MetricType::UsedSwapMb => "used_swap_mb",
+            MetricType::DriveUsedSpace => "drive_used_space",
+            MetricType::NetworkDownload => "network_download",
+            MetricType::NetworkUpload => "network_upload",
         };
 
         write!(f, "{}", value)
