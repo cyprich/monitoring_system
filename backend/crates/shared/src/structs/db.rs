@@ -60,7 +60,7 @@ pub struct EndpointsTable {
 pub type EndpointsResultsTable = crate::structs::endpoints::EndpointResult;
 pub type NotificationsTable = crate::structs::notifications::Notification;
 pub type MetricsThresholdsTable = crate::structs::thresholds::MetricsThreshold;
-pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThreshold;
+pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThresholds;
 
 // TODO do i really need these? cant i just ignore the ID on insert?
 // used when inserting new values to database, when ID is not known yet

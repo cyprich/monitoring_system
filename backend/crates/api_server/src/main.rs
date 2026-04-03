@@ -7,14 +7,14 @@ use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
 
-use crate::endpoints::notifications::{
+use crate::handlers::notifications::{
     delete_collector_notifications, delete_collector_notifications_all, get_collector_notifications,
 };
-use crate::endpoints::*;
+use crate::handlers::*;
 use db::Pool;
 
 mod db;
-mod endpoints;
+mod handlers;
 mod notifications;
 
 #[derive(Clone, Debug, Serialize)]

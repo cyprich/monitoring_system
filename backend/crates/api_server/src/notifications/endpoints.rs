@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
-use shared::structs::{db::NotificationInsert, endpoints::Endpoint};
+use shared::structs::db::NotificationInsert;
 
 use crate::{
     AppState, WebSocketType,
-    db::{Pool, get_endpoints_by_id, insert_collector_notifications},
+    db::{
+        Pool, get_collector_endpoints_thresholds, get_endpoints_by_id,
+        insert_collector_notifications,
+    },
 };
 
 // HashMap<endpoint id, (threshold value, measured values)>
@@ -38,15 +41,16 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
     let mut map: EndpointsMap = EndpointsMap::new();
 
     // TODO does this needs to be the full variant?
-    let thresholds = crate::db::get_collector_endpoints_thresholds_join(pool, collector_id).await?;
-    if thresholds.is_empty() {
-        return Ok(None);
-    }
+    // let thresholds = crate::db::get_collector_endpoints_thresholds_join(pool, collector_id).await?;
+    // if thresholds.is_empty() {
+    //     return Ok(None);
+    // }
+
+    let thresholds = get_collector_endpoints_thresholds(pool, collector_id).await?;
 
     // insert key and threshold values to the map
     for t in thresholds {
-        map.entry(t.endpoint_id)
-            .or_insert((t.threshold_value, vec![]));
+        map.entry(t.endpoint_id).or_insert((t.value, vec![]));
     }
 
     // TODO each metric chould have different value (limit), idk how to fix this rn - needs another
@@ -67,8 +71,6 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
 
     Ok(Some(map))
 }
-
-// TODO
 
 async fn create_notifications(
     pool: &Pool,
