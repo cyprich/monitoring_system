@@ -10,7 +10,7 @@ interface NotificationProps {
     collector_id: number
 }
 
-const ROWS_PER_PAGE = 8;
+const ROWS_PER_PAGE = 10;
 
 export default function Notifications(props: NotificationProps) {
     const [page, setPage] = useState<number>(1);
@@ -26,11 +26,25 @@ export default function Notifications(props: NotificationProps) {
     const end = Math.min(page * ROWS_PER_PAGE, props.notifications.length);
 
     // TODO url
-    const url = `http://localhost:5000/collector/${props.collector_id}/notifications`
+    const base_url = `http://localhost:5000/collector/${props.collector_id}/notifications`
 
-    function remove_notification(id: number) {
-        const newNotifications = props.notifications.filter((n) => n.id !== id);
-        props.setNotifications(newNotifications)
+    function remove_notification(id: number | undefined) {
+        let url = base_url;
+        if (typeof id === "number") {
+            url += `/${id}`
+        }
+
+        axios.delete(`${url}`).then(() => {
+            let newNotifications: Notification[];
+
+            if (typeof id === "number") {
+                newNotifications = props.notifications.filter((n) => n.id !== id);
+            } else {
+                newNotifications = []
+            }
+
+            props.setNotifications(newNotifications)
+        })
     }
 
     // TODO show when user does not have any registered thresholds = no notifications
@@ -97,11 +111,7 @@ export default function Notifications(props: NotificationProps) {
                                             <div
                                                 className={"bg-red-100 hover:bg-red-200 " +
                                                     "hover:*:text-red-600"}
-                                                onClick={() => {
-                                                    axios.delete(`${url}/${n.id}`).then(() => {
-                                                        remove_notification(n.id)
-                                                    })
-                                                }}
+                                                onClick={() => { remove_notification(n.id) }}
                                             >
                                                 <TrashBin className={"size-5 text-red-500"}/>
                                             </div>
@@ -154,11 +164,7 @@ export default function Notifications(props: NotificationProps) {
                     }
                 </Table.Footer>
             </Table>
-            <Button variant={"danger-soft"} onClick={() => {
-                axios.delete(url).then(() => {
-                    props.setNotifications([])
-                })
-            }}>Remove all</Button>
+            <Button variant={"danger-soft"} onClick={() => { remove_notification() }}>Remove all</Button>
         </div>
     )
 }

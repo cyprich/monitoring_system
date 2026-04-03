@@ -23,8 +23,8 @@ create table collectors (
 );
 
 create table drives (
-    mountpoint varchar, 
-    collector_id integer, 
+    mountpoint varchar not null, 
+    collector_id integer not null, 
     capacity_gb integer not null, 
     file_system varchar not null,
     primary key (mountpoint, collector_id), 
@@ -32,8 +32,8 @@ create table drives (
 );
 
 create table network_interfaces (
-    name varchar, 
-    collector_id integer, 
+    name varchar not null, 
+    collector_id integer not null, 
     mac varchar not null, 
     primary key (name, collector_id), 
     foreign key (collector_id) references collectors(id)
@@ -56,11 +56,11 @@ create table metric_type (
 );
 
 create table metrics (
-    timestamp timestamp,
-    value double precision,
-    metric_type varchar,
-    collector_id integer,
-    component_name varchar ,  -- used when we have multiple disks/network interfaces
+    timestamp timestamp not null,
+    value double precision not null,
+    metric_type varchar not null,
+    collector_id integer not null,
+    component_name varchar not null,  -- used when we have multiple disks/network interfaces
     primary key (timestamp, value, metric_type, collector_id, component_name),
     foreign key (metric_type) references metric_type(name),
     foreign key (collector_id) references collectors(id)
@@ -71,19 +71,19 @@ create table metrics (
 -- );
 
 create table endpoints (
-    id serial, 
-    collector_id integer, 
+    id serial not null, 
+    collector_id integer not null, 
     -- method request_method, 
-    url varchar, 
+    url varchar not null, 
     expected_codes integer[],
     primary key (id),
     foreign key (collector_id) references collectors(id),
     unique(collector_id, url)
 );
 
-create table endpoints_result (
-    endpoint_id integer, 
-    timestamp timestamp,
+create table endpoints_results (
+    endpoint_id integer not null, 
+    timestamp timestamp not null,
     result boolean not null, 
     latency_microseconds bigint,
     primary key (endpoint_id, timestamp), 
@@ -104,7 +104,7 @@ create table endpoints_result (
 -- );
 
 create table notifications (
-    id serial,
+    id serial not null,
     collector_id integer not null,
     metric_type varchar not null, 
     component_name varchar not null, 
@@ -118,16 +118,27 @@ create table notifications (
     -- foreign key (severity) references notification_severity(id)
 );
 
-create table thresholds (
-    id serial, 
+-- TODO count? 
+-- like how many consecutive values have to be above limit
+
+create table metrics_thresholds (
+    id serial not null, 
     collector_id integer not null, 
-    component_name varchar not null, 
     metric_type varchar not null, 
+    component_name varchar not null, 
     value double precision not null,
     primary key (id), 
     foreign key (collector_id) references collectors(id), 
     foreign key (metric_type) references metric_type(name),
-    unique(collector_id, component_name, metric_type)
+    unique(collector_id, metric_type, component_name)
+);
+
+create table endpoints_thresholds (
+    id serial not null, 
+    endpoint_id integer not null, 
+    value integer not null, 
+    primary key (id), 
+    foreign key (endpoint_id) references endpoints(id)
 );
 
 --------------------- insert metric types ---------------------

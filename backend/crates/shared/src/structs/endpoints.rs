@@ -37,7 +37,6 @@ impl Endpoint {
     pub async fn send(&self, client: &reqwest::Client) -> Result<EndpointResult, crate::Error> {
         let url = &self.url;
 
-        let latency = Instant::now();
         let req = match self.method {
             RequestMethod::Get => client.get(url),
             RequestMethod::Post => client.post(url),
@@ -46,6 +45,7 @@ impl Endpoint {
             RequestMethod::Delete => client.delete(url),
         };
 
+        let latency = Instant::now();
         let resp = req.send().await;
         let latency = latency.elapsed().as_micros();
 
@@ -59,7 +59,7 @@ impl Endpoint {
 
         let result = EndpointResult {
             endpoint_id: self.id,
-            timestamp: chrono::Local::now().naive_local(),
+            timestamp: NaiveDateTime::default(),
             result: is_success,
             latency_microseconds: Some(latency as i64),
         };
@@ -81,7 +81,7 @@ impl From<EndpointsTable> for Endpoint {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EndpointResult {
     pub endpoint_id: i32,
     pub timestamp: NaiveDateTime,

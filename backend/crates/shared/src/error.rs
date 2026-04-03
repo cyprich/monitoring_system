@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, write};
 
 use crate::UNKNOWN;
 
@@ -28,6 +28,7 @@ pub enum Error {
 
     UnsupportedSystem,
     Elapsed,
+    NotImplemented(Option<String>),
 }
 
 impl Display for Error {
@@ -78,6 +79,10 @@ impl Display for Error {
             Error::TomlDe(error) => write!(f, "Error deserializing TOML: {}", error),
             Error::UnsupportedSystem => write!(f, "System not supported"),
             Error::Elapsed => write!(f, "Time elapsed - couldn't reach in specified time"),
+            Error::NotImplemented(val) => match val {
+                Some(val) => write!(f, "Feature not implemented yet: {}", val),
+                None => write!(f, "Feature not implemented yet"),
+            },
         }
     }
 }

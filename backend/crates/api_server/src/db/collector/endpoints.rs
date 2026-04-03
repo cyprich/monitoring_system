@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use shared::structs::{
     db::{EndpointInsert, EndpointsTable},
     endpoints::Endpoint,
 };
+use sqlx::{Postgres, QueryBuilder};
 
 use crate::Pool;
 
@@ -79,4 +82,29 @@ pub async fn delete_collector_endpoint(pool: &Pool, id: i32) -> Result<(), share
     transaction.commit().await?;
 
     Ok(())
+}
+
+pub async fn get_endpoints_by_id(
+    pool: &Pool,
+    collector_id: Option<i32>,
+) -> Result<HashMap<i32, Endpoint>, shared::Error> {
+    let mut builder: QueryBuilder<Postgres> = QueryBuilder::new("select * from endpoints ");
+
+    if let Some(val) = collector_id {
+        builder.push(" where collector_id = ");
+        builder.push_bind(val);
+    }
+
+    let endpoints = builder
+        .build_query_as::<EndpointsTable>()
+        .fetch_all(pool)
+        .await?;
+
+    let mut map = HashMap::new();
+
+    for e in endpoints {
+        map.entry(e.id).insert_entry(Endpoint::from(e));
+    }
+
+    Ok(map)
 }

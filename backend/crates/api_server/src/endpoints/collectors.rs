@@ -1,4 +1,4 @@
-use crate::db;
+use crate::{db, notifications::handle_endpoints};
 use actix_web::{HttpResponse, Responder, delete, get, patch, put};
 use serde::Deserialize;
 
@@ -103,7 +103,7 @@ async fn get_collector_endpoint_results(
     state: web::Data<AppState>,
     id: web::Path<i32>,
 ) -> impl Responder {
-    let result = db::get_collector_endpoints_results(&state.pool, id.into_inner()).await;
+    let result = db::get_collector_endpoints_results(&state.pool, id.into_inner(), None).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
@@ -125,14 +125,22 @@ async fn post_collector_endpoint_results(
     if endpoint_results.is_empty() {
         return HttpResponse::NotModified().finish();
     }
+
+    let id = id.into_inner();
+
+    // intsert into db
     let result =
         db::insert_collector_endpoints_results(&state.pool, endpoint_results.clone()).await;
 
     if result.is_ok() {
+        // send to websocket
         let _ = state.tx.send((
             WebSocketType::EndpointResult(endpoint_results.into_inner()),
-            id.into_inner(),
+            id,
         ));
+
+        // evaluate notifications
+        let x = handle_endpoints(&state, id).await;
     }
 
     handle_query_error(result, ResponseBodyType::None)

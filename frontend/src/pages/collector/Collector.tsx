@@ -8,7 +8,14 @@ import {getMetricsLimit} from "../../helpFunctions.ts";
 import {SettingsMetricsCountSection} from "../../components/settings/SettingsMetricsCountSection.tsx";
 import SettingsGeneralSection from "../../components/settings/SettingsGeneralSection.tsx";
 import ConfirmableInput from "../../components/ConfirmableInput.tsx";
-import {ChevronLeft} from "@gravity-ui/icons";
+import {
+    ArrowShapeUpFromLine,
+    Bell,
+    ChartLineArrowUp,
+    ChevronLeft,
+    Gear,
+    ShieldKeyhole
+} from "@gravity-ui/icons";
 import Notifications from "./Notifications.tsx";
 import Endpoints from "./endpoints/Endpoints.tsx";
 import Metrics from "./Metrics.tsx"
@@ -161,23 +168,23 @@ export default function Collector() {
             {
                 collector && <CollectorHeader {...collector} />
             }
-            <CustomSurface title={"Metrics"}>
+            <CustomSurface title={"Metrics"} icon={ <ChartLineArrowUp/> }>
                 <Metrics collector={collector} data={metrics}/>
             </CustomSurface>
 
-            <CustomSurface title={"Notifications"}>
-                <Notifications notifications={notifications} collector_id={id} setNotifications={setNotifications}/>
-            </CustomSurface>
-
-            <CustomSurface title={"API Endpoints"}>
+            <CustomSurface title={"API Endpoints"} icon={ <ArrowShapeUpFromLine/> } >
                 <Endpoints collectorId={collector?.id || 0} lastEndpointsResults={lastEndpointsResults}/>
             </CustomSurface>
 
-            <CustomSurface title={"Security stuff?"}>
+            <CustomSurface title={"Security stuff?"} icon={ <ShieldKeyhole/> } >
                 <p className={"custom-description"}>//TODO</p>
             </CustomSurface>
 
-            <CustomSurface title={"Settings"} className={"flex flex-col gap-6"}>
+            <CustomSurface title={"Notifications"} icon={ <Bell/> } >
+                <Notifications notifications={notifications} collector_id={id} setNotifications={setNotifications}/>
+            </CustomSurface>
+
+            <CustomSurface title={"Settings"} className={"flex flex-col gap-6"} icon={ <Gear/> } >
                 <div>
                     <SettingsGeneralSection title={"Collector name"}>
                         {
@@ -211,25 +218,35 @@ function CollectorHeader(collector: Collector) {
     // TODO hidden drives/networks
 
     return (
-        <div className={"flex flex-col gap-1"}>
-            <h1>{collector.name}</h1>
-            {
-                collector.name !== collector.host_name && <h3 className={"mb-0! -mt-2!"}>{collector.host_name}</h3>
-            }
-            <p className={"flex items-center"}>
-                {collector.system_name}
-                <span className={"w-0.5 h-5 mx-2 bg-black/40"}/>
-                {collector.kernel_version}
-            </p>
-            <p>{collector.cpu_count} CPU Cores</p>
-            <p>{collector.total_memory_mb} MB RAM</p>
-            <p>{collector.total_swap_mb} MB Swap</p>
-            <p>
-                {collector.drives?.length || 0} drives
-                <span className={"font-extralight"}> with total capacity of </span>
-                {total_capacity}GB
-            </p>
-            <p>{collector.network_interfaces?.length || 0} network interfaces</p>
+        <div className={"flex flex-col gap-3"}>
+            <div className={"flex flex-col gap-2"}>
+                <h1 className={"mb-1!"}>{collector.name}</h1>
+                {
+                    collector.name !== collector.host_name && <p className={"-mt-1"}>{collector.host_name}</p>
+                }
+                <p className={"flex items-center"}>
+                    {collector.system_name}
+                    <span className={"w-0.5 h-5 mx-2 bg-black/40"}/>
+                    {collector.kernel_version}
+                </p>
+                <p>{collector.cpu_count} CPU Cores</p>
+                <p>{(collector.total_memory_mb || 0) / 1000} GB RAM</p>
+                <p>{(collector.total_swap_mb || 0) / 1000} GB Swap</p>
+                <p>
+                    {collector.drives?.length || 0} drives
+                    <span className={"font-extralight"}> with total capacity of </span>
+                    {total_capacity}GB
+                </p>
+                <p>{collector.network_interfaces?.length || 0} network interfaces</p>
+            </div>
+            {/* TODO */}
+            <div className={"flex gap-2 *:size-11 *:p-2 *:rounded-lg *:border-2 *:hover:bg-zinc-200 transition-all "}>
+                <ChartLineArrowUp/>
+                <ArrowShapeUpFromLine/>
+                <ShieldKeyhole/>
+                <Bell/>
+                <Gear/>
+            </div>
         </div>
     )
 }

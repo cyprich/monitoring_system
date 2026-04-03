@@ -1,7 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
 use shared::structs::{db::NotificationInsert, metric_type_enum::MetricTypeEnum};
-use sqlx::types::chrono;
 
 use crate::{
     AppState, WebSocketType,
@@ -9,16 +8,16 @@ use crate::{
 };
 
 // HashMap<(component name, metric type), (threshold value, measured values)>
-type MetricsMap = HashMap<(String, String), (f64, Vec<f64>)>;
+type NotificationsMap = HashMap<(String, String), (f64, Vec<f64>)>;
 
 pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), shared::Error> {
-    let map = evalueate_metrics(&state.pool, collector_id).await?;
+    let map = evaluate(&state.pool, collector_id).await?;
     let map = match map {
         Some(val) => val,
         None => return Ok(()),
     };
 
-    let notif_inserts = create_notifications(&state.pool, collector_id, map).await;
+    let notif_inserts = create_notifications(collector_id, map).await;
     if notif_inserts.is_empty() {
         return Ok(());
     }
@@ -35,13 +34,13 @@ pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), s
     Ok(())
 }
 
-async fn evalueate_metrics(
+async fn evaluate(
     pool: &Pool,
     collector_id: i32,
-) -> Result<Option<MetricsMap>, shared::Error> {
-    let mut map: MetricsMap = MetricsMap::new();
+) -> Result<Option<NotificationsMap>, shared::Error> {
+    let mut map: NotificationsMap = NotificationsMap::new();
 
-    let thresholds = crate::db::get_collector_thresholds(pool, collector_id).await?;
+    let thresholds = crate::db::get_collector_metrics_thresholds(pool, collector_id).await?;
     if thresholds.is_empty() {
         return Ok(None);
     }
@@ -51,7 +50,7 @@ async fn evalueate_metrics(
             .or_insert((t.value, vec![]));
     }
 
-    // TODO each metric chould have different value, idk how to fix this rn
+    // TODO each metric chould have different value (limit), idk how to fix this rn
     let metrics = crate::db::get_collector_metrics_table(pool, collector_id, Some(5)).await?;
     if metrics.is_empty() {
         return Ok(None);
@@ -68,15 +67,8 @@ async fn evalueate_metrics(
     Ok(Some(map))
 }
 
-async fn create_notifications(
-    pool: &Pool,
-    collector_id: i32,
-    map: MetricsMap,
-) -> Vec<NotificationInsert> {
+async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<NotificationInsert> {
     let mut notifications: Vec<NotificationInsert> = vec![];
-    // let collector_name = db::get_collector_name(pool, collector_id)
-    //     .await
-    //     .unwrap_or(format!("#{collector_id}"));
 
     'outer: for ((component_name, metric_type), (threshold_value, measured_values)) in map {
         for val in &measured_values {
@@ -84,14 +76,6 @@ async fn create_notifications(
                 continue 'outer;
             }
         }
-
-        // let pretty_component_name = match component_name.is_empty() {
-        //     true => match MetricTypeEnum::from_str(&metric_type) {
-        //         Ok(val) => val.to_string_pretty().unwrap_or(metric_type.clone()),
-        //         Err(_) => metric_type.clone(),
-        //     },
-        //     false => component_name,
-        // };
 
         let pretty_component_name = match MetricTypeEnum::from_str(&metric_type) {
             Ok(val) => match val {
@@ -115,7 +99,7 @@ async fn create_notifications(
 
         notifications.push(NotificationInsert {
             collector_id,
-            timestamp: chrono::Local::now().naive_local(),
+            timestamp: sqlx::types::chrono::Local::now().naive_local(),
             metric_type,
             component_name: pretty_component_name,
             threshold_value,

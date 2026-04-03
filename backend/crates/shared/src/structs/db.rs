@@ -47,7 +47,7 @@ pub struct MetricsTable {
     pub component_name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EndpointsTable {
     pub id: i32,
     pub collector_id: i32,
@@ -59,8 +59,10 @@ pub struct EndpointsTable {
 // it has the same fields, only here for compatibility
 pub type EndpointsResultsTable = crate::structs::endpoints::EndpointResult;
 pub type NotificationsTable = crate::structs::notifications::Notification;
-pub type ThresholdsTable = crate::structs::thresholds::Threshold;
+pub type MetricsThresholdsTable = crate::structs::thresholds::MetricsThreshold;
+pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThreshold;
 
+// TODO do i really need these? cant i just ignore the ID on insert?
 // used when inserting new values to database, when ID is not known yet
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EndpointInsert {
@@ -77,4 +79,16 @@ pub struct NotificationInsert {
     pub threshold_value: f64,
     pub measured_values: Vec<f64>,
     pub timestamp: NaiveDateTime,
+}
+
+// joined tables
+// tendpoints_thresholds joined with endpoints
+#[derive(Debug)]
+pub struct EndpointsThresholdsJoin {
+    pub threshold_id: i32,
+    pub endpoint_id: i32,
+    pub collector_id: i32,
+    pub threshold_value: i32,
+    pub url: String,
+    pub expected_codes: Vec<i32>,
 }

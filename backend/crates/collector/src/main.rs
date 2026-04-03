@@ -1,7 +1,8 @@
 use std::time::Duration;
 
+use chrono::NaiveDateTime;
 use shared::structs::{
-    Collector, UnidentifiedCollector,
+    Collector, UnidentifiedCollector, db,
     endpoints::{Endpoint, EndpointResult},
 };
 use tokio::time::{sleep, timeout};
@@ -77,8 +78,9 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
     };
 
     let mut endpoint_results = vec![];
+    let timestamp = chrono::Local::now().naive_local();
 
-    // send requests to user-specifiend endpoints
+    // send requests to user-specified endpoints
     for e in endpoints {
         // if timeout passes
         let response = timeout(Duration::from_secs(ENDPOINT_TIMEOUT), e.send(client))
@@ -86,12 +88,15 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
             .unwrap_or(Err(shared::Error::Elapsed));
 
         let result = match response {
-            Ok(val) => val,
+            Ok(mut val) => {
+                val.timestamp = timestamp;
+                val
+            }
             Err(val) => {
                 eprintln!("Error while checking endpoint: {}", val);
                 EndpointResult {
                     endpoint_id: e.id,
-                    timestamp: chrono::Local::now().naive_local(),
+                    timestamp,
                     result: false,
                     latency_microseconds: None,
                 }
