@@ -9,54 +9,52 @@ export default function Metrics({collector, data}: CollectorProps) {
     const nets_cols = (collector?.network_interfaces?.length || 0) > 4 ? 3 : 2
 
     return (
-        <>
-            <Tabs>
-                <Tabs.ListContainer>
-                    <Tabs.List>
-                        <Tabs.Tab id={"cpu"}>
-                            CPU
-                            <Tabs.Indicator/>
-                        </Tabs.Tab>
-                        <Tabs.Tab id={"mem"}>
-                            Memory
-                            <Tabs.Indicator/>
-                        </Tabs.Tab>
-                        <Tabs.Tab id={"drives"}>
-                            Drives
-                            <Tabs.Indicator/>
-                        </Tabs.Tab>
-                        <Tabs.Tab id={"net"}>
-                            Network
-                            <Tabs.Indicator/>
-                        </Tabs.Tab>
-                    </Tabs.List>
-                </Tabs.ListContainer>
+        <Tabs>
+            <Tabs.ListContainer>
+                <Tabs.List>
+                    <Tabs.Tab id={"cpu"}>
+                        CPU
+                        <Tabs.Indicator/>
+                    </Tabs.Tab>
+                    <Tabs.Tab id={"mem"}>
+                        Memory
+                        <Tabs.Indicator/>
+                    </Tabs.Tab>
+                    <Tabs.Tab id={"drives"}>
+                        Drives
+                        <Tabs.Indicator/>
+                    </Tabs.Tab>
+                    <Tabs.Tab id={"net"}>
+                        Network
+                        <Tabs.Indicator/>
+                    </Tabs.Tab>
+                </Tabs.List>
+            </Tabs.ListContainer>
 
-                <Tabs.Panel id={"cpu"}>
-                    <div className={"grid grid-cols-4 mt-8"}>
-                        <div className={"col-span-2 col-start-2"}>
-                            <CpuChart collector={collector} data={data}/>
-                        </div>
+            <Tabs.Panel id={"cpu"}>
+                <div className={"grid grid-cols-4 mt-8"}>
+                    <div className={"col-span-2 col-start-2"}>
+                        <CpuChart collector={collector} data={data}/>
                     </div>
-                </Tabs.Panel>
-                <Tabs.Panel id={"mem"}>
-                    <div className={className} style={{gridTemplateColumns: `repeat(2, 1fr`}}>
-                        <RamChart collector={collector} data={data}/>
-                        <SwapChart collector={collector} data={data}/>
-                    </div>
-                </Tabs.Panel>
-                <Tabs.Panel id={"drives"}>
-                    <div className={className} style={{gridTemplateColumns: `repeat(${drives_cols}, 1fr)`}}>
-                        <DriveCharts collector={collector} data={data}/>
-                    </div>
-                </Tabs.Panel>
-                <Tabs.Panel id={"net"}>
-                    <div className={className} style={{gridTemplateColumns: `repeat(${nets_cols}, 1fr)`}}>
-                        <NetworkCharts collector={collector} data={data}/>
-                    </div>
-                </Tabs.Panel>
-            </Tabs>
-        </>
+                </div>
+            </Tabs.Panel>
+            <Tabs.Panel id={"mem"}>
+                <div className={className} style={{gridTemplateColumns: `repeat(2, 1fr`}}>
+                    <RamChart collector={collector} data={data}/>
+                    <SwapChart collector={collector} data={data}/>
+                </div>
+            </Tabs.Panel>
+            <Tabs.Panel id={"drives"}>
+                <div className={className} style={{gridTemplateColumns: `repeat(${drives_cols}, 1fr)`}}>
+                    <DriveCharts collector={collector} data={data}/>
+                </div>
+            </Tabs.Panel>
+            <Tabs.Panel id={"net"}>
+                <div className={className} style={{gridTemplateColumns: `repeat(${nets_cols}, 1fr)`}}>
+                    <NetworkCharts collector={collector} data={data}/>
+                </div>
+            </Tabs.Panel>
+        </Tabs>
     )
 }
 function CpuChart(props: CollectorProps) {

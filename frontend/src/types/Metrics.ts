@@ -1,5 +1,3 @@
-import Metrics from "../pages/collector/Metrics.tsx";
-
 export interface Metrics {
     collector_id: string,
     time: string,

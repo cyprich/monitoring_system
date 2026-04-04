@@ -7,9 +7,6 @@ use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
 
-use crate::handlers::notifications::{
-    delete_collector_notifications, delete_collector_notifications_all, get_collector_notifications,
-};
 use crate::handlers::*;
 use db::Pool;
 
@@ -86,6 +83,10 @@ async fn main() -> std::io::Result<()> {
             .service(delete_collector_notifications)
             .service(delete_collector_notifications_all)
             .service(rename_collector)
+            .service(get_collector_metrics_thresholds)
+            .service(get_collector_endpoints_thresholds)
+            .service(delete_metrics_thresholds)
+            .service(delete_endpoints_thresholds)
     })
     .bind(("0.0.0.0", port))?
     .run()

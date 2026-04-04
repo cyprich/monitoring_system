@@ -18,6 +18,11 @@ import Metrics from "./Metrics.tsx"
 import type {EndpointResult} from "../../types/Endpoints.ts";
 import type {Notification} from "../../types/Notifications.ts";
 import {Settings} from "./Settings.tsx";
+import {getResolution, getTimeLimit} from "../../helpFunctions.ts";
+import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
+import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
+import {Separator} from "@heroui/react";
+import {MetricsThresholds} from "./metricsThresholds/MetricsThresholds.tsx";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -38,8 +43,8 @@ export default function Collector() {
     const url = `http://localhost:5000/collector/${id}`;
 
     // TODO
-    const TIME_LIMIT_HOURS = 2;
-    const RESOLUTION = 20;
+    const TIME_LIMIT_HOURS = getTimeLimit();
+    const RESOLUTION = getResolution();
 
     const METRICS_INTERVAL = 5; // new metrics every 5 seconds; TODO
     const TOTAL_METRICS_COUNT = (TIME_LIMIT_HOURS * 3600) / METRICS_INTERVAL; // how many metrics in total
@@ -102,7 +107,6 @@ export default function Collector() {
                         time: new Date(i.time).toLocaleTimeString()
                     }
                 ))
-                console.log(data.length)
                 setMetrics(data);
             })
 
@@ -177,7 +181,7 @@ export default function Collector() {
     }, [TIME_LIMIT_HOURS, id]);
 
     return (
-        <main className={"flex flex-col gap-4"}>
+        <main className={"flex flex-col gap-8"}>
             <Link to={"/"} className={"flex items-center custom-description hover:underline w-max"}>
                 <ChevronLeft/>Home
             </Link>
@@ -186,6 +190,12 @@ export default function Collector() {
             }
             <CustomSurface title={"Metrics"} icon={ <ChartLineArrowUp/> }>
                 <Metrics collector={collector} data={metrics}/>
+                <Separator variant={"tertiary"} className={"my-8"}/>
+                <h4 className={"mt-4 pb-2"}>Settings</h4>
+                <div className={"flex flex-col gap-4"}>
+                    <SettingsTimeLimit/>
+                    <SettingsResolution/>
+                </div>
             </CustomSurface>
 
             <CustomSurface title={"API Endpoints"} icon={ <ArrowShapeUpFromLine/> } >

@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Instant};
 
-use chrono::{NaiveDateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use crate::structs::db::EndpointsTable;

@@ -122,9 +122,12 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
     match resp {
         Ok(val) => match val.status().as_u16() {
             400 | 404 | 500 => {
+                let code = &val.status().to_string();
+                let text = &val.text().await.unwrap_or(code.clone());
+
                 eprintln!(
                     "Unexpected error happened while sending endpoint results: {}",
-                    val.status()
+                    text
                 )
             }
             _ => (),

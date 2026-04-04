@@ -1,25 +1,23 @@
-import {AlertDialog, Button} from "@heroui/react";
-import {EndpointsForm} from "./Form.tsx";
-import type {Endpoint} from "../../../types/Endpoints.ts";
-import axios from "axios";
+import type {MetricsThresholdsInterface} from "../../../types/MetricsThresholdsInterface.ts";
 import {firstLetterUppercase} from "../../../helpFunctions.ts";
+import {AlertDialog, Button} from "@heroui/react";
+import axios from "axios";
+import {EndpointsForm} from "../endpoints/Form.tsx";
 
-export interface DialogProps {
+interface DialogProps {
     action: "add" | "edit" | "delete",
     isOpen: boolean,
     setIsOpen: (isOpen: boolean) => void,
     collector_id: number,
-    endpoint?: Endpoint,
-    refresh: () => void,
+    threshold?: MetricsThresholdsInterface,
 }
 
 export function Dialog(props: DialogProps) {
-    // just formatting - first letter is uppercase
     const title = firstLetterUppercase(props.action)
 
-    function deleteEndpoint(id: number) {
-        const url = `http://localhost:5000/collector/${props.collector_id}/endpoints/${id}`
-        axios.delete(url).then()
+    const url = `http://localhost:5000/metrics_thresholds/${props.threshold?.id}`
+    function deleteThreshold() {
+        axios.delete(url).then().catch(e => console.error(e))
     }
 
     return (
@@ -28,23 +26,22 @@ export function Dialog(props: DialogProps) {
                 <AlertDialog.Container size={"lg"}>
                     <AlertDialog.Dialog>
                         <AlertDialog.Header>
-                            <h4>{title} Endpoint{props.action === "delete" && "?"}</h4>
+                            <h4>{title} Threshold{props.action === "delete" && "?"}</h4>
                             <AlertDialog.CloseTrigger/>
                         </AlertDialog.Header>
                         {
                             props.action !== "delete"
                                 ? <AlertDialog.Body>
-                                    <EndpointsForm
-                                        action={props.action}
-                                        endpoint={ props.action === "edit" ? props.endpoint : undefined}
-                                        collectorId={props.collector_id}
-                                        setIsOpen={props.setIsOpen}
-                                        refresh={props.refresh}
-                                    />
+                                    {/*<EndpointsForm */}
+                                    {/*    action={props.action} */}
+                                    {/*    collectorId={ props.action === "edit" ? props.threshold : undefined} */}
+                                    {/*    setIsOpen={} */}
+                                    {/*    refresh={}*/}
+                                    {/*/>*/}
                                 </AlertDialog.Body>
                                 : <>
                                     <AlertDialog.Body>
-                                        <p>Collector will no longer send requests to this endpoint</p>
+                                        <p>You will no longer receiving notifications after exceeding these limits</p>
                                         <p>This action is not reversible</p>
                                     </AlertDialog.Body>
                                     <AlertDialog.Footer>
@@ -52,10 +49,7 @@ export function Dialog(props: DialogProps) {
                                         <Button
                                             slot={"close"}
                                             variant={"danger"}
-                                            onClick={() => {
-                                                deleteEndpoint(props.endpoint?.id || 0)
-                                                props.refresh()
-                                            }}
+                                            onClick={() => deleteThreshold()}
                                         >Delete</Button>
                                     </AlertDialog.Footer>
                                 </>
@@ -65,4 +59,5 @@ export function Dialog(props: DialogProps) {
             </AlertDialog.Backdrop>
         </AlertDialog>
     )
+
 }

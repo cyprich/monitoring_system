@@ -1,56 +1,10 @@
-import type {Endpoint} from "../../../types/Endpoints.ts";
-import {useState} from "react";
-import {Button, FieldError, Fieldset, Form, Input, TextField, Label, Description} from "@heroui/react";
+import {Button, FieldError, Fieldset, Form, Input, Label, TextField} from "@heroui/react";
 import {ExclamationShapeFill, Plus, TrashBin} from "@gravity-ui/icons";
-import axios from "axios";
 import * as React from "react";
 
-export interface EndpointsFormProps {
-    action: "add" | "edit"
-    collectorId: number
-    setIsOpen: (isOpen: boolean) => void
-    endpoint?: Endpoint,
-    refresh: () => void
-}
-
-export function EndpointsForm(props: EndpointsFormProps) {
-    const [endpointUrl, setEndpointUrl] = useState<string>(props.endpoint?.url || "")
-    const [responseCodeInput, setResponseCodeInput] = useState<string>("")
-    const [responseCodes, setResponseCodes] = useState<number[]>(props.endpoint?.expected_codes || [])
-
-    const backendUrl = `http://localhost:5000/collector/${props.collectorId}/endpoints`
-
-    // TODO historical data
-
+export function ThresholdsForm() {
     function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        const endpoint = {
-            url: endpointUrl,
-            expected_codes: responseCodes,
-            method: "Get"
-        }
-
-        console.log("SUBMIT")
-
-        if (props.action === "add") {
-            axios
-                .post(backendUrl, { ...endpoint })
-                .then()
-                .catch((err) => console.error("post error", err))
-        }
-
-        if (props.action === "edit") {
-            if (props.endpoint?.id === undefined) return
-
-            axios
-                .put(backendUrl, { ...endpoint, id: props.endpoint.id })
-                .then()
-                .catch((err) => console.error("put error", err))
-        }
-
-        props.refresh()
-        props.setIsOpen(false)
+        // TODO
     }
 
     return (
@@ -105,21 +59,21 @@ export function EndpointsForm(props: EndpointsFormProps) {
                             <p className={"pr-2"}>Selected Codes:</p>
                             {
                                 responseCodes.length === 0 ? "None" :
-                                responseCodes.map((c, i) => (
-                                    <div
-                                        className={"bg-background p-2 w-max rounded-xl relative cursor-pointer group min-w-10"}
-                                        key={i}
-                                        onClick={() => {
-                                            const newList = responseCodes.filter((x) => x !== c)
-                                            setResponseCodes(newList)
-                                        }}
-                                    >
-                                        <p className={"group-hover:opacity-0 transition-opacity text-center font-semibold"}>{c}</p>
-                                        <TrashBin className={"absolute top-[50%] left-[50%] translate-[-50%] " +
-                                            "size-6 bg-background text-red-600 " +
-                                            "opacity-0 group-hover:opacity-100 transition-opacity "}/>
-                                    </div>
-                                ))
+                                    responseCodes.map((c, i) => (
+                                        <div
+                                            className={"bg-background p-2 w-max rounded-xl relative cursor-pointer group min-w-10"}
+                                            key={i}
+                                            onClick={() => {
+                                                const newList = responseCodes.filter((x) => x !== c)
+                                                setResponseCodes(newList)
+                                            }}
+                                        >
+                                            <p className={"group-hover:opacity-0 transition-opacity text-center font-semibold"}>{c}</p>
+                                            <TrashBin className={"absolute top-[50%] left-[50%] translate-[-50%] " +
+                                                "size-6 bg-background text-red-600 " +
+                                                "opacity-0 group-hover:opacity-100 transition-opacity "}/>
+                                        </div>
+                                    ))
                             }
                         </div>
                     </div>

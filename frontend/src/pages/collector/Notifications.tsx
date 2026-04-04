@@ -1,8 +1,10 @@
-import {Button, EmptyState, Pagination, Table} from "@heroui/react";
-import {ChevronLeft, ChevronRight, CircleCheckFill, TrashBin} from "@gravity-ui/icons";
+import {Button, Pagination, Table} from "@heroui/react";
+import {ChevronLeft, ChevronRight, TrashBin} from "@gravity-ui/icons";
 import type {Notification} from "../../types/Notifications.ts";
 import {useMemo, useState} from "react";
 import axios from "axios";
+import {TableEmptyContent} from "../../components/TableEmptyContent.tsx";
+import {TableActions} from "../../components/TableActions.tsx";
 
 interface NotificationProps {
     notifications: Notification[],
@@ -28,7 +30,7 @@ export default function Notifications(props: NotificationProps) {
     // TODO url
     const base_url = `http://localhost:5000/collector/${props.collector_id}/notifications`
 
-    function remove_notification(id: number | undefined) {
+    function remove_notification(id: number | null) {
         let url = base_url;
         if (typeof id === "number") {
             url += `/${id}`
@@ -77,11 +79,7 @@ export default function Notifications(props: NotificationProps) {
                             </Table.Column>
                         </Table.Header>
                         <Table.Body renderEmptyState={() => (
-                            <EmptyState
-                                className={"flex flex-col gap-1 justify-center items-center bg-background  rounded-2xl py-8"}>
-                                <CircleCheckFill className={"size-16 opacity-80"}/>
-                                <span>No notifications found</span>
-                            </EmptyState>
+                            <TableEmptyContent text={["No notifications found"]} icon={"check"}/>
                         )}>
                             {
                                 paginatedItems.map((n, i) => {
@@ -103,19 +101,7 @@ export default function Notifications(props: NotificationProps) {
                                         <Table.Cell>
                                             <p>{measured.join(", ")}</p>
                                         </Table.Cell>
-                                        <Table.Cell
-                                            className={"flex gap-4 items-center *:transition-all " +
-                                                "*:w-max *:h-max *:p-2 *:rounded-lg *:cursor-pointer " +
-                                                " *:active:scale:95"}
-                                        >
-                                            <div
-                                                className={"bg-red-100 hover:bg-red-200 " +
-                                                    "hover:*:text-red-600"}
-                                                onClick={() => { remove_notification(n.id) }}
-                                            >
-                                                <TrashBin className={"size-5 text-red-500"}/>
-                                            </div>
-                                        </Table.Cell>
+                                        <TableActions deleteOnClick={() => {remove_notification(n.id)}}/>
                                     </Table.Row>
                                 })
                             }
@@ -164,7 +150,7 @@ export default function Notifications(props: NotificationProps) {
                     }
                 </Table.Footer>
             </Table>
-            <Button variant={"danger-soft"} onClick={() => { remove_notification() }}>Remove all</Button>
+            <Button variant={"danger-soft"} onClick={() => { remove_notification(null) }}>Remove all</Button>
         </div>
     )
 }

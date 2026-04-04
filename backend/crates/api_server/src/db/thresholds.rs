@@ -34,3 +34,28 @@ pub async fn get_endpoints_thresholds(
 
     Ok(result)
 }
+
+pub async fn delete_metrics_thresholds(
+    pool: &Pool,
+    threshold_id: i32,
+) -> Result<(), shared::Error> {
+    sqlx::query!("delete from metrics_thresholds where id = $1", threshold_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
+pub async fn delete_endpoints_thresholds(
+    pool: &Pool,
+    threshold_id: i32,
+) -> Result<(), shared::Error> {
+    sqlx::query!(
+        "delete from endpoints_thresholds where id = $1",
+        threshold_id
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}

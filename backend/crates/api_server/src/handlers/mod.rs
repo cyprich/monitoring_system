@@ -2,14 +2,15 @@ use actix_web::{HttpResponse, Responder, get};
 
 mod collectors;
 mod metrics;
+mod notifications;
+mod thresholds;
 mod ws;
 
 pub use collectors::*;
 pub use metrics::*;
+pub use notifications::*;
+pub use thresholds::*;
 pub use ws::*;
-
-// TODO make all pub mod, rename endpoint functions
-pub mod notifications;
 
 enum ResponseBodyType {
     Json,

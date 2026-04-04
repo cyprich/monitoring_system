@@ -1,13 +1,12 @@
 import {useEffect, useState} from "react";
 import type {Endpoint, EndpointResult} from "../../../types/Endpoints.ts";
 import axios from "axios";
-import {
-    Button,
-    EmptyState,
-    Table,
-} from "@heroui/react";
-import {CircleCheckFill, CircleXmarkFill, TriangleExclamationFill, Pencil, TrashBin, Tray} from "@gravity-ui/icons";
+import {Button, Separator, Table} from "@heroui/react";
+import {CircleCheckFill, CircleXmarkFill, TriangleExclamationFill, Pencil, TrashBin} from "@gravity-ui/icons";
 import {Dialog} from "./Dialog.tsx";
+import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
+import {TableActions} from "../../../components/TableActions.tsx";
+import {EndpointsThresholds} from "../endpointsThresholds/EndpointsThresholds.tsx";
 
 export interface EndpointsProps {
     collectorId: number,
@@ -73,12 +72,7 @@ export default function Endpoints(props: EndpointsProps) {
                             </Table.Column>
                         </Table.Header>
                         <Table.Body renderEmptyState={() => (
-                            <EmptyState
-                                className={"flex flex-col justify-center items-center bg-background  rounded-2xl py-8"}>
-                                <Tray className={"size-16 opacity-80 mb-2"}/>
-                                <span>No Endpoints found</span>
-                                <span>Start by adding your first endpoint</span>
-                            </EmptyState>
+                            <TableEmptyContent text={["No endpoints found", "Start by adding your first endpoint"]} icon={"tray"}/>
                         )}>
                             {
                                 endpoints?.map((e, i) => {
@@ -109,30 +103,17 @@ export default function Endpoints(props: EndpointsProps) {
                                                 </p>
                                             }
                                         </Table.Cell>
-                                        <Table.Cell
-                                            className={"flex gap-4 items-center *:transition-all " +
-                                                "*:w-max *:h-max *:p-2 *:rounded-lg *:cursor-pointer " +
-                                                " *:active:scale:95"}
-                                        >
-                                            <div className={"bg-gray-200 hover:bg-gray-300"}
-                                                 onClick={() => {
-                                                     setEditingEndpoint(e)
-                                                     setIsEditOpen(true)
-                                                 }}
-                                            >
-                                                <Pencil className={"size-5"}/>
-                                            </div>
-                                            <div
-                                                className={"bg-red-100 hover:bg-red-200 " +
-                                                    "hover:*:text-red-600"}
-                                                onClick={() => {
-                                                    setDeletingEndpoint(e)
-                                                    setIsDeleteOpen(true)
-                                                }}
-                                            >
-                                                <TrashBin className={"size-5 text-red-500"}/>
-                                            </div>
-                                        </Table.Cell>
+                                        <TableActions
+                                            deleteOnClick={() => {
+                                                setDeletingEndpoint(e)
+                                                setIsDeleteOpen(true)
+                                            }}
+                                            showEdit={true}
+                                            editOnClick={() => {
+                                                setEditingEndpoint(e)
+                                                setIsEditOpen(true)
+                                            }}
+                                        />
                                     </Table.Row>
                                 })
                             }

@@ -1,19 +1,8 @@
 import type {Key} from "@heroui/react";
 
-// export function getMetricsLimit(): number {
-//     const default_value = 100;
-//     const value = localStorage.getItem("metrics_limit")
-//
-//     if (value !== null) {
-//         return Number(value);
-//     } else {
-//         return default_value;
-//     }
-// }
-//
-// export function setMetricsLimit(value: number) {
-//     localStorage.setItem("metrics_limit", String(value))
-// }
+export function reload() {
+    window.location.reload()
+}
 
 export function getTimeLimit(): number {
     const value = localStorage.getItem("time_limit");
@@ -37,9 +26,20 @@ export function getResolution(): number {
 
 export function setTimeLimit(value: number) {
     localStorage.setItem("time_limit", String(value))
+    reload()
+}
+
+export function setResolution(value: number) {
+    localStorage.setItem("resolution", String(value))
+    reload()
 }
 
 export function keysToNumber(keys: Set<Key>): number {
     const val = keys.values().next().value;
     return Number(val)
+}
+
+
+export function firstLetterUppercase(value: string): string {
+    return value.charAt(0).toUpperCase() + value.slice(1)
 }

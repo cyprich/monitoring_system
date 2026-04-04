@@ -10,8 +10,8 @@ export default function SettingsGeneralSection(props: SectionProps) {
     return (
         <div className={"flex flex-col gap-2"}>
             <p className={"font-semibold"}>{props.title}</p>
-            { props.children }
             <p className={"custom-description"}>{props.description}</p>
+            { props.children }
         </div>
     )
 }

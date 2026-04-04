@@ -62,7 +62,7 @@ pub async fn insert_endpoints_results(
     endpoint_results: Vec<EndpointResult>,
 ) -> Result<(), shared::Error> {
     let mut builder = Builder::new(
-        "insert into endpoints_results (endpoint_id, time at time zone 'utc', result, latency_microseconds) ",
+        "insert into endpoints_results (endpoint_id, time, result, latency_microseconds) ",
     );
 
     builder.push_values(endpoint_results, |mut b, val| {
