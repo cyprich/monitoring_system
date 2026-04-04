@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::structs::db::NotificationInsert;
@@ -11,7 +10,7 @@ pub struct Notification {
     pub component_name: String,
     pub threshold_value: f64,
     pub measured_values: Vec<f64>,
-    pub timestamp: NaiveDateTime,
+    pub time: chrono::DateTime<chrono::Utc>,
 }
 
 impl Notification {
@@ -23,7 +22,7 @@ impl Notification {
             component_name: value.component_name,
             threshold_value: value.threshold_value,
             measured_values: value.measured_values,
-            timestamp: value.timestamp,
+            time: value.time,
         }
     }
 }

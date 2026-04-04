@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 use crate::structs::endpoints::RequestMethod;
@@ -40,7 +39,7 @@ pub struct MetricTypeTable {
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MetricsTable {
-    pub timestamp: NaiveDateTime,
+    pub time: chrono::DateTime<chrono::Utc>,
     pub value: f64,
     pub metric_type: String,
     pub collector_id: i32,
@@ -78,7 +77,7 @@ pub struct NotificationInsert {
     pub component_name: String,
     pub threshold_value: f64,
     pub measured_values: Vec<f64>,
-    pub timestamp: NaiveDateTime,
+    pub time: chrono::DateTime<chrono::Utc>,
 }
 
 // joined tables

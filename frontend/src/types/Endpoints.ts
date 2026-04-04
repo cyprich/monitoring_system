@@ -10,7 +10,7 @@ export interface Endpoint {
 
 export interface EndpointResult {
     endpoint_id: number,
-    timestamp: string,
+    time: string,
     result: boolean,
     latency_microseconds: number | null
 }

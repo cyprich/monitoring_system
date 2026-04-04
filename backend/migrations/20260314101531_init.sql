@@ -56,12 +56,12 @@ create table metric_type (
 );
 
 create table metrics (
-    timestamp timestamp not null,
+    time timestamptz not null,
     value double precision not null,
     metric_type varchar not null,
     collector_id integer not null,
     component_name varchar not null,  -- used when we have multiple disks/network interfaces
-    primary key (timestamp, value, metric_type, collector_id, component_name),
+    primary key (time, value, metric_type, collector_id, component_name),
     foreign key (metric_type) references metric_type(name),
     foreign key (collector_id) references collectors(id)
 );
@@ -83,12 +83,12 @@ create table endpoints (
 
 create table endpoints_results (
     endpoint_id integer not null, 
-    timestamp timestamp not null,
+    time timestamptz not null,
     result boolean not null, 
     latency_microseconds bigint,
-    primary key (endpoint_id, timestamp), 
+    primary key (endpoint_id, time), 
     foreign key (endpoint_id) references endpoints(id)
-)
+);
 
 -- create table users (
 --     id serial,
@@ -111,7 +111,7 @@ create table notifications (
     threshold_value double precision not null, 
     measured_values double precision[] not null,
     -- severity integer,
-    timestamp timestamp not null,
+    time timestamptz not null,
     primary key (id),
     foreign key (collector_id) references collectors(id),
     foreign key (metric_type) references metric_type(name)

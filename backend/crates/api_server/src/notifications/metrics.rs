@@ -50,7 +50,7 @@ async fn evaluate(
     }
 
     // TODO each metric chould have different value (limit), idk how to fix this rn
-    let metrics = crate::db::get_metrics_table(pool, collector_id, Some(5)).await?;
+    let metrics = crate::db::get_metrics_table(pool, collector_id, None, Some(5)).await?;
     if metrics.is_empty() {
         return Ok(None);
     }
@@ -96,7 +96,7 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
 
         notifications.push(NotificationInsert {
             collector_id,
-            timestamp: sqlx::types::chrono::Local::now().naive_local(),
+            time: chrono::Utc::now(),
             metric_type,
             component_name: pretty_component_name,
             threshold_value,

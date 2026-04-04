@@ -60,7 +60,7 @@ export default function Notifications(props: NotificationProps) {
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
-                                Timestamp
+                                Time
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
@@ -95,7 +95,7 @@ export default function Notifications(props: NotificationProps) {
                                             <p>{n.component_name}</p>
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <p>{n.timestamp}</p>
+                                            <p>{n.time}</p>
                                         </Table.Cell>
                                         <Table.Cell>
                                             <p>{threshold}</p>

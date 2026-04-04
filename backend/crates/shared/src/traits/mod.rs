@@ -6,11 +6,11 @@ use crate::structs::{
 };
 
 // TODO it says i should not use `async fn`, but ratner return `impl Future`
-pub trait Collector {
+#[async_trait::async_trait]
+pub trait Collector: Send + Sync {
     fn get_info(&self) -> Result<CollectorInfo, crate::Error>;
     fn get_metrics(&mut self) -> Metrics;
-    // fn get_endpoints(&self) -> Future<Output = Result<Vec<Endpoint>, crate::Error>>;
-    fn get_endpoints(&self) -> impl Future<Output = Result<Vec<Endpoint>, crate::Error>> + Send;
+    async fn get_endpoints(&self) -> Result<Vec<Endpoint>, crate::Error>;
 
     fn get_id(&self) -> Option<i32>;
     fn set_id(&mut self, id: i32);

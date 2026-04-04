@@ -1,5 +1,4 @@
-import {getMetricsLimit, setMetricsLimit} from "../../helpFunctions.ts";
-import {type Key, ToggleButton, ToggleButtonGroup} from "@heroui/react";
+import {ToggleButton, ToggleButtonGroup} from "@heroui/react";
 import SettingsGeneralSection from "./SettingsGeneralSection.tsx";
 import {TriangleExclamationFill} from "@gravity-ui/icons";
 
@@ -10,11 +9,6 @@ interface Props {
 export function SettingsMetricsCountSection(props: Props) {
     const values = [50, 100, 250, 500, 1000];
 
-    function keysToNumber(keys: Set<Key>): number {
-        const val = keys.values().next().value;
-        return Number(val)
-    }
-
     return (
         <>
             <SettingsGeneralSection
@@ -22,9 +16,9 @@ export function SettingsMetricsCountSection(props: Props) {
                 description={"How many datapoints to show in metrics charts"}
             >
                 <ToggleButtonGroup
-                    defaultSelectedKeys={[String(getMetricsLimit())]}
+                    // defaultSelectedKeys={[String(getMetricsLimit())]}
                     selectionMode={"single"}
-                    onSelectionChange={(keys) => {setMetricsLimit(keysToNumber(keys))}}
+                    // onSelectionChange={(keys) => {setMetricsLimit(keysToNumber(keys))}}
                 >
                     {
                         values.map((value) => {

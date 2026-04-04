@@ -25,6 +25,7 @@ pub struct LocalCollector {
 }
 
 // implementations
+#[async_trait::async_trait]
 impl Collector for LocalCollector {
     fn get_metrics(&mut self) -> Metrics {
         self.sysinfo_system.refresh_memory();
@@ -35,7 +36,7 @@ impl Collector for LocalCollector {
 
         Metrics {
             collector_id: self.id.unwrap(),
-            timestamp: chrono::Local::now().naive_local(),
+            time: chrono::Utc::now(),
             used_memory_mb: self.sysinfo_system.used_memory() / 1_000_000,
             used_swap_mb: self.sysinfo_system.used_swap() / 1_000_000,
             cpu_usage: self.sysinfo_system.global_cpu_usage(),

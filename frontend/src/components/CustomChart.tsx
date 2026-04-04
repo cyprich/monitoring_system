@@ -25,7 +25,7 @@ interface LineChartProps {
 }
 
 interface LineChartData {
-    timestamp: string,
+    time: string,
 
     [value: string]: number | string
 }
@@ -91,7 +91,7 @@ export default function CustomChart({name, data, keys, unit, max_y, threshold, s
                 }
 
                 <CartesianGrid stroke={colors.gray[500]} opacity={0.25} vertical={false}/>
-                <XAxis dataKey={"timestamp"} niceTicks={'adaptive'} tickLine={false} minTickGap={60} />
+                <XAxis dataKey={"time"} niceTicks={'adaptive'} tickLine={false} minTickGap={60} />
                 <YAxis domain={max_y ? [0, max_y] : undefined} tickLine={false} width={100} axisLine={false} unit={unit} />
                 {
                     keys.length > 1 && <Legend/>

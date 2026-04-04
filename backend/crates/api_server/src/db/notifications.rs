@@ -12,7 +12,7 @@ pub async fn insert_notifications(
     }
 
     let mut builder = Builder::new(
-        "insert into notifications (collector_id, metric_type, component_name, threshold_value, measured_values, timestamp) ",
+        "insert into notifications (collector_id, metric_type, component_name, threshold_value, measured_values, time) ",
     );
 
     builder.push_values(&notifications, |mut b, n| {
@@ -21,18 +21,15 @@ pub async fn insert_notifications(
             .push_bind(&n.component_name)
             .push_bind(n.threshold_value)
             .push_bind(&n.measured_values)
-            .push_bind(n.timestamp);
+            .push_bind(n.time);
     });
 
-    builder.push(" returning id");
+    builder.push(" returning *");
 
-    let ids = builder.build_query_scalar::<i32>().fetch_all(pool).await?;
-
-    let result = notifications
-        .into_iter()
-        .zip(ids)
-        .map(|(old, id)| Notification::from_notification_insert(old, id))
-        .collect();
+    let result = builder
+        .build_query_as::<Notification>()
+        .fetch_all(pool)
+        .await?;
 
     Ok(result)
 }

@@ -5,5 +5,5 @@ export interface Notification {
     component_name: string,
     threshold_value: number,
     measured_values: number[],
-    timestamp: string,
+    time: string,
 }

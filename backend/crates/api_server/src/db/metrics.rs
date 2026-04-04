@@ -1,13 +1,7 @@
-use std::{collections::BTreeMap, str::FromStr};
-
 use shared::{
     enums::metric_type::MetricType,
-    structs::{
-        db::MetricsTable,
-        metrics::{DriveMetrics, Metrics, NetworkInterfaceMetrics},
-    },
+    structs::{db::MetricsTable, metrics::Metrics},
 };
-use sqlx::types::chrono::NaiveDateTime;
 
 use crate::{
     AppState,
@@ -17,7 +11,7 @@ use crate::{
 
 pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), shared::Error> {
     let mut builder = Builder::new(
-        "insert into metrics (timestamp, value, metric_type, collector_id, component_name) ",
+        "insert into metrics (time, value, metric_type, collector_id, component_name) ",
     );
 
     let mut values = vec![
@@ -58,7 +52,7 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
     }
 
     builder.push_values(values, |mut b, val| {
-        b.push_bind(metrics.timestamp)
+        b.push_bind(metrics.time)
             .push_bind(val.0)
             .push_bind(val.1.to_string())
             .push_bind(metrics.collector_id)
@@ -79,23 +73,38 @@ pub async fn insert_metrics(state: &AppState, metrics: &Metrics) -> Result<(), s
 pub async fn get_metrics_table(
     pool: &Pool,
     collector_id: i32,
+    time_limit_hours: Option<i32>,
     limit: Option<i32>,
 ) -> Result<Vec<MetricsTable>, shared::Error> {
     let mut builder = Builder::new("select * from metrics where collector_id = ");
     builder.push_bind(collector_id);
 
+    if let Some(val) = time_limit_hours {
+        builder.push(" and time > (now() - ");
+        builder.push_bind(val);
+        builder.push(" * '1 hour'::interval) ");
+        // val * '1 hour'
+        // else it will become `... '$2 hour'::intverval`, and because it's a string literal,
+        // it will be converted to `'2 hour'::intverval`
+        // it was giving the last 2 hours every time
+    };
+
     if let Some(val) = limit {
         builder.push(
-            " and timestamp in (
-            select distinct timestamp
-            from metrics
+            " and time in (
+            select distinct time
+            from metrics 
             where collector_id = ",
         );
+
         builder.push_bind(collector_id);
-        builder.push(" order by timestamp desc limit ");
+        builder.push(" order by time desc limit ");
         builder.push_bind(val);
         builder.push(" )");
-    };
+    }
+
+    // TODO should i order it?
+    builder.push(" order by time ");
 
     let result = builder
         .build_query_as::<MetricsTable>()
@@ -103,87 +112,4 @@ pub async fn get_metrics_table(
         .await?;
 
     Ok(result)
-}
-
-pub async fn get_metrics(
-    pool: &Pool,
-    collector_id: i32,
-    limit: Option<i32>,
-) -> Result<Vec<Metrics>, shared::Error> {
-    let result = get_metrics_table(pool, collector_id, limit).await?;
-
-    let mut map: BTreeMap<NaiveDateTime, Metrics> = BTreeMap::new();
-
-    for row in result {
-        let entry = map.entry(row.timestamp).or_insert(Metrics {
-            // TODO it's useless to carry collector id, too much overhead
-            collector_id,
-            timestamp: row.timestamp,
-            used_memory_mb: 0,
-            used_swap_mb: 0,
-            cpu_usage: 0.0,
-            drives: vec![],
-            network_interfaces: vec![],
-        });
-
-        let metric_type = match MetricType::from_str(&row.metric_type) {
-            Ok(val) => val,
-            Err(val) => {
-                eprintln!("Invalid Metric Type value: {}", val);
-                continue;
-            }
-        };
-
-        match metric_type {
-            MetricType::CpuUsage => entry.cpu_usage = row.value as f32,
-            MetricType::UsedMemoryMb => entry.used_memory_mb = row.value as u64,
-            MetricType::UsedSwapMb => entry.used_swap_mb = row.value as u64,
-            MetricType::DriveUsedSpace => {
-                entry.drives.push(DriveMetrics {
-                    mountpoint: row.component_name,
-                    used_space_gb: row.value as u64,
-                });
-            }
-            MetricType::NetworkDownload => {
-                let net = entry
-                    .network_interfaces
-                    .iter_mut()
-                    .find(|n| n.name == row.component_name);
-
-                match net {
-                    Some(val) => {
-                        val.download_kb = row.value as u64;
-                    }
-                    None => {
-                        entry.network_interfaces.push(NetworkInterfaceMetrics {
-                            name: row.component_name,
-                            upload_kb: 0,
-                            download_kb: row.value as u64,
-                        });
-                    }
-                }
-            }
-            MetricType::NetworkUpload => {
-                let net = entry
-                    .network_interfaces
-                    .iter_mut()
-                    .find(|n| n.name == row.component_name);
-
-                match net {
-                    Some(val) => {
-                        val.upload_kb = row.value as u64;
-                    }
-                    None => {
-                        entry.network_interfaces.push(NetworkInterfaceMetrics {
-                            name: row.component_name,
-                            upload_kb: row.value as u64,
-                            download_kb: 0,
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(map.into_values().collect())
 }

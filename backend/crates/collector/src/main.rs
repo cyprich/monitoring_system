@@ -82,7 +82,7 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
     };
 
     let mut endpoint_results = vec![];
-    let timestamp = chrono::Local::now().naive_local();
+    let time = chrono::Utc::now();
 
     // test if services on endpoints are available, generate results
     for e in endpoints {
@@ -93,8 +93,8 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
 
         let result = match response {
             Ok(mut val) => {
-                // set the same timestamp to all
-                val.timestamp = timestamp;
+                // set the same time to all
+                val.time = time;
                 val
             }
             Err(val) => {
@@ -102,7 +102,7 @@ async fn handle_endpoints(endpoints_url: &str, results_url: &str, client: &reqwe
                 eprintln!("Error while checking endpoint: {}", val);
                 EndpointResult {
                     endpoint_id: e.id,
-                    timestamp,
+                    time,
                     result: false,
                     latency_microseconds: None,
                 }

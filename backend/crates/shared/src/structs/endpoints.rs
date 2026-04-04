@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Instant};
 
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::structs::db::EndpointsTable;
@@ -59,7 +59,7 @@ impl Endpoint {
 
         let result = EndpointResult {
             endpoint_id: self.id,
-            timestamp: NaiveDateTime::default(),
+            time: Utc::now(),
             result: is_success,
             latency_microseconds: Some(latency as i64),
         };
@@ -84,7 +84,7 @@ impl From<EndpointsTable> for Endpoint {
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct EndpointResult {
     pub endpoint_id: i32,
-    pub timestamp: NaiveDateTime,
+    pub time: chrono::DateTime<chrono::Utc>,
     pub result: bool,
     pub latency_microseconds: Option<i64>,
 }

@@ -1,13 +1,9 @@
-import type {Metrics as MetricsInterface} from "../../types/Metrics.ts";
+import {average_metrics, type Metrics as MetricsInterface} from "../../types/Metrics.ts";
 import type {Collector, Drive, NetworkInterface} from "../../types/Collector.ts";
 import axios from "axios";
 import {Link, useParams} from "react-router";
 import CustomSurface from "../../components/CustomSurface.tsx";
 import {useEffect, useState} from "react";
-import {getMetricsLimit} from "../../helpFunctions.ts";
-import {SettingsMetricsCountSection} from "../../components/settings/SettingsMetricsCountSection.tsx";
-import SettingsGeneralSection from "../../components/settings/SettingsGeneralSection.tsx";
-import ConfirmableInput from "../../components/ConfirmableInput.tsx";
 import {
     ArrowShapeUpFromLine,
     Bell,
@@ -21,6 +17,7 @@ import Endpoints from "./endpoints/Endpoints.tsx";
 import Metrics from "./Metrics.tsx"
 import type {EndpointResult} from "../../types/Endpoints.ts";
 import type {Notification} from "../../types/Notifications.ts";
+import {Settings} from "./Settings.tsx";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -33,12 +30,20 @@ export default function Collector() {
 
     const [collector, setCollector] = useState<Collector | null>(null)
     const [metrics, setMetrics] = useState<MetricsInterface[]>([])
+    const [lastMetrics, setLastMetrics] = useState<MetricsInterface[]>([]);
     const [lastEndpointsResults, setLastEndpointsResults] = useState<EndpointResult[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
 
     // TODO link
     const url = `http://localhost:5000/collector/${id}`;
-    const LIMIT = getMetricsLimit();
+
+    // TODO
+    const TIME_LIMIT_HOURS = 2;
+    const RESOLUTION = 20;
+
+    const METRICS_INTERVAL = 5; // new metrics every 5 seconds; TODO
+    const TOTAL_METRICS_COUNT = (TIME_LIMIT_HOURS * 3600) / METRICS_INTERVAL; // how many metrics in total
+    const VALUES_IN_WINDOW = Math.floor(TOTAL_METRICS_COUNT / RESOLUTION); // number of values for each window
 
     // TODO move the corresponding useEffect get to it's component
     // TODO not sure about the websocket tho, it would be nice to have just one
@@ -86,16 +91,18 @@ export default function Collector() {
         axios
             .get(`${url}/metrics`, {
                 params: {
-                    limit: LIMIT
+                    time_limit_hours: TIME_LIMIT_HOURS,
+                    resolution: RESOLUTION
                 }
             })
             .then((resp) => {
                 const data: MetricsInterface[] = resp.data.map((i: MetricsInterface) => (
                     {
                         ...i,
-                        timestamp: new Date(i.timestamp)
+                        time: new Date(i.time).toLocaleTimeString()
                     }
                 ))
+                console.log(data.length)
                 setMetrics(data);
             })
 
@@ -106,7 +113,7 @@ export default function Collector() {
                 let newData: Notification[] = resp.data;
                 newData = newData.map((n) => ({
                     ...n,
-                    timestamp: new Date(n.timestamp).toLocaleTimeString()
+                    time: new Date(n.time).toLocaleTimeString()
                 }))
                 setNotifications(newData)
             })
@@ -118,12 +125,12 @@ export default function Collector() {
                 const data: EndpointResult[] = resp.data.map((r: EndpointResult) => {
                     return {
                         ...r,
-                        timestamp: new Date(r.timestamp).toLocaleTimeString()
+                        time: new Date(r.time).toLocaleTimeString()
                     }
                 })
                 setLastEndpointsResults(data)
         })
-    }, [LIMIT, id, url]);
+    }, [TIME_LIMIT_HOURS, RESOLUTION, id, url]);
 
     useEffect(() => {
         const socket = new WebSocket(`ws://localhost:5000/ws/collector/${id}`);
@@ -135,22 +142,31 @@ export default function Collector() {
         socket.addEventListener("message", (event) => {
             const recv = JSON.parse(event.data);
             if (recv.type === "metrics") {
-                const newData: MetricsInterface = recv.data
                 // https://howtodoinjava.com/typescript/typescript-date-object/
-                newData.timestamp = new Date(newData.timestamp)
-                setMetrics(oldData => [...oldData, newData].slice(-LIMIT))
+                const newData: MetricsInterface = recv.data
+                const newTime = new Date(newData.time).toLocaleTimeString()
+                setLastMetrics(prev => {
+                    const newLastMetrics = [...prev, {...newData, time: newTime}]
+
+                    if (newLastMetrics.length >= VALUES_IN_WINDOW) {
+                        setMetrics(prev => [...prev, average_metrics(newLastMetrics)!].slice(-RESOLUTION))
+                        return []
+                    } else {
+                        return newLastMetrics
+                    }
+                });
             } else if (recv.type === "endpoints_results") {
                 let newData: EndpointResult[] = recv.data;
                 newData = newData.map((r) => ({
                     ...r,
-                    timestamp: new Date(r.timestamp).toLocaleTimeString()
+                    time: new Date(r.time).toLocaleTimeString()
                 }))
                 setLastEndpointsResults(newData)
             } else if (recv.type === 'notifications') {
                 let newData: Notification[] = recv.data;
                 newData = newData.map((n) => ({
                     ...n,
-                    timestamp: new Date(n.timestamp).toLocaleTimeString()
+                    time: new Date(n.time).toLocaleTimeString()
                 }))
                 setNotifications((prev) => [...prev, ...newData])
             }
@@ -158,7 +174,7 @@ export default function Collector() {
 
         return () => socket.close()
 
-    }, [LIMIT, id]);
+    }, [TIME_LIMIT_HOURS, id]);
 
     return (
         <main className={"flex flex-col gap-4"}>
@@ -184,30 +200,12 @@ export default function Collector() {
                 <Notifications notifications={notifications} collector_id={id} setNotifications={setNotifications}/>
             </CustomSurface>
 
-            <CustomSurface title={"Settings"} className={"flex flex-col gap-6"} icon={ <Gear/> } >
-                <div>
-                    <SettingsGeneralSection title={"Collector name"}>
-                        {
-                            collector !== null &&
-                            <ConfirmableInput
-                                value={collector.name}
-                                variant={"secondary"}
-                                onConfirm={(newName) => {
-                                    if (collector === null) { return }
-                                    axios
-                                        .patch(`${url}/rename`, {"name": newName})
-                                        .then(() => {
-                                            setCollector((old) => old ? {...old, name: newName} : old)
-                                        }).catch((e) => { console.error(e) /* TODO */ })
-                                }}
-                            />
-                        }
-                    </SettingsGeneralSection>
-                </div>
-                <div>
-                    <SettingsMetricsCountSection showWarning={true}/>
-                </div>
-            </CustomSurface>
+            {
+                collector !== null &&
+                <CustomSurface title={"Settings"} className={"flex flex-col gap-6"} icon={ <Gear/> } >
+                    <Settings collector={collector} setCollector={setCollector} />
+                </CustomSurface>
+            }
         </main>
     )
 }

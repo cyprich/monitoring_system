@@ -14,11 +14,12 @@ pub async fn get_endpoints(pool: &Pool, collector_id: i32) -> Result<Vec<Endpoin
         collector_id
     )
     .fetch_all(pool)
-    .await?;
+    .await?
+    .into_iter()
+    .map(Endpoint::from)
+    .collect();
 
-    let result = result.into_iter().map(Endpoint::from);
-
-    Ok(result.collect())
+    Ok(result)
 }
 
 pub async fn insert_endpoint(

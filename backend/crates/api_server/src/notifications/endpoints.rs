@@ -91,7 +91,7 @@ async fn create_notifications(
 
         notifications.push(NotificationInsert {
             collector_id,
-            timestamp: sqlx::types::chrono::Local::now().naive_local(),
+            time: chrono::Utc::now(),
             metric_type: "endpoint".to_string(),
             component_name: pretty_component_name,
             threshold_value: threshold_value as f64,

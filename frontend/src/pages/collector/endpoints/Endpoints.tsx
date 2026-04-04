@@ -91,7 +91,7 @@ export default function Endpoints(props: EndpointsProps) {
                                         </Table.Cell>
                                         <Table.Cell>
                                             <div className={"flex flex-col gap-1"}>
-                                                <p>Time: {result?.timestamp || "-"}</p>
+                                                <p>Time: {result?.time || "-"}</p>
                                                 <div className={"flex gap-1 *:items-center *:flex *:gap-1"}>Status: {
                                                     getEndpointResults(e)?.result
                                                         ? <p className={"text-success"}><CircleCheckFill/> Success</p>

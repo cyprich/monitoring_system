@@ -12,12 +12,8 @@ use shared::structs::{
     collector_info::CollectorInfo,
     db::EndpointInsert,
     endpoints::{Endpoint, EndpointResult},
+    metrics::Metrics,
 };
-
-#[derive(Deserialize)]
-struct QueryLimit {
-    limit: Option<i32>,
-}
 
 #[get("/collectors")]
 async fn collectors(state: web::Data<AppState>) -> impl Responder {
@@ -32,14 +28,43 @@ async fn get_collector(state: web::Data<AppState>, id: web::Path<i32>) -> impl R
     handle_query_error(result, ResponseBodyType::Json)
 }
 
+#[derive(Deserialize)]
+struct MetricsQueryParams {
+    time_limit_hours: Option<i32>,
+    resolution: Option<i32>,
+}
+
 #[get("/collector/{id}/metrics")]
 async fn get_collector_metrics(
     state: web::Data<AppState>,
     id: web::Path<i32>,
-    query: web::Query<QueryLimit>,
+    query: web::Query<MetricsQueryParams>,
 ) -> impl Responder {
-    let result = db::get_metrics(&state.pool, id.into_inner(), query.limit).await;
-    handle_query_error(result, ResponseBodyType::Json)
+    let table =
+        db::get_metrics_table(&state.pool, id.into_inner(), query.time_limit_hours, None).await;
+    if table.is_err() {
+        return handle_query_error(table, ResponseBodyType::Json);
+    }
+
+    let metrics = Metrics::from_metrics_table(table.unwrap());
+    if query.resolution.is_none() {
+        return handle_query_error(metrics, ResponseBodyType::Json);
+    }
+
+    let metrics = metrics.unwrap();
+
+    let chunk_size = metrics.len() / (query.resolution.unwrap() as usize);
+    if chunk_size == 0 {
+        // TODO what do i do here - maybe some 4xx response code and display on frontend?
+        return handle_query_error(Ok(metrics), ResponseBodyType::Json);
+    }
+
+    let result = metrics
+        .chunks(chunk_size)
+        .map(Metrics::average)
+        .collect::<Vec<Metrics>>();
+
+    handle_query_error(Ok(result), ResponseBodyType::Json)
 }
 
 #[get("/collector/{id}/drives")]

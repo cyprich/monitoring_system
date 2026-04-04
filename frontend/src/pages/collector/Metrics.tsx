@@ -63,7 +63,8 @@ function CpuChart(props: CollectorProps) {
     return (
         <CustomChart name={"CPU Usage"} keys={["CPU"]} data={
             props.data.map((i) => ({
-                timestamp: i.timestamp.toLocaleTimeString(),
+                // timestamp: i.timestamp.toLocaleTimeString(),
+                time: i.time,
                 cpu: i.cpu_usage
             }))
         } unit={"%"} max_y={100} />
@@ -78,7 +79,8 @@ function RamChart(props: CollectorProps) {
             keys={["RAM"]}
             data={
                 props.data.map((i) => ({
-                    timestamp: i.timestamp.toLocaleTimeString(),
+                    // timestamp: i.timestamp.toLocaleTimeString(),
+                    time: i.time,
                     ram: i.used_memory_mb
                 }))
             }
@@ -96,7 +98,8 @@ function SwapChart(props: CollectorProps) {
             keys={["Swap"]}
             data={
                 props.data.map((i) => ({
-                    timestamp: i.timestamp.toLocaleTimeString(),
+                    // timestamp: i.timestamp.toLocaleTimeString(),
+                    time: i.time,
                     swap: i.used_swap_mb
                 }))
             }
@@ -123,7 +126,8 @@ function DriveCharts(props: CollectorProps) {
                                 )
 
                                 return {
-                                    timestamp: metric.timestamp.toLocaleTimeString(),
+                                    // timestamp: metric.timestamp.toLocaleTimeString(),
+                                    time: metric.time,
                                     used: selected?.used_space_gb || 0
                                 }
                             })
@@ -154,7 +158,8 @@ function NetworkCharts(props: CollectorProps) {
                                 )
 
                                 return {
-                                    timestamp: metric.timestamp.toLocaleTimeString(),
+                                    // timestamp: metric.timestamp.toLocaleTimeString(),
+                                    time: metric.time,
                                     download: (selected?.download_kb || 0) / 1000,
                                     upload: (selected?.upload_kb || 0) / 1000,
                                 }
