@@ -33,8 +33,12 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
     }, [url, props.collector_id]);
 
     function deleteThreshold(id: number) {
-        axios.delete(`${url}/metrics_thresholds/${id}`).then().catch(e => console.error(e))
-        setThresholds(prev => prev.filter(t => (t.id !== id)))
+        axios
+            .delete(`${url}/metrics_thresholds/${id}`)
+            .then(() => {
+                setThresholds(prev => prev.filter(t => (t.id !== id)))
+            })
+            .catch(e => console.error(e))
     }
 
     return (
@@ -87,7 +91,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
 
             {/* dialogs */}
             <CustomDialog
-                title={"Add Threshold"}
+                title={"Add Threshold for Metrics"}
                 body={
                     <MetricsThresholdsForm
                         action={"add"}
@@ -103,7 +107,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                 showFooter={false}
             />
             <CustomDialog
-                title={"Edit Threshold"}
+                title={"Edit Threshold for Metrics"}
                 body={
                     <MetricsThresholdsForm
                         action={"edit"}
@@ -120,7 +124,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                 showFooter={false}
             />
             <CustomDialog
-                title={"Delete Threshold?"}
+                title={"Delete Threshold for Metrics?"}
                 body={ <>
                     <p>You will no longer be receiving notifications after exceeding these limits</p>
                 </> }

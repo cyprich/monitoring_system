@@ -96,11 +96,7 @@ async fn post_collector_endpoints(
     id: web::Path<i32>,
 ) -> impl Responder {
     let result = db::insert_endpoint(&state.pool, id.into_inner(), &endpoint).await;
-    if result.is_err() {
-        handle_query_error(result, ResponseBodyType::Json)
-    } else {
-        HttpResponse::Created().finish()
-    }
+    handle_query_error(result, ResponseBodyType::Json)
 }
 
 // put = update existing

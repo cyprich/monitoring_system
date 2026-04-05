@@ -66,14 +66,9 @@ create table metrics (
     foreign key (collector_id) references collectors(id)
 );
 
--- create type request_method as enum (
---     'get', 
--- );
-
 create table endpoints (
     id serial not null, 
     collector_id integer not null, 
-    -- method request_method, 
     url varchar not null, 
     expected_codes integer[],
     primary key (id),
@@ -138,7 +133,8 @@ create table endpoints_thresholds (
     endpoint_id integer not null, 
     value integer not null, 
     primary key (id), 
-    foreign key (endpoint_id) references endpoints(id)
+    foreign key (endpoint_id) references endpoints(id),
+    unique(endpoint_id)
 );
 
 --------------------- insert metric types ---------------------

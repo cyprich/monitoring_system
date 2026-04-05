@@ -5,31 +5,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::structs::db::EndpointsTable;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub enum RequestMethod {
-    #[default]
-    Get,
-    Post,
-    Put,
-    Patch,
-    Delete,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Endpoint {
     pub id: i32,
     pub url: String,
-    pub method: RequestMethod,
     pub expected_codes: HashSet<u16>,
 }
 
 // TODO every request has it's own client - not good
 impl Endpoint {
-    pub fn new(id: i32, url: &str, method: &RequestMethod, expected_codes: HashSet<u16>) -> Self {
+    pub fn new(id: i32, url: &str, expected_codes: HashSet<u16>) -> Self {
         Self {
             id,
             url: url.to_string(),
-            method: method.clone(),
             expected_codes,
         }
     }
@@ -37,16 +25,8 @@ impl Endpoint {
     pub async fn send(&self, client: &reqwest::Client) -> Result<EndpointResult, crate::Error> {
         let url = &self.url;
 
-        let req = match self.method {
-            RequestMethod::Get => client.get(url),
-            RequestMethod::Post => client.post(url),
-            RequestMethod::Put => client.put(url),
-            RequestMethod::Patch => client.patch(url),
-            RequestMethod::Delete => client.delete(url),
-        };
-
         let latency = Instant::now();
-        let resp = req.send().await;
+        let resp = client.get(url).send().await;
         let latency = latency.elapsed().as_micros();
 
         let is_success = match resp {
@@ -71,13 +51,7 @@ impl Endpoint {
 impl From<EndpointsTable> for Endpoint {
     fn from(value: EndpointsTable) -> Self {
         let codes = value.expected_codes.iter().map(|c| *c as u16);
-
-        Self::new(
-            value.id,
-            &value.url,
-            &RequestMethod::Get,
-            HashSet::from_iter(codes),
-        )
+        Self::new(value.id, &value.url, HashSet::from_iter(codes))
     }
 }
 

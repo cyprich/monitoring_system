@@ -10,6 +10,7 @@ export interface EndpointsFormProps {
     collectorId: number
     setIsOpen: (isOpen: boolean) => void
     endpoint?: Endpoint,
+    setEndpoints: (f: (prev: Endpoint[]) => Endpoint[]) => void
 }
 
 export function EndpointsForm(props: EndpointsFormProps) {
@@ -32,8 +33,10 @@ export function EndpointsForm(props: EndpointsFormProps) {
 
         if (props.action === "add") {
             axios
-                .post(backendUrl, { ...endpoint })
-                .then()
+                .post<Endpoint>(backendUrl, { ...endpoint })
+                .then(resp => {
+                    props.setEndpoints(prev => [...prev, resp.data])
+                })
                 .catch((err) => console.error("post error", err))
         }
 

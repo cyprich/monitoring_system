@@ -14,21 +14,19 @@ export interface EndpointsProps {
 }
 
 export default function Endpoints(props: EndpointsProps) {
-    const [endpoints, setEndpoints] = useState<Array<Endpoint> | null>(null)
+    const [endpoints, setEndpoints] = useState<Endpoint[]>([])
 
     const [isAddOpen, setIsAddOpen] = useState<boolean>(false)
-
-    const [isEditOpen, setIsEditOpen] = useState<boolean>(false)
-    const [editingEndpoint, setEditingEndpoint] = useState<Endpoint | null>(null)
-
+    // const [isEditOpen, setIsEditOpen] = useState<boolean>(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
+
+    // const [editingEndpoint, setEditingEndpoint] = useState<Endpoint | null>(null)
     const [deletingEndpoint, setDeletingEndpoint] = useState<Endpoint | null>(null)
 
     // TODO url
     const url = `http://localhost:5000/collector/${props.collectorId}/endpoints`
 
     // TODO REFRESH
-
     useEffect(() => {
         axios
             .get<Endpoint[]>(url)
@@ -42,7 +40,12 @@ export default function Endpoints(props: EndpointsProps) {
     }
 
     function deleteEndpoint(id: number) {
-        axios.delete(`${url}/${id}`).then().catch(e => console.error(e))
+        axios
+            .delete(`${url}/${id}`)
+            .then(() => {
+                setEndpoints(prev => prev.filter(e => (e.id !== id)))
+            })
+            .catch(e => console.error(e))
     }
 
     return (
@@ -93,7 +96,7 @@ export default function Endpoints(props: EndpointsProps) {
                                         </Table.Cell>
                                         <Table.Cell>
                                             {
-                                                e.expected_codes.join(", ") ||
+                                                e.expected_codes?.join(", ") ||
                                                 <p className={"flex gap-2"}>
                                                     None
                                                     <TriangleExclamationFill className={"text-amber-400 size-5"}/>
@@ -105,11 +108,12 @@ export default function Endpoints(props: EndpointsProps) {
                                                 setDeletingEndpoint(e)
                                                 setIsDeleteOpen(true)
                                             }}
-                                            showEdit={true}
-                                            editOnClick={() => {
-                                                setEditingEndpoint(e)
-                                                setIsEditOpen(true)
-                                            }}
+                                            // TODO
+                                            // showEdit={true}
+                                            // editOnClick={() => {
+                                            //     setEditingEndpoint(e)
+                                            //     setIsEditOpen(true)
+                                            // }}
                                         />
                                     </Table.Row>
                                 })
@@ -131,6 +135,7 @@ export default function Endpoints(props: EndpointsProps) {
                         action={"add"}
                         collectorId={props.collectorId}
                         setIsOpen={setIsAddOpen}
+                        setEndpoints={setEndpoints}
                     />
                 }
                 action={"add"}
@@ -139,23 +144,23 @@ export default function Endpoints(props: EndpointsProps) {
                 setIsOpen={setIsAddOpen}
                 showFooter={false}
             />
-            <CustomDialog
-                title={"Edit Endpoint"}
-                body={
-                    // TODO form
-                    <EndpointsForm
-                        action={"edit"}
-                        collectorId={props.collectorId}
-                        endpoint={ editingEndpoint! }
-                        setIsOpen={setIsAddOpen}
-                    />
-                }
-                action={"edit"}
-                onConfirm={() => {}}
-                isOpen={isEditOpen}
-                setIsOpen={setIsEditOpen}
-                showFooter={false}
-            />
+            {/*<CustomDialog*/}
+            {/*    title={"Edit Endpoint"}*/}
+            {/*    body={*/}
+            {/*        <EndpointsForm*/}
+            {/*            action={"edit"}*/}
+            {/*            collectorId={props.collectorId}*/}
+            {/*            endpoint={ editingEndpoint! }*/}
+            {/*            setIsOpen={setIsAddOpen}*/}
+            {/*            setEndpoints={setEndpoints}*/}
+            {/*        />*/}
+            {/*    }*/}
+            {/*    action={"edit"}*/}
+            {/*    onConfirm={() => {}}*/}
+            {/*    isOpen={isEditOpen}*/}
+            {/*    setIsOpen={setIsEditOpen}*/}
+            {/*    showFooter={false}*/}
+            {/*/>*/}
             <CustomDialog
                 title={"Delete Endpoint?"}
                 body={ <p>Collector will no longer send requests to this endpoint</p> }

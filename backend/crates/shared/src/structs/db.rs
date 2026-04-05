@@ -2,8 +2,6 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::structs::endpoints::RequestMethod;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CollectorTable {
     pub id: i32,
@@ -51,7 +49,6 @@ pub struct EndpointsTable {
     pub id: i32,
     pub collector_id: i32,
     pub url: String,
-    // pub method: RequestMethod,
     pub expected_codes: Vec<i32>,
 }
 
@@ -66,7 +63,6 @@ pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThreshol
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EndpointInsert {
     pub url: String,
-    pub method: RequestMethod,
     pub expected_codes: HashSet<u16>,
 }
 
@@ -82,7 +78,7 @@ pub struct NotificationInsert {
 
 // joined tables
 // tendpoints_thresholds joined with endpoints
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EndpointsThresholdsJoin {
     pub threshold_id: i32,
     pub endpoint_id: i32,

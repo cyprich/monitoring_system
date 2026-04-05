@@ -5,6 +5,7 @@ import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../../components/TableActions.tsx";
 import type {EndpointsThresholdsInterface} from "../../../types/EndpointsThresholdsInterface.ts";
 import {CustomDialog} from "../../../components/CustomDialog.tsx";
+import {EndpointsThresholdsForm} from "./EndpointsThresholdsForm.tsx";
 
 export interface EndpointsThresholdsProps {
     collector_id: number
@@ -18,17 +19,30 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
 
     // TODO
-    const [editingThreshold, setEditingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
+    // const [editingThreshold, setEditingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
     const [deletingThreshold, setDeletingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
 
-    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds`
+    // TODO url
+    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds_join`
 
     useEffect(() => {
         axios
             .get<EndpointsThresholdsInterface[]>(url)
-            .then(resp => {setThresholds(resp.data)})
+            .then(resp => {
+                setThresholds(resp.data)
+            })
             .catch(e => console.error(e))
     }, [url]);
+
+    function deleteThreshold(threshold_id: number) {
+        // TODO url
+        axios
+            .delete(`http://localhost:5000/endpoints_thresholds/${threshold_id}`)
+            .then(() => {
+                setThresholds(prev => prev.filter(t => (t.threshold_id !== threshold_id)))
+            })
+            .catch(e => console.error(e))
+    }
 
     return (
         <div>
@@ -38,27 +52,29 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                     <Table.Content aria-label={"Endpoints Notification Thresholds"}>
                         <Table.Header>
                             <Table.Column isRowHeader>Endpoint</Table.Column>
-                            <Table.Column>Count</Table.Column>
+                            <Table.Column>Unsuccessful Request Count</Table.Column>
                             <Table.Column>Actions</Table.Column>
                         </Table.Header>
                         <Table.Body renderEmptyState={() => (
-                            <TableEmptyContent text={["No thresholds found", "Start by adding your first threshold"]} icon={"tray"}/>
+                            <TableEmptyContent text={["No thresholds found", "Start by adding your first threshold"]}
+                                               icon={"tray"}/>
                         )}>
                             {
-                                thresholds.map((t, i) => (
-                                    <Table.Row key={i}>
-                                        <Table.Cell>{t.endpoint.url}</Table.Cell>
-                                        <Table.Cell>{t.value}</Table.Cell>
+                                thresholds.map(t => (
+                                    <Table.Row key={t.threshold_id}>
+                                        <Table.Cell>{t.url}</Table.Cell>
+                                        <Table.Cell>{t.threshold_value}</Table.Cell>
                                         <TableActions
                                             deleteOnClick={() => {
                                                 setDeletingThreshold(t)
                                                 setIsDeleteOpen(true)
                                             }}
-                                            showEdit={true}
-                                            editOnClick={() => {
-                                                setEditingThreshold(t)
-                                                setIsEditOpen(true)
-                                            }}
+                                            // TODO
+                                            // showEdit={true}
+                                            // editOnClick={() => {
+                                            //     setEditingThreshold(t)
+                                            //     setIsEditOpen(true)
+                                            // }}
                                         />
                                     </Table.Row>
                                 ))
@@ -72,8 +88,13 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                 <Button onClick={() => setIsAddOpen(true)}>Add new</Button>
 
                 <CustomDialog
-                    title={"Add Threshold"}
-                    body={<>TODO</>}
+                    title={"Add Threshold for Endpoint"}
+                    body={ <EndpointsThresholdsForm
+                        action={"add"}
+                        collectorId={props.collector_id}
+                        setIsOpen={setIsAddOpen}
+                        setThresholds={setThresholds}
+                    /> }
                     action={"add"}
                     onConfirm={() => {}}
                     isOpen={isAddOpen}
@@ -81,7 +102,7 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                     showFooter={false}
                 />
                 <CustomDialog
-                    title={"Edit Threshold"}
+                    title={"Edit Threshold for Endpoint"}
                     body={<>TODO</>}
                     action={"edit"}
                     onConfirm={() => {}}
@@ -90,13 +111,13 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                     showFooter={false}
                 />
                 <CustomDialog
-                    title={"Delete Threshold"}
+                    title={"Delete Threshold for Endpoint?"}
                     body={ <p>You will no longer be receiving notifications after exceeding these limits</p> }
-                    action={"add"}
-                    onConfirm={() => {}}
+                    action={"delete"}
+                    onConfirm={() => { deleteThreshold(deletingThreshold?.threshold_id || 0) }}
                     isOpen={isDeleteOpen}
                     setIsOpen={setIsDeleteOpen}
-                    showFooter={false}
+                    showFooter={true}
                 />
             </div>
         </div>

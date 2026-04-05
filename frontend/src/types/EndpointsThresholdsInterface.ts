@@ -1,7 +1,8 @@
-import type {Endpoint} from "./Endpoints.ts";
-
 export interface EndpointsThresholdsInterface {
-    id: number
-    endpoint: Endpoint
-    value: number
+    threshold_id: number
+    endpoint_id: number
+    collector_id: number
+    threshold_value: number
+    url: string
+    expected_codes: number[]
 }

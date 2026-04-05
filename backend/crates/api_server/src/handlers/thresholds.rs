@@ -24,6 +24,15 @@ pub async fn get_collector_endpoints_thresholds(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
+#[get("/collector/{id}/endpoints_thresholds_join")]
+pub async fn get_collector_endpoints_thresholds_join(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_endpoints_thresholds_join(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
 #[post("/metrics_thresholds")]
 pub async fn post_metrics_thresholds(
     state: web::Data<AppState>,
@@ -105,5 +114,14 @@ pub async fn get_collector_metrics_thresholds_available_networks_download(
         db::NetworkMetricType::Download,
     )
     .await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[get("/collector/{id}/endpoints_thresholds/available_endpoints")]
+pub async fn get_collector_endpooints_available_endpoints(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_available_endpoints(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
 }

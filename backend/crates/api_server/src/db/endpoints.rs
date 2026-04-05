@@ -26,23 +26,24 @@ pub async fn insert_endpoint(
     pool: &Pool,
     collector_id: i32,
     endpoint: &EndpointInsert,
-) -> Result<(), shared::Error> {
+) -> Result<Endpoint, shared::Error> {
     let codes = endpoint
         .expected_codes
         .iter()
         .map(|c| *c as i32)
         .collect::<Vec<i32>>();
 
-    sqlx::query!(
-        "insert into endpoints ( collector_id, url, expected_codes ) values ( $1, $2, $3 )",
+    let result = sqlx::query_as!(
+        EndpointsTable,
+        "insert into endpoints ( collector_id, url, expected_codes ) values ( $1, $2, $3 ) returning *",
         collector_id,
         endpoint.url,
         &codes
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await?;
 
-    Ok(())
+    Ok(result.into())
 }
 
 pub async fn update_endpoint(pool: &Pool, endpoint: &Endpoint) -> Result<(), shared::Error> {
@@ -78,6 +79,13 @@ pub async fn delete_endpoint(pool: &Pool, endpoint_id: i32) -> Result<(), shared
     sqlx::query!("delete from endpoints where id = $1", endpoint_id)
         .execute(&mut *transaction)
         .await?;
+
+    sqlx::query!(
+        "delete from endpoints_results where endpoint_id = $1",
+        endpoint_id
+    )
+    .execute(&mut *transaction)
+    .await?;
 
     transaction.commit().await?;
 

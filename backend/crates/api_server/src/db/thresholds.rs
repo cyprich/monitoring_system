@@ -1,5 +1,8 @@
 use shared::structs::{
-    db::{DriveTable, MetricsThresholdsTable, NetworkInterfaceTable},
+    db::{
+        DriveTable, EndpointsTable, EndpointsThresholdsJoin, MetricsThresholdsTable,
+        NetworkInterfaceTable,
+    },
     thresholds::{EndpointsThreshold, MetricsThreshold},
 };
 
@@ -34,6 +37,22 @@ pub async fn get_endpoints_thresholds(
     )
     .fetch_all(pool)
     .await?;
+
+    Ok(result)
+}
+
+pub async fn get_endpoints_thresholds_join(
+    pool: &Pool,
+    collector_id: i32,
+) -> Result<Vec<EndpointsThresholdsJoin>, shared::Error> {
+
+    let result = sqlx::query_as!(EndpointsThresholdsJoin, 
+        "
+        select t.id threshold_id, endpoint_id, collector_id, t.value threshold_value, url, expected_codes
+        from endpoints e
+        join endpoints_thresholds t on e.id = t.endpoint_id
+        where collector_id = $1", collector_id
+    ).fetch_all(pool).await?;
 
     Ok(result)
 }
@@ -194,6 +213,28 @@ pub async fn get_available_network_interfaces(
         .build_query_as::<NetworkInterfaceTable>()
         .fetch_all(pool)
         .await?;
+
+    Ok(result)
+}
+
+pub async fn get_available_endpoints(
+    pool: &Pool,
+    collector_id: i32,
+) -> Result<Vec<EndpointsTable>, shared::Error> {
+    let result = sqlx::query_as!(
+        EndpointsTable,
+        "select *
+        from endpoints
+        where id not in (
+            select endpoint_id
+            from endpoints_thresholds t
+            join endpoints e on t.endpoint_id = e.id
+            where collector_id = $1
+        );",
+        collector_id
+    )
+    .fetch_all(pool)
+    .await?;
 
     Ok(result)
 }
