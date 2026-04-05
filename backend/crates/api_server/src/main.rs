@@ -67,7 +67,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::permissive())
             .app_data(web::Data::new(state.clone()))
             .service(
-                web::scope("/api")
+                web::scope("")
                     .wrap(middleware::NormalizePath::trim())
                     .service(hello)
                     .service(ws)
