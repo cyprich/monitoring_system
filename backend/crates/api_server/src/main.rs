@@ -6,6 +6,8 @@ use shared::structs::endpoints::EndpointResult;
 use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::handlers::*;
 use db::Pool;
@@ -57,44 +59,52 @@ async fn main() -> std::io::Result<()> {
 
     let state = AppState { pool, tx };
 
+    let openapi = ApiDoc::openapi();
+
     HttpServer::new(move || {
         App::new()
             // TODO
             .wrap(Cors::permissive())
-            .wrap(middleware::NormalizePath::trim())
             .app_data(web::Data::new(state.clone()))
-            .service(hello)
-            .service(ws_metrics)
-            .service(metrics_post)
-            .service(collector_register)
-            .service(collectors)
-            .service(get_collector)
-            .service(get_collector_metrics)
-            .service(get_collector_drives)
-            .service(get_collector_network_interfaces)
-            .service(get_collector_endpoints)
-            .service(post_collector_endpoints)
-            .service(put_collector_endpoints)
-            .service(delete_collector_endpoints)
-            .service(get_collector_endpoint_results)
-            .service(get_collector_endpoint_results_last)
-            .service(post_collector_endpoint_results)
-            .service(get_collector_notifications)
-            .service(delete_collector_notifications)
-            .service(delete_collector_notifications_all)
-            .service(rename_collector)
-            .service(get_collector_metrics_thresholds)
-            .service(get_collector_metrics_thresholds_available_metric_types)
-            .service(get_collector_metrics_thresholds_available_drives)
-            .service(get_collector_metrics_thresholds_available_networks_upload)
-            .service(get_collector_metrics_thresholds_available_networks_download)
-            .service(get_collector_endpoints_thresholds)
-            .service(get_collector_endpoints_thresholds_join)
-            .service(get_collector_endpooints_available_endpoints)
-            .service(post_metrics_thresholds)
-            .service(post_endpoints_thresholds)
-            .service(delete_metrics_thresholds)
-            .service(delete_endpoints_thresholds)
+            .service(
+                web::scope("/api")
+                    .wrap(middleware::NormalizePath::trim())
+                    .service(hello)
+                    .service(ws)
+                    .service(metrics_post)
+                    .service(collector_register)
+                    .service(collectors)
+                    .service(get_collector)
+                    .service(get_collector_metrics)
+                    .service(get_collector_drives)
+                    .service(get_collector_network_interfaces)
+                    .service(get_collector_endpoints)
+                    .service(post_collector_endpoints)
+                    .service(put_collector_endpoints)
+                    .service(delete_collector_endpoints)
+                    .service(get_collector_endpoint_results)
+                    .service(get_collector_endpoint_results_last)
+                    .service(post_collector_endpoint_results)
+                    .service(get_collector_notifications)
+                    .service(delete_collector_notifications)
+                    .service(delete_collector_notifications_all)
+                    .service(rename_collector)
+                    .service(get_collector_metrics_thresholds)
+                    .service(get_collector_metrics_thresholds_available_metric_types)
+                    .service(get_collector_metrics_thresholds_available_drives)
+                    .service(get_collector_metrics_thresholds_available_networks_upload)
+                    .service(get_collector_metrics_thresholds_available_networks_download)
+                    .service(get_collector_endpoints_thresholds)
+                    .service(get_collector_endpoints_thresholds_join)
+                    .service(get_collector_endpoints_available_endpoints)
+                    .service(post_metrics_thresholds)
+                    .service(post_endpoints_thresholds)
+                    .service(delete_metrics_thresholds)
+                    .service(delete_endpoints_thresholds),
+            )
+            .service(
+                SwaggerUi::new("/swagger_ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
+            )
     })
     .bind(("0.0.0.0", port))?
     .run()

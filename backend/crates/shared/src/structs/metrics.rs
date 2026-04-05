@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{enums::metric_type::MetricType, structs::db::MetricsTable};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Metrics {
     pub collector_id: i32,
     pub time: chrono::DateTime<chrono::Utc>,
@@ -29,7 +29,7 @@ impl Metrics {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct DriveMetrics {
     pub mountpoint: String,
     pub used_space_gb: u64,
@@ -44,7 +44,7 @@ impl From<&sysinfo::Disk> for DriveMetrics {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct NetworkInterfaceMetrics {
     pub name: String,
     pub upload_kb: u64,

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::structs::db::NotificationInsert;
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, utoipa::ToSchema)]
 pub struct Notification {
     pub id: i32,
     pub collector_id: i32,

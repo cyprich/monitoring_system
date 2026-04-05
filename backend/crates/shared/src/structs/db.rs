@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct CollectorTable {
     pub id: i32,
     pub name: String,
@@ -14,7 +14,7 @@ pub struct CollectorTable {
     pub cpu_count: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct DriveTable {
     pub mountpoint: String,
     pub collector_id: i32,
@@ -22,7 +22,7 @@ pub struct DriveTable {
     pub file_system: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, utoipa::ToSchema)]
 pub struct NetworkInterfaceTable {
     pub name: String,
     pub mac: String,
@@ -44,7 +44,7 @@ pub struct MetricsTable {
     pub component_name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, utoipa::ToSchema)]
 pub struct EndpointsTable {
     pub id: i32,
     pub collector_id: i32,
@@ -60,7 +60,7 @@ pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThreshol
 
 // TODO do i really need these? cant i just ignore the ID on insert?
 // used when inserting new values to database, when ID is not known yet
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct EndpointInsert {
     pub url: String,
     pub expected_codes: HashSet<u16>,
@@ -76,7 +76,7 @@ pub struct NotificationInsert {
 
 // joined tables
 // tendpoints_thresholds joined with endpoints
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct EndpointsThresholdsJoin {
     pub threshold_id: i32,
     pub endpoint_id: i32,

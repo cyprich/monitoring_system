@@ -4,7 +4,7 @@ use crate::structs::db::DriveTable;
 use crate::structs::db::NetworkInterfaceTable;
 
 // todo
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, utoipa::ToSchema)]
 pub struct CollectorInfo {
     pub id: i32,
     pub name: String,
@@ -18,7 +18,7 @@ pub struct CollectorInfo {
     pub network_interfaces: Vec<NetworkInterfaceInfo>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, utoipa::ToSchema)]
 pub struct DriveInfo {
     pub mountpoint: String,
     pub capacity_gb: u32,
@@ -45,7 +45,7 @@ impl From<&sysinfo::Disk> for DriveInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, utoipa::ToSchema)]
 pub struct NetworkInterfaceInfo {
     pub name: String,
     pub mac: String,

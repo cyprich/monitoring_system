@@ -5,12 +5,14 @@ mod metrics;
 mod notifications;
 mod thresholds;
 mod ws;
+mod api_docs;
 
 pub use collectors::*;
 pub use metrics::*;
 pub use notifications::*;
 pub use thresholds::*;
 pub use ws::*;
+pub use api_docs::*;
 
 enum ResponseBodyType {
     Json,
@@ -43,6 +45,11 @@ fn handle_query_error<T: serde::Serialize>(
     }
 }
 
+#[utoipa::path(
+    responses(
+        (status = 200, description="API Server reachable", body=String),
+    ), 
+)]
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello, world!")

@@ -4,6 +4,12 @@ use shared::structs::metrics::Metrics;
 
 use crate::{AppState, WebSocketType};
 
+#[utoipa::path(
+    responses(
+        (status = 200, description="Sucessfully inserted into database"),
+        (status = 500, description="Interval Server Error", body=String)
+    ), 
+)]
 #[post("/metrics")]
 pub async fn metrics_post(
     state: web::Data<AppState>,

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::structs::db::EndpointsTable;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Endpoint {
     pub id: i32,
     pub url: String,
@@ -55,7 +55,7 @@ impl From<EndpointsTable> for Endpoint {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, utoipa::ToSchema)]
 pub struct EndpointResult {
     pub endpoint_id: i32,
     pub time: chrono::DateTime<chrono::Utc>,

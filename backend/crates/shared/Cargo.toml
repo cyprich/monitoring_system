@@ -14,3 +14,4 @@ sqlx = { version = "0.8.6", features = ["migrate", "runtime-tokio"] }
 sysinfo = "0.38.2"
 tokio = "1.50.0"
 toml = "1.0.7"
+utoipa = { version = "5.4.0", features = ["actix_extras", "chrono"] }
