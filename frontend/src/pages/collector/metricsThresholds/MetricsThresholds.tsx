@@ -95,7 +95,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                 body={
                     <MetricsThresholdsForm
                         action={"add"}
-                        collectorId={props.collector_id}
+                        collector_id={props.collector_id}
                         setIsOpen={setIsAddOpen}
                         setThresholds={setThresholds}
                     />
@@ -111,7 +111,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                 body={
                     <MetricsThresholdsForm
                         action={"edit"}
-                        collectorId={props.collector_id}
+                        collector_id={props.collector_id}
                         // endpoint={ editingThreshold! }
                         setIsOpen={setIsAddOpen}
                         setThresholds={setThresholds}

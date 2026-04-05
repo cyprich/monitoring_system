@@ -10,7 +10,7 @@ import type {MetricsThresholdsInterface} from "../../../types/MetricsThresholdsI
 
 export interface MetricsThresholdsFormProps {
     action: "add" | "edit"
-    collectorId: number
+    collector_id: number
     thresholdId?: number
     setIsOpen: (isOpen: boolean) => void
     setThresholds: (f: (prev: MetricsThresholdsInterface[]) => MetricsThresholdsInterface[]) => void
@@ -32,7 +32,7 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
 
 
     // TODO URL
-    const url = `http://localhost:5000/collector/${props.collectorId}/metrics_thresholds/`
+    const url = `http://localhost:5000/collector/${props.collector_id}/metrics_thresholds/`
 
     useEffect(() => {
         axios
@@ -67,7 +67,7 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
         event.preventDefault()
         const result: MetricsThresholdsInterface = {
             id: 0,
-            collector_id: props.collectorId,
+            collector_id: props.collector_id,
             component_name: selectedComponentName,
             metric_type: selectedMetricType || "",
             value: Number(value) || -1

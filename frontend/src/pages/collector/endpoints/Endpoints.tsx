@@ -9,7 +9,7 @@ import {CustomDialog} from "../../../components/CustomDialog.tsx";
 import {EndpointsForm} from "./EndpointsForm.tsx";
 
 export interface EndpointsProps {
-    collectorId: number,
+    collector_id: number,
     lastEndpointsResults: EndpointResult[]
 }
 
@@ -24,7 +24,7 @@ export default function Endpoints(props: EndpointsProps) {
     const [deletingEndpoint, setDeletingEndpoint] = useState<Endpoint | null>(null)
 
     // TODO url
-    const url = `http://localhost:5000/collector/${props.collectorId}/endpoints`
+    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints`
 
     // TODO REFRESH
     useEffect(() => {
@@ -133,7 +133,7 @@ export default function Endpoints(props: EndpointsProps) {
                 body={
                     <EndpointsForm
                         action={"add"}
-                        collectorId={props.collectorId}
+                        collector_id={props.collector_id}
                         setIsOpen={setIsAddOpen}
                         setEndpoints={setEndpoints}
                     />

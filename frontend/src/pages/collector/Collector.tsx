@@ -22,7 +22,6 @@ import {getResolution, getTimeLimit} from "../../helpFunctions.ts";
 import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
 import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
 import {Separator} from "@heroui/react";
-// import type {MetricsThresholdsInterface} from "../../types/MetricsThresholdsInterface.ts";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -43,16 +42,12 @@ export default function Collector() {
     // TODO link
     const url = `http://localhost:5000/collector/${id}`;
 
-    // TODO
     const TIME_LIMIT_HOURS = getTimeLimit();
     const RESOLUTION = getResolution();
 
-    const METRICS_INTERVAL = 5; // new metrics every 5 seconds; TODO
+    const METRICS_INTERVAL = 5; // new metrics every 5 seconds
     const TOTAL_METRICS_COUNT = (TIME_LIMIT_HOURS * 3600) / METRICS_INTERVAL; // how many metrics in total
     const VALUES_IN_WINDOW = Math.floor(TOTAL_METRICS_COUNT / RESOLUTION); // number of values for each window
-
-    // TODO move the corresponding useEffect get to it's component
-    // TODO not sure about the websocket tho, it would be nice to have just one
 
     // TODO check response code
     useEffect(() => {
@@ -182,7 +177,7 @@ export default function Collector() {
             {
                 collector && <CollectorHeader {...collector} />
             }
-            <CustomSurface title={"Metrics"} icon={ <ChartLineArrowUp/> }>
+            <CustomSurface title={"Metrics"} id={"metrics"} icon={ <ChartLineArrowUp/> }>
                 <Metrics collector={collector} data={metrics}/>
                 <Separator variant={"tertiary"} className={"my-8"}/>
                 <h4 className={"mt-4 pb-2"}>Settings</h4>
@@ -192,21 +187,21 @@ export default function Collector() {
                 </div>
             </CustomSurface>
 
-            <CustomSurface title={"API Endpoints"} icon={ <ArrowShapeUpFromLine/> } >
-                <Endpoints collectorId={collector?.id || 0} lastEndpointsResults={lastEndpointsResults}/>
+            <CustomSurface title={"API Endpoints"} id={"endpoints"} icon={ <ArrowShapeUpFromLine/> } >
+                <Endpoints collector_id={collector?.id || 0} lastEndpointsResults={lastEndpointsResults}/>
             </CustomSurface>
 
-            <CustomSurface title={"Security stuff?"} icon={ <ShieldKeyhole/> } >
+            <CustomSurface title={"Security stuff?"} id={"security"} icon={ <ShieldKeyhole/> } >
                 <p className={"custom-description"}>//TODO</p>
             </CustomSurface>
 
-            <CustomSurface title={"Notifications"} icon={ <Bell/> } >
+            <CustomSurface title={"Notifications"} id={"notifications"} icon={ <Bell/> } >
                 <Notifications notifications={notifications} collector_id={id} setNotifications={setNotifications}/>
             </CustomSurface>
 
             {
                 collector !== null &&
-                <CustomSurface title={"Settings"} className={"flex flex-col gap-6"} icon={ <Gear/> } >
+                <CustomSurface title={"Settings"} id={"settings"} className={"flex flex-col gap-6"} icon={ <Gear/> } >
                     <Settings collector={collector} setCollector={setCollector} />
                 </CustomSurface>
             }
@@ -217,7 +212,12 @@ export default function Collector() {
 function CollectorHeader(collector: Collector) {
     const total_capacity = collector.drives?.reduce((acc, d) => acc + d.capacity_gb, 0) || 0;
 
-    // TODO hidden drives/networks
+    function scroll_to(value: string) {
+        document.getElementById(value)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        })
+    }
 
     return (
         <div className={"flex flex-col gap-3"}>
@@ -241,13 +241,12 @@ function CollectorHeader(collector: Collector) {
                 </p>
                 <p>{collector.network_interfaces?.length || 0} network interfaces</p>
             </div>
-            {/* TODO */}
             <div className={"flex gap-2 *:size-11 *:p-2 *:rounded-lg *:border-2 *:hover:bg-zinc-200 transition-all "}>
-                <ChartLineArrowUp/>
-                <ArrowShapeUpFromLine/>
-                <ShieldKeyhole/>
-                <Bell/>
-                <Gear/>
+                <ChartLineArrowUp onClick={() => scroll_to("metrics")}/>
+                <ArrowShapeUpFromLine onClick={() => scroll_to("endpoints")}/>
+                <ShieldKeyhole onClick={() => scroll_to("security")}/>
+                <Bell onClick={() => scroll_to("notifications")}/>
+                <Gear onClick={() => scroll_to("settings")}/>
             </div>
         </div>
     )

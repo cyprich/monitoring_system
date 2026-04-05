@@ -91,7 +91,7 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                     title={"Add Threshold for Endpoint"}
                     body={ <EndpointsThresholdsForm
                         action={"add"}
-                        collectorId={props.collector_id}
+                        collector_id={props.collector_id}
                         setIsOpen={setIsAddOpen}
                         setThresholds={setThresholds}
                     /> }

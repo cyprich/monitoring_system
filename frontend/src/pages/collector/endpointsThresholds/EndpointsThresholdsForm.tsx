@@ -8,8 +8,8 @@ import type {EndpointsThresholdsInterface} from "../../../types/EndpointsThresho
 
 export interface EndpointsThresholdsFormProps {
     action: "add" | "edit"
-    collectorId: number
-    thresholdId?: number
+    collector_id: number
+    threshold_id?: number
     setIsOpen: (isOpen: boolean) => void
     setThresholds: (f: (prev: EndpointsThresholdsInterface[]) => EndpointsThresholdsInterface[]) => void
 }
@@ -20,7 +20,7 @@ export function EndpointsThresholdsForm(props: EndpointsThresholdsFormProps) {
     const [count, setCount] = useState<string | null>(null)
 
     // TODO URL
-    const url = `http://localhost:5000/collector/${props.collectorId}/endpoints_thresholds`
+    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds`
 
     useEffect(() => {
         axios
@@ -51,7 +51,7 @@ export function EndpointsThresholdsForm(props: EndpointsThresholdsFormProps) {
                 // TODO this chould be done better
                 const endpoint = availableEndpoints.find(e => e.id == resp.data.endpoint_id)!
                 const newData: EndpointsThresholdsInterface = {
-                    collector_id: props.collectorId,
+                    collector_id: props.collector_id,
                     endpoint_id: endpoint.id,
                     expected_codes: endpoint.expected_codes,
                     threshold_id: resp.data.id,

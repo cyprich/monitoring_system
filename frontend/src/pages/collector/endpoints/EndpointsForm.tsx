@@ -7,7 +7,7 @@ import * as React from "react";
 
 export interface EndpointsFormProps {
     action: "add" | "edit"
-    collectorId: number
+    collector_id: number
     setIsOpen: (isOpen: boolean) => void
     endpoint?: Endpoint,
     setEndpoints: (f: (prev: Endpoint[]) => Endpoint[]) => void
@@ -18,7 +18,7 @@ export function EndpointsForm(props: EndpointsFormProps) {
     const [responseCodeInput, setResponseCodeInput] = useState<string>("")
     const [responseCodes, setResponseCodes] = useState<number[]>(props.endpoint?.expected_codes || [])
 
-    const backendUrl = `http://localhost:5000/collector/${props.collectorId}/endpoints`
+    const backendUrl = `http://localhost:5000/collector/${props.collector_id}/endpoints`
 
     // TODO historical data
 
