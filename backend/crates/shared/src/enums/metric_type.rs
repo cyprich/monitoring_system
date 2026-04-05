@@ -13,7 +13,7 @@ pub enum MetricType {
 }
 
 impl MetricType {
-    pub fn to_string_pretty(self) -> Option<String> {
+    pub fn to_string_pretty(&self) -> Option<String> {
         let val = match self {
             Self::CpuUsage => "CPU Usage (%)",
             Self::UsedMemoryMb => "Used Memory (MB)",
@@ -21,6 +21,17 @@ impl MetricType {
             Self::DriveUsedSpace => "Used Drive Space (GB)",
             Self::NetworkDownload => "Network Download (KB)",
             Self::NetworkUpload => "Network Upload (KB)",
+        };
+
+        String::from_str(val).ok()
+    }
+
+    pub fn unit(&self) -> Option<String> {
+        let val = match &self {
+            MetricType::CpuUsage => "%",
+            MetricType::UsedMemoryMb | MetricType::UsedSwapMb => "MB",
+            MetricType::DriveUsedSpace => "GB",
+            MetricType::NetworkDownload | MetricType::NetworkUpload => "kB",
         };
 
         String::from_str(val).ok()

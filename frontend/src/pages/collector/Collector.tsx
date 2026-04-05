@@ -89,7 +89,7 @@ export default function Collector() {
                     resp.data.map(m => ({
                         ...m,
                         time : new Date(m.time).toLocaleTimeString()
-                    }))
+                    })) || []
                 );
             })
 
@@ -101,7 +101,7 @@ export default function Collector() {
                     resp.data.map(n => ({
                         ...n,
                         time: new Date(n.time).toLocaleDateString() + " " + new Date(n.time).toLocaleTimeString()
-                    }))
+                    })) || []
                 )
             })
 
@@ -113,7 +113,7 @@ export default function Collector() {
                     resp.data.map(r => ({
                         ...r,
                         time: new Date(r.time).toLocaleTimeString()
-                    }))
+                    })) || []
                 )
         })
 

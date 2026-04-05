@@ -7,8 +7,8 @@ use crate::{
     db::{Pool, get_endpoints_by_id, get_endpoints_thresholds, insert_notifications},
 };
 
-// HashMap<endpoint id, (threshold value, measured values)>
-type EndpointsMap = HashMap<i32, (i32, Vec<bool>)>;
+// HashMap<endpoint id, measured values>
+type EndpointsMap = HashMap<i32, Vec<bool>>;
 
 pub async fn handle_endpoints(state: &AppState, collector_id: i32) -> Result<(), shared::Error> {
     let map = evaluate(&state.pool, collector_id).await?;
@@ -46,7 +46,7 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
 
     // insert key and threshold values to the map
     for t in thresholds {
-        map.entry(t.endpoint_id).or_insert((t.value, vec![]));
+        map.entry(t.endpoint_id).or_insert(vec![]);
     }
 
     // TODO each metric chould have different value (limit), idk how to fix this rn - needs another
@@ -59,7 +59,7 @@ async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>
 
     // insert actual values to the map
     for e in endpoints_results {
-        map.entry(e.endpoint_id).and_modify(|(_, val)| {
+        map.entry(e.endpoint_id).and_modify(|val| {
             val.push(e.result);
         });
     }
@@ -75,7 +75,7 @@ async fn create_notifications(
     let mut notifications: Vec<NotificationInsert> = vec![];
     let endpoints_by_id = get_endpoints_by_id(pool, Some(collector_id)).await?;
 
-    'outer: for (endpoint_id, (threshold_value, measured_values)) in map {
+    'outer: for (endpoint_id, measured_values) in map {
         for val in &measured_values {
             if *val {
                 continue 'outer;
@@ -87,15 +87,13 @@ async fn create_notifications(
             None => &format!("ID: {}", endpoint_id),
         };
 
-        let pretty_component_name = format!("Too many unsucesfull requests for endpoint '{}'", url);
+        let cause = format!("Too many unsucesfull requests for endpoint '{}'", url);
 
         notifications.push(NotificationInsert {
             collector_id,
             time: chrono::Utc::now(),
-            metric_type: "endpoint".to_string(),
-            component_name: pretty_component_name,
-            threshold_value: threshold_value as f64,
-            measured_values: vec![],
+            cause,
+            description: None,
         });
     }
 

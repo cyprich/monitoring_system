@@ -11,16 +11,13 @@ pub async fn insert_notifications(
         return Ok(vec![]);
     }
 
-    let mut builder = Builder::new(
-        "insert into notifications (collector_id, metric_type, component_name, threshold_value, measured_values, time) ",
-    );
+    let mut builder =
+        Builder::new("insert into notifications (collector_id, cause, description, time) ");
 
     builder.push_values(&notifications, |mut b, n| {
         b.push_bind(collector_id)
-            .push_bind(&n.metric_type)
-            .push_bind(&n.component_name)
-            .push_bind(n.threshold_value)
-            .push_bind(&n.measured_values)
+            .push_bind(&n.cause)
+            .push_bind(&n.description)
             .push_bind(n.time);
     });
 

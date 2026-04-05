@@ -6,10 +6,8 @@ use crate::structs::db::NotificationInsert;
 pub struct Notification {
     pub id: i32,
     pub collector_id: i32,
-    pub metric_type: String,
-    pub component_name: String,
-    pub threshold_value: f64,
-    pub measured_values: Vec<f64>,
+    pub cause: String,
+    pub description: Option<String>,
     pub time: chrono::DateTime<chrono::Utc>,
 }
 
@@ -18,10 +16,8 @@ impl Notification {
         Self {
             id,
             collector_id: value.collector_id,
-            metric_type: value.metric_type,
-            component_name: value.component_name,
-            threshold_value: value.threshold_value,
-            measured_values: value.measured_values,
+            cause: value.cause,
+            description: value.description,
             time: value.time,
         }
     }

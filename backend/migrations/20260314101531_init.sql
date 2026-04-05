@@ -39,18 +39,6 @@ create table network_interfaces (
     foreign key (collector_id) references collectors(id)
 );
 
--- TODO component as separate table 
-
--- create table components (
---     id serial, 
---     collector_id integer, 
---     name varchar not null, 
---     threshold_value double precision, -- if this value is exceeded
---     threshold_count integer, -- number of consecutive exceeds to be notified
---     primary key (id), 
---     foreign key (collector_id) references collectors(id)
--- );
-
 create table metric_type (
     name varchar primary key
 );
@@ -85,31 +73,15 @@ create table endpoints_results (
     foreign key (endpoint_id) references endpoints(id)
 );
 
--- create table users (
---     id serial,
---     name varchar,
---     password_hash varchar,
---     primary key (id)
--- );
-
--- create table notification_severity (
---     id serial,
---     severity varchar,
---     primary key (id)
--- );
-
 create table notifications (
     id serial not null,
     collector_id integer not null,
-    metric_type varchar not null, 
-    component_name varchar not null, 
-    threshold_value double precision not null, 
-    measured_values double precision[] not null,
+    cause varchar not null, 
+    description varchar,
     -- severity integer,
     time timestamptz not null,
     primary key (id),
-    foreign key (collector_id) references collectors(id),
-    foreign key (metric_type) references metric_type(name)
+    foreign key (collector_id) references collectors(id)
     -- foreign key (severity) references notification_severity(id)
 );
 

@@ -62,15 +62,11 @@ export default function Notifications(props: NotificationProps) {
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
-                                Time
+                                Description
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
-                                Threshold
-                                <Table.ColumnResizer/>
-                            </Table.Column>
-                            <Table.Column>
-                                Measured Values
+                                Date and Time
                                 <Table.ColumnResizer/>
                             </Table.Column>
                             <Table.Column>
@@ -83,26 +79,15 @@ export default function Notifications(props: NotificationProps) {
                         )}>
                             {
                                 paginatedItems.map((n, i) => {
-                                    const threshold = Math.floor(n.threshold_value) === n.threshold_value
-                                        ? n.threshold_value
-                                        : n.threshold_value.toFixed(2)
-
-                                    const measured = n.measured_values.map(val => (
-                                        Math.floor(val) === val ? val : val.toFixed(2)
-                                    ))
-
                                     return <Table.Row key={i}>
                                         <Table.Cell>
-                                            <p>{n.component_name}</p>
+                                            <p>{n.cause}</p>
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <p>{n.description || ""}</p>
                                         </Table.Cell>
                                         <Table.Cell>
                                             <p>{n.time}</p>
-                                        </Table.Cell>
-                                        <Table.Cell>
-                                            <p>{threshold}</p>
-                                        </Table.Cell>
-                                        <Table.Cell>
-                                            <p>{measured.join(", ")}</p>
                                         </Table.Cell>
                                         <TableActions deleteOnClick={() => {remove_notification(n.id)}}/>
                                     </Table.Row>

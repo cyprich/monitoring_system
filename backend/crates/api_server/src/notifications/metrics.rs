@@ -76,7 +76,23 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
             }
         }
 
-        let pretty_component_name = match MetricType::from_str(&metric_type) {
+        let metric_type_enum = MetricType::from_str(&metric_type);
+
+        let unit = match &metric_type_enum {
+            Ok(val) => val.unit(),
+            Err(_) => None,
+        }
+        .unwrap_or("".to_string());
+
+        let description = format!(
+            "Exceeded threshold ({}{}) - Average value: {}{}",
+            threshold_value,
+            unit,
+            measured_values.iter().sum::<f64>() / measured_values.len() as f64,
+            unit
+        );
+
+        let cause = match metric_type_enum {
             Ok(val) => match val {
                 MetricType::CpuUsage | MetricType::UsedMemoryMb | MetricType::UsedSwapMb => {
                     val.to_string_pretty().unwrap_or(metric_type.clone())
@@ -97,10 +113,8 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
         notifications.push(NotificationInsert {
             collector_id,
             time: chrono::Utc::now(),
-            metric_type,
-            component_name: pretty_component_name,
-            threshold_value,
-            measured_values,
+            cause,
+            description: Some(description),
         });
     }
 
