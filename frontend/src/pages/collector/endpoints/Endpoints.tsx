@@ -1,12 +1,12 @@
 import {useEffect, useState} from "react";
 import type {Endpoint, EndpointResult} from "../../../types/Endpoints.ts";
 import axios from "axios";
-import {Button, Separator, Table} from "@heroui/react";
-import {CircleCheckFill, CircleXmarkFill, TriangleExclamationFill, Pencil, TrashBin} from "@gravity-ui/icons";
-import {Dialog} from "./Dialog.tsx";
+import {Button, Table} from "@heroui/react";
+import {CircleCheckFill, CircleXmarkFill, TriangleExclamationFill} from "@gravity-ui/icons";
 import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../../components/TableActions.tsx";
-import {EndpointsThresholds} from "../endpointsThresholds/EndpointsThresholds.tsx";
+import {CustomDialog} from "../../../components/CustomDialog.tsx";
+import {EndpointsForm} from "./EndpointsForm.tsx";
 
 export interface EndpointsProps {
     collectorId: number,
@@ -15,7 +15,6 @@ export interface EndpointsProps {
 
 export default function Endpoints(props: EndpointsProps) {
     const [endpoints, setEndpoints] = useState<Array<Endpoint> | null>(null)
-    const [toggleRefresh, setToggleRefresh] = useState<boolean>(true)
 
     const [isAddOpen, setIsAddOpen] = useState<boolean>(false)
 
@@ -28,10 +27,7 @@ export default function Endpoints(props: EndpointsProps) {
     // TODO url
     const url = `http://localhost:5000/collector/${props.collectorId}/endpoints`
 
-    function refreshEndpoints() {
-        setToggleRefresh(false)
-        setToggleRefresh(true)
-    }
+    // TODO REFRESH
 
     useEffect(() => {
         axios.get(url).then((resp) => {
@@ -40,10 +36,14 @@ export default function Endpoints(props: EndpointsProps) {
             })
             setEndpoints(endpoints)
         })
-    }, [url, toggleRefresh]);
+    }, [url]);
 
     function getEndpointResults(e: Endpoint): EndpointResult | null {
         return props.lastEndpointsResults.find((r) => r.endpoint_id === e.id) || null
+    }
+
+    function deleteEndpoint(id: number) {
+        axios.delete(`${url}/${id}`).then().catch(e => console.error(e))
     }
 
     return (
@@ -128,28 +128,49 @@ export default function Endpoints(props: EndpointsProps) {
             <Button onClick={() => setIsAddOpen(true)}>Add new</Button>
 
             { /* dialogs for add/edit/delete */}
-            <Dialog
-                collector_id={props.collectorId}
+
+            <CustomDialog
+                title={"Add Endpoint"}
+                body={
+                    <EndpointsForm
+                        action={"add"}
+                        collectorId={props.collectorId}
+                        setIsOpen={setIsAddOpen}
+                    />
+                }
                 action={"add"}
+                onConfirm={() => {}}
                 isOpen={isAddOpen}
                 setIsOpen={setIsAddOpen}
-                refresh={refreshEndpoints}
+                showFooter={false}
             />
-            <Dialog
-                collector_id={props.collectorId}
+            <CustomDialog
+                title={"Edit Endpoint"}
+                body={
+                    // TODO form
+                    <EndpointsForm
+                        action={"edit"}
+                        collectorId={props.collectorId}
+                        endpoint={ editingEndpoint! }
+                        setIsOpen={setIsAddOpen}
+                    />
+                }
                 action={"edit"}
-                endpoint={editingEndpoint!}
+                onConfirm={() => {}}
                 isOpen={isEditOpen}
                 setIsOpen={setIsEditOpen}
-                refresh={refreshEndpoints}
+                showFooter={false}
             />
-            <Dialog
-                collector_id={props.collectorId}
+            <CustomDialog
+                title={"Delete Endpoint?"}
+                body={ <p>Collector will no longer send requests to this endpoint</p> }
                 action={"delete"}
-                endpoint={deletingEndpoint!}
+                onConfirm={() => {
+                    deleteEndpoint(deletingEndpoint!.id)
+                }}
                 isOpen={isDeleteOpen}
                 setIsOpen={setIsDeleteOpen}
-                refresh={refreshEndpoints}
+                showFooter={true}
             />
         </div>
     )

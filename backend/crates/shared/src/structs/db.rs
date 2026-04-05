@@ -24,7 +24,7 @@ pub struct DriveTable {
     pub file_system: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct NetworkInterfaceTable {
     pub name: String,
     pub mac: String,
@@ -59,7 +59,7 @@ pub struct EndpointsTable {
 pub type EndpointsResultsTable = crate::structs::endpoints::EndpointResult;
 pub type NotificationsTable = crate::structs::notifications::Notification;
 pub type MetricsThresholdsTable = crate::structs::thresholds::MetricsThreshold;
-pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThresholds;
+pub type EndpointThresholdsTable = crate::structs::thresholds::EndpointsThreshold;
 
 // TODO do i really need these? cant i just ignore the ID on insert?
 // used when inserting new values to database, when ID is not known yet

@@ -1,4 +1,5 @@
-use actix_web::{Responder, delete, get, web};
+use actix_web::{Responder, delete, get, post, web};
+use shared::structs::thresholds::{EndpointsThreshold, MetricsThreshold};
 
 use crate::{
     AppState, db,
@@ -23,6 +24,24 @@ pub async fn get_collector_endpoints_thresholds(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
+#[post("/metrics_thresholds")]
+pub async fn post_metrics_thresholds(
+    state: web::Data<AppState>,
+    json: web::Json<MetricsThreshold>,
+) -> impl Responder {
+    let result = db::insert_metrics_thresholds(&state.pool, json.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[post("/endpoints_thresholds")]
+pub async fn post_endpoints_thresholds(
+    state: web::Data<AppState>,
+    json: web::Json<EndpointsThreshold>,
+) -> impl Responder {
+    let result = db::insert_endpoints_thresholds(&state.pool, json.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
 #[delete("/metrics_thresholds/{threshold_id}")]
 pub async fn delete_metrics_thresholds(
     state: web::Data<AppState>,
@@ -39,4 +58,52 @@ pub async fn delete_endpoints_thresholds(
 ) -> impl Responder {
     let result = db::delete_endpoints_thresholds(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::None)
+}
+
+#[get("/collector/{id}/metrics_thresholds/available_metric_types")]
+pub async fn get_collector_metrics_thresholds_available_metric_types(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_available_metric_types(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+// TODO merge these three into one with {metric_type} in web::Path
+
+#[get("/collector/{id}/metrics_thresholds/available_drives")]
+pub async fn get_collector_metrics_thresholds_available_drives(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_available_drives(&state.pool, id.into_inner()).await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[get("/collector/{id}/metrics_thresholds/available_network_interfaces_upload")]
+pub async fn get_collector_metrics_thresholds_available_networks_upload(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_available_network_interfaces(
+        &state.pool,
+        id.into_inner(),
+        db::NetworkMetricType::Upload,
+    )
+    .await;
+    handle_query_error(result, ResponseBodyType::Json)
+}
+
+#[get("/collector/{id}/metrics_thresholds/available_network_interfaces_download")]
+pub async fn get_collector_metrics_thresholds_available_networks_download(
+    state: web::Data<AppState>,
+    id: web::Path<i32>,
+) -> impl Responder {
+    let result = db::get_available_network_interfaces(
+        &state.pool,
+        id.into_inner(),
+        db::NetworkMetricType::Download,
+    )
+    .await;
+    handle_query_error(result, ResponseBodyType::Json)
 }

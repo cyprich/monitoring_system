@@ -1,6 +1,6 @@
 import type {Endpoint} from "../../../types/Endpoints.ts";
 import {useState} from "react";
-import {Button, FieldError, Fieldset, Form, Input, TextField, Label, Description} from "@heroui/react";
+import {Button, FieldError, Fieldset, Form, Input, TextField, Label} from "@heroui/react";
 import {ExclamationShapeFill, Plus, TrashBin} from "@gravity-ui/icons";
 import axios from "axios";
 import * as React from "react";
@@ -10,7 +10,6 @@ export interface EndpointsFormProps {
     collectorId: number
     setIsOpen: (isOpen: boolean) => void
     endpoint?: Endpoint,
-    refresh: () => void
 }
 
 export function EndpointsForm(props: EndpointsFormProps) {
@@ -49,7 +48,6 @@ export function EndpointsForm(props: EndpointsFormProps) {
                 .catch((err) => console.error("put error", err))
         }
 
-        props.refresh()
         props.setIsOpen(false)
     }
 

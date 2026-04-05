@@ -1,11 +1,11 @@
-import {Button, Table, Tooltip} from "@heroui/react";
+import {Button, Table} from "@heroui/react";
 import {useEffect, useState} from "react";
 import axios from "axios";
 import type {MetricsThresholdsInterface} from "../../../types/MetricsThresholdsInterface.ts";
 import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../../components/TableActions.tsx";
-import {Dialog} from "../metricsThresholds/Dialog.tsx";
 import type {EndpointsThresholdsInterface} from "../../../types/EndpointsThresholdsInterface.ts";
+import {CustomDialog} from "../../../components/CustomDialog.tsx";
 
 export interface EndpointsThresholdsProps {
     collector_id: number
@@ -18,6 +18,7 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
     const [isEditOpen, setIsEditOpen] = useState<boolean>(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
 
+    // TODO
     const [editingThreshold, setEditingThreshold] = useState<MetricsThresholdsInterface | null>(null)
     const [deletingThreshold, setDeletingThreshold] = useState<MetricsThresholdsInterface | null>(null)
 
@@ -76,24 +77,32 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                 </Table>
                 <Button onClick={() => setIsAddOpen(true)}>Add new</Button>
 
-                <Dialog
-                    collector_id={props.collector_id}
+                <CustomDialog
+                    title={"Add Threshold"}
+                    body={<>TODO</>}
                     action={"add"}
+                    onConfirm={() => {}}
                     isOpen={isAddOpen}
                     setIsOpen={setIsAddOpen}
+                    showFooter={false}
                 />
-                <Dialog
-                    collector_id={props.collector_id}
+                <CustomDialog
+                    title={"Edit Threshold"}
+                    body={<>TODO</>}
                     action={"edit"}
+                    onConfirm={() => {}}
                     isOpen={isEditOpen}
                     setIsOpen={setIsEditOpen}
+                    showFooter={false}
                 />
-                <Dialog
-                    collector_id={props.collector_id}
-                    action={"delete"}
-                    isOpen={isDeleteOpen}
-                    setIsOpen={setIsDeleteOpen}
-                    threshold={deletingThreshold!}
+                <CustomDialog
+                    title={"Delete Threshold"}
+                    body={ <p>You will no longer be receiving notifications after exceeding these limits</p> }
+                    action={"add"}
+                    onConfirm={() => {}}
+                    isOpen={isAddOpen}
+                    setIsOpen={setIsAddOpen}
+                    showFooter={false}
                 />
             </div>
         </div>

@@ -10,7 +10,7 @@ pub struct MetricsThreshold {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct EndpointsThresholds {
+pub struct EndpointsThreshold {
     pub id: i32,
     pub endpoint_id: i32,
     pub value: i32,
