@@ -48,7 +48,7 @@ pub async fn get_endpoints_thresholds_join(
 
     let result = sqlx::query_as!(EndpointsThresholdsJoin, 
         "
-        select t.id threshold_id, endpoint_id, collector_id, t.value threshold_value, url, expected_codes
+        select t.id threshold_id, endpoint_id, collector_id, t.count threshold_value, url, expected_codes
         from endpoints e
         join endpoints_thresholds t on e.id = t.endpoint_id
         where collector_id = $1", collector_id
@@ -64,13 +64,14 @@ pub async fn insert_metrics_thresholds(
     let result = sqlx::query_as!(
         MetricsThreshold,
         "insert into metrics_thresholds
-        (collector_id, metric_type, component_name, value)
-        values ($1, $2, $3, $4)
+        (collector_id, metric_type, component_name, value, count)
+        values ($1, $2, $3, $4, $5)
         returning *",
         thresholds.collector_id,
         thresholds.metric_type,
         thresholds.component_name,
-        thresholds.value
+        thresholds.value, 
+        thresholds.count
     )
     .fetch_one(pool)
     .await?;
@@ -85,11 +86,11 @@ pub async fn insert_endpoints_thresholds(
     let result = sqlx::query_as!(
         EndpointsThreshold,
         "insert into endpoints_thresholds
-        (endpoint_id, value)
+        (endpoint_id, count)
         values ($1, $2)
         returning *",
         thresholds.endpoint_id,
-        thresholds.value
+        thresholds.count
     )
     .fetch_one(pool)
     .await?;

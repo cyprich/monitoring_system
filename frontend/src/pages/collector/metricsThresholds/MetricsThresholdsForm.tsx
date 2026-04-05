@@ -70,7 +70,8 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
             collector_id: props.collector_id,
             component_name: selectedComponentName,
             metric_type: selectedMetricType || "",
-            value: Number(value) || -1
+            value: Number(value),
+            count: Number(count)
         }
 
         // TODO url

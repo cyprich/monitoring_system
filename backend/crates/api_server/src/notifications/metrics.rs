@@ -11,7 +11,7 @@ use crate::{
 type NotificationsMap = HashMap<(String, String), (f64, Vec<f64>)>;
 
 pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), shared::Error> {
-    let map = evaluate(&state.pool, collector_id).await?;
+    let map = collect_into_map(&state.pool, collector_id).await?;
     let map = match map {
         Some(val) => val,
         None => return Ok(()),
@@ -33,7 +33,7 @@ pub async fn handle_metrics(state: &AppState, collector_id: i32) -> Result<(), s
     Ok(())
 }
 
-async fn evaluate(
+async fn collect_into_map(
     pool: &Pool,
     collector_id: i32,
 ) -> Result<Option<NotificationsMap>, shared::Error> {
@@ -45,22 +45,21 @@ async fn evaluate(
     }
     // insert key and threshold values to the map
     for t in thresholds {
+        let values = crate::db::get_metrics_by_type_and_component(
+            pool,
+            collector_id,
+            &t.metric_type,
+            &t.component_name,
+            t.count,
+        )
+        .await
+        .unwrap_or_default()
+        .iter()
+        .map(|val| val.value)
+        .collect::<Vec<f64>>();
+
         map.entry((t.component_name, t.metric_type))
-            .or_insert((t.value, vec![]));
-    }
-
-    // TODO each metric chould have different value (limit), idk how to fix this rn
-    let metrics = crate::db::get_metrics_table(pool, collector_id, None, Some(5)).await?;
-    if metrics.is_empty() {
-        return Ok(None);
-    }
-
-    // insert actual values to the map
-    for m in metrics {
-        map.entry((m.component_name, m.metric_type))
-            .and_modify(|(_, val)| {
-                val.push(m.value);
-            });
+            .or_insert((t.value, values));
     }
 
     Ok(Some(map))
@@ -69,11 +68,11 @@ async fn evaluate(
 async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<NotificationInsert> {
     let mut notifications: Vec<NotificationInsert> = vec![];
 
-    'outer: for ((component_name, metric_type), (threshold_value, measured_values)) in map {
-        for val in &measured_values {
-            if val < &threshold_value {
-                continue 'outer;
-            }
+    for ((component_name, metric_type), (threshold_value, measured_values)) in map {
+        let avg = measured_values.iter().sum::<f64>() / measured_values.len() as f64;
+
+        if avg <= threshold_value {
+            continue;
         }
 
         let metric_type_enum = MetricType::from_str(&metric_type);
@@ -86,10 +85,7 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
 
         let description = format!(
             "Exceeded threshold ({}{}) - Average value: {}{}",
-            threshold_value,
-            unit,
-            measured_values.iter().sum::<f64>() / measured_values.len() as f64,
-            unit
+            threshold_value, unit, avg, unit
         );
 
         let cause = match metric_type_enum {

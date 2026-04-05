@@ -11,7 +11,7 @@ use crate::{
 type EndpointsMap = HashMap<i32, Vec<bool>>;
 
 pub async fn handle_endpoints(state: &AppState, collector_id: i32) -> Result<(), shared::Error> {
-    let map = evaluate(&state.pool, collector_id).await?;
+    let map = collect_into_map(&state.pool, collector_id).await?;
     let map = match map {
         Some(val) => val,
         None => return Ok(()),
@@ -33,35 +33,23 @@ pub async fn handle_endpoints(state: &AppState, collector_id: i32) -> Result<(),
     Ok(())
 }
 
-async fn evaluate(pool: &Pool, collector_id: i32) -> Result<Option<EndpointsMap>, shared::Error> {
+async fn collect_into_map(
+    pool: &Pool,
+    collector_id: i32,
+) -> Result<Option<EndpointsMap>, shared::Error> {
     let mut map: EndpointsMap = EndpointsMap::new();
-
-    // TODO does this needs to be the full variant?
-    // let thresholds = crate::db::get_collector_endpoints_thresholds_join(pool, collector_id).await?;
-    // if thresholds.is_empty() {
-    //     return Ok(None);
-    // }
 
     let thresholds = get_endpoints_thresholds(pool, collector_id).await?;
 
     // insert key and threshold values to the map
     for t in thresholds {
-        map.entry(t.endpoint_id).or_insert(vec![]);
-    }
+        let values = crate::db::get_endpoints_results_by_endpoint_id(pool, t.endpoint_id, t.count)
+            .await?
+            .iter()
+            .map(|val| val.result)
+            .collect::<Vec<bool>>();
 
-    // TODO each metric chould have different value (limit), idk how to fix this rn - needs another
-    // field in db
-    let endpoints_results = crate::db::get_endpoints_results(pool, collector_id, Some(5)).await?;
-
-    if endpoints_results.is_empty() {
-        return Ok(None);
-    }
-
-    // insert actual values to the map
-    for e in endpoints_results {
-        map.entry(e.endpoint_id).and_modify(|val| {
-            val.push(e.result);
-        });
+        map.entry(t.endpoint_id).or_insert(values);
     }
 
     Ok(Some(map))

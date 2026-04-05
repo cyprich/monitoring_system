@@ -85,15 +85,13 @@ create table notifications (
     -- foreign key (severity) references notification_severity(id)
 );
 
--- TODO count? 
--- like how many consecutive values have to be above limit
-
 create table metrics_thresholds (
     id serial not null, 
     collector_id integer not null, 
     metric_type varchar not null, 
     component_name varchar not null, 
     value double precision not null,
+    count integer not null,
     primary key (id), 
     foreign key (collector_id) references collectors(id), 
     foreign key (metric_type) references metric_type(name),
@@ -103,7 +101,7 @@ create table metrics_thresholds (
 create table endpoints_thresholds (
     id serial not null, 
     endpoint_id integer not null, 
-    value integer not null, 
+    count integer not null, 
     primary key (id), 
     foreign key (endpoint_id) references endpoints(id),
     unique(endpoint_id)

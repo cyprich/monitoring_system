@@ -7,11 +7,12 @@ pub struct MetricsThreshold {
     pub metric_type: String,
     pub component_name: String,
     pub value: f64,
+    pub count: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EndpointsThreshold {
     pub id: i32,
     pub endpoint_id: i32,
-    pub value: i32,
+    pub count: i32,
 }

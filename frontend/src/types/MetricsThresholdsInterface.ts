@@ -4,4 +4,5 @@ export interface MetricsThresholdsInterface {
     metric_type: string
     component_name: string
     value: number
+    count: number
 }

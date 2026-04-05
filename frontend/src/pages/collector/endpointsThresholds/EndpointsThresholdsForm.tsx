@@ -41,7 +41,7 @@ export function EndpointsThresholdsForm(props: EndpointsThresholdsFormProps) {
         const result = {
             id: 0,
             endpoint_id: endpoint.id,
-            value: Number(count)
+            count: Number(count),
         }
 
         // TODO url

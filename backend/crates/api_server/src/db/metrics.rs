@@ -113,3 +113,29 @@ pub async fn get_metrics_table(
 
     Ok(result)
 }
+
+pub async fn get_metrics_by_type_and_component(
+    pool: &Pool,
+    collector_id: i32,
+    metric_type: &str,
+    component_name: &str,
+    limit: i32,
+) -> Result<Vec<MetricsTable>, shared::Error> {
+    let result = sqlx::query_as!(
+        MetricsTable,
+        "select * 
+        from metrics 
+        where collector_id = $1 
+        and metric_type = $2
+        and component_name = $3
+        limit $4",
+        collector_id,
+        metric_type,
+        component_name,
+        limit as i64
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(result)
+}

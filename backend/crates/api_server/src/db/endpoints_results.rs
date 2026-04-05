@@ -57,6 +57,26 @@ pub async fn get_collector_endpoints_results_last(
     Ok(result)
 }
 
+pub async fn get_endpoints_results_by_endpoint_id(
+    pool: &Pool,
+    endpoint_id: i32,
+    limit: i32,
+) -> Result<Vec<EndpointResult>, shared::Error> {
+    let result = sqlx::query_as!(
+        EndpointResult,
+        "select * 
+        from endpoints_results 
+        where endpoint_id = $1 
+        limit $2",
+        endpoint_id,
+        limit as i64
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(result)
+}
+
 pub async fn insert_endpoints_results(
     pool: &Pool,
     endpoint_results: Vec<EndpointResult>,
