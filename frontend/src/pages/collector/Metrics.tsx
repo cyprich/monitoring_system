@@ -57,11 +57,11 @@ export default function Metrics({collector, data}: CollectorProps) {
         </Tabs>
     )
 }
+
 function CpuChart(props: CollectorProps) {
     return (
         <CustomChart name={"CPU Usage"} keys={["CPU"]} data={
-            props.data.map((i) => ({
-                // timestamp: i.timestamp.toLocaleTimeString(),
+            props.data.map(i => ({
                 time: i.time,
                 cpu: i.cpu_usage
             }))
@@ -76,8 +76,7 @@ function RamChart(props: CollectorProps) {
             name={"RAM"}
             keys={["RAM"]}
             data={
-                props.data.map((i) => ({
-                    // timestamp: i.timestamp.toLocaleTimeString(),
+                props.data.map(i => ({
                     time: i.time,
                     ram: i.used_memory_mb
                 }))
@@ -95,8 +94,7 @@ function SwapChart(props: CollectorProps) {
             name={"Swap"}
             keys={["Swap"]}
             data={
-                props.data.map((i) => ({
-                    // timestamp: i.timestamp.toLocaleTimeString(),
+                props.data.map(i => ({
                     time: i.time,
                     swap: i.used_swap_mb
                 }))
@@ -118,13 +116,12 @@ function DriveCharts(props: CollectorProps) {
                         key={i}
                         keys={["Used"]}
                         data={
-                            props.data.map((metric) => {
+                            props.data.map(metric => {
                                 const selected = metric.drives?.find(
-                                    (a) => a.mountpoint == drive.mountpoint
+                                    a => a.mountpoint == drive.mountpoint
                                 )
 
                                 return {
-                                    // timestamp: metric.timestamp.toLocaleTimeString(),
                                     time: metric.time,
                                     used: selected?.used_space_gb || 0
                                 }
@@ -150,13 +147,12 @@ function NetworkCharts(props: CollectorProps) {
                         key={i}
                         keys={["Download", "Upload"]}
                         data={
-                            props.data.map((metric) => {
+                            props.data.map(metric => {
                                 const selected = metric.network_interfaces?.find(
-                                    (a) => a.name == network.name
+                                    a => a.name == network.name
                                 )
 
                                 return {
-                                    // timestamp: metric.timestamp.toLocaleTimeString(),
                                     time: metric.time,
                                     download: (selected?.download_kb || 0) / 1000,
                                     upload: (selected?.upload_kb || 0) / 1000,
@@ -165,7 +161,6 @@ function NetworkCharts(props: CollectorProps) {
                         }
                         unit={"MB"}
                         max_y={10}
-                        farColors={true}
                     />
                 ))
             }

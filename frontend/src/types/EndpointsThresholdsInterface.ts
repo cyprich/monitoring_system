@@ -2,6 +2,6 @@ import type {Endpoint} from "./Endpoints.ts";
 
 export interface EndpointsThresholdsInterface {
     id: number
-    endpoint: Endpointg
+    endpoint: Endpoint
     value: number
 }

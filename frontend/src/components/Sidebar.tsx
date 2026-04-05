@@ -1,7 +1,5 @@
-// import ChartAreaStackedNormalizedIcon from '@gravity-ui/icons/svgs/chart-area-stacked-normalized.svg';
 import HouseIcon from '@gravity-ui/icons/svgs/house.svg';
 import LayoutSideContentLeftIcon from '@gravity-ui/icons/svgs/layout-side-content-left.svg';
-import PersonIcon from '@gravity-ui/icons/svgs/person.svg';
 import GearIcon from '@gravity-ui/icons/svgs/gear.svg';
 import CircleInfoIcon from '@gravity-ui/icons/svgs/circle-info.svg';
 import BellIcon from '@gravity-ui/icons/svgs/bell.svg';
@@ -25,11 +23,6 @@ export default function Sidebar() {
                     name={"Home"}
                     link={"/"}
                     icon={HouseIcon}
-                    expanded={isExpanded}/>
-                <SidebarItem
-                    name={"Account"}
-                    link={"/account"}
-                    icon={PersonIcon}
                     expanded={isExpanded}/>
                 <SidebarItem
                     name={"Notifications"}

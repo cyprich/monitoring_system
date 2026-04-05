@@ -21,7 +21,7 @@ export default function ConfirmableInput(props: Props) {
     return (
         <div
             className={"flex items-center gap-4 relative"}
-            style={{width: props.width || "auto"}}
+            style={{ width: props.width || "auto" }}
             onMouseEnter={() => setIsActive(true)}
             onMouseLeave={() => setIsActive(false)}
         >

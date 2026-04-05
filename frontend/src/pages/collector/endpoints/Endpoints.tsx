@@ -30,16 +30,15 @@ export default function Endpoints(props: EndpointsProps) {
     // TODO REFRESH
 
     useEffect(() => {
-        axios.get(url).then((resp) => {
-            const endpoints: Array<Endpoint> = resp.data.map((e: Endpoint) => {
-                return e
+        axios
+            .get<Endpoint[]>(url)
+            .then(resp => {
+                setEndpoints(resp.data)
             })
-            setEndpoints(endpoints)
-        })
     }, [url]);
 
     function getEndpointResults(e: Endpoint): EndpointResult | null {
-        return props.lastEndpointsResults.find((r) => r.endpoint_id === e.id) || null
+        return props.lastEndpointsResults.find(r => r.endpoint_id === e.id) || null
     }
 
     function deleteEndpoint(id: number) {
@@ -49,11 +48,9 @@ export default function Endpoints(props: EndpointsProps) {
     return (
         <div className={"flex flex-col gap-4"}>
             <Table>
-                {/*<Table.ScrollContainer>*/}
                 <Table.ResizableContainer>
                     <Table.Content aria-label="Endpoints">
                         <Table.Header>
-                            {/*<Table.Column isRowHeader>Method</Table.Column>*/}
                             <Table.Column isRowHeader>
                                 URL
                                 <Table.ColumnResizer/>
@@ -119,7 +116,6 @@ export default function Endpoints(props: EndpointsProps) {
                             }
                         </Table.Body>
                     </Table.Content>
-                {/*</Table.ScrollContainer>*/}
                 </Table.ResizableContainer>
                 <Table.Footer>
                     <p className={"font-light text-sm"}>{endpoints?.length || 0} result{endpoints?.length !== 1 && "s"}</p>
@@ -127,8 +123,7 @@ export default function Endpoints(props: EndpointsProps) {
             </Table>
             <Button onClick={() => setIsAddOpen(true)}>Add new</Button>
 
-            { /* dialogs for add/edit/delete */}
-
+            { /* dialogs */}
             <CustomDialog
                 title={"Add Endpoint"}
                 body={

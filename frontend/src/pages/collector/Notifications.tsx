@@ -1,5 +1,5 @@
 import {Button, Pagination, Table} from "@heroui/react";
-import {ChevronLeft, ChevronRight, TrashBin} from "@gravity-ui/icons";
+import {ChevronLeft, ChevronRight} from "@gravity-ui/icons";
 import type {Notification} from "../../types/Notifications.ts";
 import {useMemo, useState} from "react";
 import axios from "axios";
@@ -40,7 +40,7 @@ export default function Notifications(props: NotificationProps) {
             let newNotifications: Notification[];
 
             if (typeof id === "number") {
-                newNotifications = props.notifications.filter((n) => n.id !== id);
+                newNotifications = props.notifications.filter(n => n.id !== id);
             } else {
                 newNotifications = []
             }
@@ -83,8 +83,11 @@ export default function Notifications(props: NotificationProps) {
                         )}>
                             {
                                 paginatedItems.map((n, i) => {
-                                    const threshold = Math.floor(n.threshold_value) === n.threshold_value ? n.threshold_value : n.threshold_value.toFixed(2)
-                                    const measured = n.measured_values.map((val) => (
+                                    const threshold = Math.floor(n.threshold_value) === n.threshold_value
+                                        ? n.threshold_value
+                                        : n.threshold_value.toFixed(2)
+
+                                    const measured = n.measured_values.map(val => (
                                         Math.floor(val) === val ? val : val.toFixed(2)
                                     ))
 
@@ -111,7 +114,9 @@ export default function Notifications(props: NotificationProps) {
                 <Table.Footer className={"flex items-center justify-between"}>
                     {
                         props.notifications.length <= ROWS_PER_PAGE
-                            ? <p className={"flex font-light text-sm"}>{props.notifications.length} result{props.notifications.length !== 1 && "s"}</p>
+                            ? <p className={"flex font-light text-sm"}>
+                                {props.notifications.length} result{props.notifications.length !== 1 && "s"}
+                            </p>
                             : <Pagination>
                                 <Pagination.Summary>
                                     Results {start} to {end} of {props.notifications.length}
@@ -120,7 +125,7 @@ export default function Notifications(props: NotificationProps) {
                                     <Pagination.Item>
                                         <Pagination.Previous
                                             isDisabled={ page === 1 }
-                                            onPress={() => setPage((p) => Math.max(1, p - 1))}
+                                            onPress={() => setPage(p => Math.max(1, p - 1))}
                                         >
                                             <ChevronLeft/>
                                             Prev
@@ -138,7 +143,7 @@ export default function Notifications(props: NotificationProps) {
                                     <Pagination.Item>
                                         <Pagination.Next
                                             isDisabled={ page === totalPages }
-                                            onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                            onPress={() => setPage(p => Math.min(totalPages, p + 1))}
                                         >
                                             Next
                                             <ChevronRight/>

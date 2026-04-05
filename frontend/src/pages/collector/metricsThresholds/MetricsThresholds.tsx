@@ -27,12 +27,9 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
 
     useEffect(() => {
         axios
-            .get(`${url}/collector/${props.collector_id}/metrics_thresholds`)
-            .then(resp => {
-                const val: MetricsThresholdsInterface[] =
-                    resp.data.map((t: MetricsThresholdsInterface) => (t))
-                setThresholds(val)
-            })
+            .get<MetricsThresholdsInterface[]>(`${url}/collector/${props.collector_id}/metrics_thresholds`)
+            .then(resp => {setThresholds(resp.data)})
+            .catch(e => console.error(e))
     }, [url, props.collector_id]);
 
     function deleteThreshold(id: number) {
@@ -60,7 +57,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                                 thresholds.map((t, i) => (
                                     <Table.Row key={i}>
                                         <Table.Cell>{prettyMetricType(t.metric_type as MetricType)}</Table.Cell>
-                                        <Table.Cell>{t.component_name || ""}</Table.Cell>
+                                        <Table.Cell className={"wrap-anywhere"}>{t.component_name || ""}</Table.Cell>
                                         <Table.Cell>{t.value}</Table.Cell>
                                         <Table.Cell>//TODO</Table.Cell>
                                         <TableActions
@@ -129,7 +126,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                 </> }
                 action={"delete"}
                 onConfirm={() => {
-                    deleteThreshold(deletingThreshold!.id)
+                    deleteThreshold(deletingThreshold?.id || -1)
                 }}
                 isOpen={isDeleteOpen}
                 setIsOpen={setIsDeleteOpen}

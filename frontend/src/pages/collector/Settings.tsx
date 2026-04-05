@@ -15,6 +15,7 @@ export interface SettingsProps {
 
 export function Settings(props: SettingsProps) {
     const url = `http://localhost:5000/collector/${props.collector.id}/rename`
+
     return (
         <div className={"grid grid-cols-[1fr_auto_1fr] gap-16 *:flex *:flex-col *:gap-8 "}>
             <div>
@@ -26,8 +27,9 @@ export function Settings(props: SettingsProps) {
                             axios
                                 .patch(url, {"name": newName})
                                 .then(() => {
-                                    props.setCollector({...props.collector, name: newName})
-                                }).catch((e) => { console.error(e) /* TODO */ })
+                                    props.setCollector({ ...props.collector, name: newName }
+                                )})
+                                .catch(e => { console.error(e) /* TODO */ })
                         }}
                     />
                 </SettingsGeneralSection>

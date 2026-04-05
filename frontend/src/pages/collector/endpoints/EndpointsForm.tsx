@@ -30,8 +30,6 @@ export function EndpointsForm(props: EndpointsFormProps) {
             method: "Get"
         }
 
-        console.log("SUBMIT")
-
         if (props.action === "add") {
             axios
                 .post(backendUrl, { ...endpoint })
@@ -60,7 +58,7 @@ export function EndpointsForm(props: EndpointsFormProps) {
                         placeholder={"http://192.168.10.10:80/api"}
                         variant={"secondary"}
                         value={endpointUrl}
-                        onChange={(e) => setEndpointUrl(e.target.value)}
+                        onChange={e => setEndpointUrl(e.target.value)}
                     />
                     <FieldError/>
                 </TextField>
@@ -79,7 +77,7 @@ export function EndpointsForm(props: EndpointsFormProps) {
                                 type={"number"}
                                 className={"w-56"}
                                 value={responseCodeInput}
-                                onChange={(e) => setResponseCodeInput(e.target.value)}
+                                onChange={e => setResponseCodeInput(e.target.value)}
                                 placeholder={"Response Code Number"}
                             />
                             <Button
@@ -91,13 +89,9 @@ export function EndpointsForm(props: EndpointsFormProps) {
                                         (c) => (c === val)
                                     )) { return }
 
-                                    setResponseCodes(
-                                        (prev) => [ ...prev, Number(val) ]
-                                    )
-                                }
-                                }>
-                                <Plus/>
-                            </Button>
+                                    setResponseCodes(prev => [ ...prev, Number(val) ])
+                                }}
+                            ><Plus/></Button>
                         </div>
                         <div className={"flex items-center gap-1"}>
                             <p className={"pr-2"}>Selected Codes:</p>
@@ -108,7 +102,7 @@ export function EndpointsForm(props: EndpointsFormProps) {
                                         className={"bg-background p-2 w-max rounded-xl relative cursor-pointer group min-w-10"}
                                         key={i}
                                         onClick={() => {
-                                            const newList = responseCodes.filter((x) => x !== c)
+                                            const newList = responseCodes.filter(x => x !== c)
                                             setResponseCodes(newList)
                                         }}
                                     >

@@ -22,7 +22,7 @@ import {getResolution, getTimeLimit} from "../../helpFunctions.ts";
 import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
 import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
 import {Separator} from "@heroui/react";
-import {MetricsThresholds} from "./metricsThresholds/MetricsThresholds.tsx";
+// import type {MetricsThresholdsInterface} from "../../types/MetricsThresholdsInterface.ts";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -35,9 +35,10 @@ export default function Collector() {
 
     const [collector, setCollector] = useState<Collector | null>(null)
     const [metrics, setMetrics] = useState<MetricsInterface[]>([])
-    const [lastMetrics, setLastMetrics] = useState<MetricsInterface[]>([]);
+    const [, setLastMetrics] = useState<MetricsInterface[]>([]);
     const [lastEndpointsResults, setLastEndpointsResults] = useState<EndpointResult[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
+    // const [metricsThresholds, setMetricsThresholds] = useState<MetricsThresholdsInterface[]>([])
 
     // TODO link
     const url = `http://localhost:5000/collector/${id}`;
@@ -53,87 +54,80 @@ export default function Collector() {
     // TODO move the corresponding useEffect get to it's component
     // TODO not sure about the websocket tho, it would be nice to have just one
 
+    // TODO check response code
     useEffect(() => {
         // collector
         axios
-            .get(url)
+            .get<Collector>(url)
             .then((resp) => {
-                // TODO check response code
                 setCollector(resp.data)
             })
 
         // drives
-        axios.get(`${url}/drives`).then((resp) => {
-            const drives: Drive[] = (resp.data as any[]).map(
-                (d: Drive) => ({
-                    mountpoint: d.mountpoint,
-                    capacity_gb: d.capacity_gb,
-                    file_system: d.file_system
-                })
-            )
+        axios.get<Drive[]>(`${url}/drives`).then((resp) => {
             setCollector(
-                (old) => (
-                    old ? {...old, drives: drives} : old
+                prev => (
+                    prev ? {...prev, drives: resp.data} : prev
                 )
             )
         });
 
         // network interfaces
-        axios.get(`${url}/network_interfaces`).then((resp) => {
-            const network_interfaces: NetworkInterface[] = (
-                resp.data as any[]).map((n: NetworkInterface) => ({
-                    name: n.name, mac: n.mac
-                })
-            )
+        axios.get<NetworkInterface[]>(`${url}/network_interfaces`).then((resp) => {
             setCollector(
-                (old) => (
-                    old ? {...old, network_interfaces: network_interfaces} : old
+                prev => (
+                    prev ? {...prev, network_interfaces: resp.data} : prev
                 )
             )
         });
 
         // historic metrics
         axios
-            .get(`${url}/metrics`, {
+            .get<MetricsInterface[]>(`${url}/metrics`, {
                 params: {
                     time_limit_hours: TIME_LIMIT_HOURS,
                     resolution: RESOLUTION
                 }
             })
             .then((resp) => {
-                const data: MetricsInterface[] = resp.data.map((i: MetricsInterface) => (
-                    {
-                        ...i,
-                        time: new Date(i.time).toLocaleTimeString()
-                    }
-                ))
-                setMetrics(data);
+                setMetrics(
+                    resp.data.map(m => ({
+                        ...m,
+                        time : new Date(m.time).toLocaleTimeString()
+                    }))
+                );
             })
 
         // historic notifications
         axios
-            .get(`${url}/notifications`)
+            .get<Notification[]>(`${url}/notifications`)
             .then((resp) => {
-                let newData: Notification[] = resp.data;
-                newData = newData.map((n) => ({
-                    ...n,
-                    time: new Date(n.time).toLocaleTimeString()
-                }))
-                setNotifications(newData)
+                setNotifications(
+                    resp.data.map(n => ({
+                        ...n,
+                        time: new Date(n.time).toLocaleDateString() + " " + new Date(n.time).toLocaleTimeString()
+                    }))
+                )
             })
 
         // last endpoints results
         axios
-            .get(`${url}/endpoints_results/last`)
+            .get<EndpointResult[]>(`${url}/endpoints_results/last`)
             .then((resp) => {
-                const data: EndpointResult[] = resp.data.map((r: EndpointResult) => {
-                    return {
+                setLastEndpointsResults(
+                    resp.data.map(r => ({
                         ...r,
                         time: new Date(r.time).toLocaleTimeString()
-                    }
-                })
-                setLastEndpointsResults(data)
+                    }))
+                )
         })
+
+        // // metrics thresholds
+        // axios
+        //     .get<MetricsThresholdsInterface[]>(`${url}/metrics_thresholds`)
+        //     .then(resp => {
+        //         setMetricsThresholds(resp.data)
+        //     })
     }, [TIME_LIMIT_HOURS, RESOLUTION, id, url]);
 
     useEffect(() => {
@@ -143,7 +137,7 @@ export default function Collector() {
             console.log("Websocket opened")
         })
 
-        socket.addEventListener("message", (event) => {
+        socket.addEventListener("message", event => {
             const recv = JSON.parse(event.data);
             if (recv.type === "metrics") {
                 // https://howtodoinjava.com/typescript/typescript-date-object/
@@ -161,24 +155,24 @@ export default function Collector() {
                 });
             } else if (recv.type === "endpoints_results") {
                 let newData: EndpointResult[] = recv.data;
-                newData = newData.map((r) => ({
+                newData = newData.map(r => ({
                     ...r,
                     time: new Date(r.time).toLocaleTimeString()
                 }))
                 setLastEndpointsResults(newData)
             } else if (recv.type === 'notifications') {
                 let newData: Notification[] = recv.data;
-                newData = newData.map((n) => ({
+                newData = newData.map(n => ({
                     ...n,
-                    time: new Date(n.time).toLocaleTimeString()
+                    time: new Date(n.time).toLocaleDateString() + " " + new Date(n.time).toLocaleTimeString()
                 }))
-                setNotifications((prev) => [...prev, ...newData])
+                setNotifications(prev => [...prev, ...newData])
             }
         })
 
         return () => socket.close()
 
-    }, [TIME_LIMIT_HOURS, id]);
+    }, [RESOLUTION, TIME_LIMIT_HOURS, VALUES_IN_WINDOW, id]);
 
     return (
         <main className={"flex flex-col gap-8"}>

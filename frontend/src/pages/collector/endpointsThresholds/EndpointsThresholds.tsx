@@ -1,7 +1,6 @@
 import {Button, Table} from "@heroui/react";
 import {useEffect, useState} from "react";
 import axios from "axios";
-import type {MetricsThresholdsInterface} from "../../../types/MetricsThresholdsInterface.ts";
 import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../../components/TableActions.tsx";
 import type {EndpointsThresholdsInterface} from "../../../types/EndpointsThresholdsInterface.ts";
@@ -19,19 +18,16 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
 
     // TODO
-    const [editingThreshold, setEditingThreshold] = useState<MetricsThresholdsInterface | null>(null)
-    const [deletingThreshold, setDeletingThreshold] = useState<MetricsThresholdsInterface | null>(null)
+    const [editingThreshold, setEditingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
+    const [deletingThreshold, setDeletingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
 
     const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds`
 
     useEffect(() => {
         axios
-            .get(url)
-            .then(resp => {
-                const val: EndpointsThresholdsInterface[] =
-                    resp.data.map((t: EndpointsThresholdsInterface) => (t))
-                setThresholds(val)
-            })
+            .get<EndpointsThresholdsInterface[]>(url)
+            .then(resp => {setThresholds(resp.data)})
+            .catch(e => console.error(e))
     }, [url]);
 
     return (
@@ -41,9 +37,8 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                 <Table>
                     <Table.Content aria-label={"Endpoints Notification Thresholds"}>
                         <Table.Header>
-                            <Table.Column isRowHeader>Type</Table.Column>
-                            <Table.Column>Component Name</Table.Column>
-                            <Table.Column>Value</Table.Column>
+                            <Table.Column isRowHeader>Endpoint</Table.Column>
+                            <Table.Column>Count</Table.Column>
                             <Table.Column>Actions</Table.Column>
                         </Table.Header>
                         <Table.Body renderEmptyState={() => (
@@ -52,8 +47,7 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                             {
                                 thresholds.map((t, i) => (
                                     <Table.Row key={i}>
-                                        <Table.Cell>{t.metric_type}</Table.Cell>
-                                        <Table.Cell>{t.component_name || "-"}</Table.Cell>
+                                        <Table.Cell>{t.endpoint.url}</Table.Cell>
                                         <Table.Cell>{t.value}</Table.Cell>
                                         <TableActions
                                             deleteOnClick={() => {
@@ -72,7 +66,7 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                         </Table.Body>
                     </Table.Content>
                     <Table.Footer>
-                        <p className={"text-sm font-light"}>{thresholds.length} results</p>
+                        <p className={"text-sm font-light"}>{thresholds.length} result{thresholds.length !== 1 && "s"}</p>
                     </Table.Footer>
                 </Table>
                 <Button onClick={() => setIsAddOpen(true)}>Add new</Button>
@@ -100,8 +94,8 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
                     body={ <p>You will no longer be receiving notifications after exceeding these limits</p> }
                     action={"add"}
                     onConfirm={() => {}}
-                    isOpen={isAddOpen}
-                    setIsOpen={setIsAddOpen}
+                    isOpen={isDeleteOpen}
+                    setIsOpen={setIsDeleteOpen}
                     showFooter={false}
                 />
             </div>

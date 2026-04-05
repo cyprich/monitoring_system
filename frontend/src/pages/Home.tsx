@@ -3,6 +3,7 @@ import axios from "axios";
 import type {Collector} from "../types/Collector.ts";
 import {Card} from "@heroui/react";
 import {Link} from "react-router";
+// import {CircleCheckFill} from "@gravity-ui/icons";
 
 export default function Home() {
     return (
@@ -21,8 +22,8 @@ function Collectors() {
 
     useEffect(() => {
         axios
-            .get(URL)
-            .then((resp) => {
+            .get<Collector[]>(URL)
+            .then(resp => {
                 setCollectors(resp.data)
             })
     }, []);
@@ -50,13 +51,13 @@ function Collectors() {
                                         <span>RAM: {((c.total_memory_mb || 0) / 1000).toFixed(0)} GB</span>
                                     </Card.Description>
                                 </Card.Header>
-                                <Card.Footer>
-                                    <div className={"flex items-center gap-1"}>
-                                        <p>Last seen: <span className={"text-gray-500"}>TODO</span></p>
-                                        {/*<CircleCheckFill className={"text-success"}/>*/}
-                                        {/*<p className={"text-success"}>Online</p>*/}
-                                    </div>
-                                </Card.Footer>
+                                {/*<Card.Footer>*/}
+                                {/*    <div className={"flex items-center gap-1"}>*/}
+                                {/*        /!* TODO *!/*/}
+                                {/*        <CircleCheckFill className={"text-success"}/>*/}
+                                {/*        <p className={"text-success"}>Online</p>*/}
+                                {/*    </div>*/}
+                                {/*</Card.Footer>*/}
                             </Card>
                         </Link>
                     ))

@@ -16,7 +16,7 @@ export function TableEmptyContent(props: TableEmptyContentProps) {
                     : <CircleCheckFill className={"size-16 opacity-80 mb-2"}/>
             }
             {
-                props.text.map((t) => (
+                props.text.map(t => (
                     <span>{t}</span>
                 ))
             }

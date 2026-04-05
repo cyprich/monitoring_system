@@ -2,11 +2,7 @@ import {ToggleButton, ToggleButtonGroup} from "@heroui/react";
 import SettingsGeneralSection from "./SettingsGeneralSection.tsx";
 import {getTimeLimit, keysToNumber, setTimeLimit} from "../../helpFunctions.ts";
 
-interface Props {
-    showWarning?: boolean
-}
-
-export function SettingsTimeLimit(props: Props) {
+export function SettingsTimeLimit() {
     const values = [1, 3, 6, 12, 24];
 
     return (

@@ -64,9 +64,7 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
     }, [url]);
 
     function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-        // TODO
         event.preventDefault()
-        console.log(new FormData(event.currentTarget))
         const result: MetricsThresholdsInterface = {
             id: 0,
             collector_id: props.collectorId,
