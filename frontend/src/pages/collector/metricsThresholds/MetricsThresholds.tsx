@@ -63,7 +63,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
                                         <Table.Cell>{prettyMetricType(t.metric_type as MetricType)}</Table.Cell>
                                         <Table.Cell className={"wrap-anywhere"}>{t.component_name || ""}</Table.Cell>
                                         <Table.Cell>{t.value}</Table.Cell>
-                                        <Table.Cell>//TODO</Table.Cell>
+                                        <Table.Cell>{t.count}</Table.Cell>
                                         <TableActions
                                             deleteOnClick={() => {
                                                 setDeletingThreshold(t)
