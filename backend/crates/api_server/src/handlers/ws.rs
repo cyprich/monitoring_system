@@ -4,8 +4,27 @@ use futures_util::StreamExt as _;
 
 use crate::AppState;
 
+#[get("/ws/hello")]
+pub async fn ws_hello(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let (resp, mut send, mut receive) = actix_ws::handle(&req, stream)?;
+
+    rt::spawn(async move {
+        send.text("Hello World from monitoring system backend WebSocket!")
+            .await
+            .unwrap();
+
+        while let Some(val) = receive.next().await {
+            if let Ok(Message::Close(_)) = val {
+                break;
+            }
+        }
+    });
+
+    Ok(resp)
+}
+
 #[get("/ws/collector/{id}")]
-pub async fn ws(
+pub async fn ws_collector(
     state: web::Data<AppState>,
     path: web::Path<i32>,
     req: HttpRequest,

@@ -18,7 +18,7 @@ import Metrics from "./Metrics.tsx"
 import type {EndpointResult} from "../../types/Endpoints.ts";
 import type {Notification} from "../../types/Notifications.ts";
 import {Settings} from "./Settings.tsx";
-import {getBaseUrl, getResolution, getTimeLimit} from "../../helpFunctions.ts";
+import {getBaseUrl, getResolution, getTimeLimit, getWebsocketBaseUrl} from "../../helpFunctions.ts";
 import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
 import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
 import {Separator} from "@heroui/react";
@@ -48,7 +48,6 @@ export default function Collector() {
     const TOTAL_METRICS_COUNT = (TIME_LIMIT_HOURS * 3600) / METRICS_INTERVAL; // how many metrics in total
     const VALUES_IN_WINDOW = Math.floor(TOTAL_METRICS_COUNT / RESOLUTION); // number of values for each window
 
-    // TODO check response code
     useEffect(() => {
         // collector
         axios
@@ -125,7 +124,7 @@ export default function Collector() {
     }, [TIME_LIMIT_HOURS, RESOLUTION, id, url]);
 
     useEffect(() => {
-        const socket = new WebSocket(`ws://localhost:5000/ws/collector/${id}`);
+        const socket = new WebSocket(getWebsocketBaseUrl() + `/ws/collector/${id}`);
 
         socket.addEventListener("open", () => {
             console.log("Websocket opened")
@@ -251,3 +250,8 @@ function CollectorHeader(collector: Collector) {
     )
 }
 
+function backendUnreachableAlert() {
+    return (
+        <>eh</>
+    )
+}

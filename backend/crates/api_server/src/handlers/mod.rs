@@ -64,5 +64,5 @@ fn handle_query_error<T: serde::Serialize>(
 )]
 #[get("")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello, world!")
+    HttpResponse::Ok().body("Hello World from monitoring system backend API!")
 }

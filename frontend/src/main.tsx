@@ -9,16 +9,16 @@ import Settings from "./pages/Settings.tsx";
 import About from "./pages/About.tsx";
 
 createRoot(document.getElementById('root')!).render(
-    <BrowserRouter>
-        <div className={"flex"}>
-            <Sidebar/>
-            <Routes>
-                <Route path={"/"} element={<Home/>}/>
-                <Route path={"/collector/:id"} element={<Collector/>}/>
-                <Route path={"/notifications"} element={<Notifications/>}/>
-                <Route path={"/settings"} element={<Settings/>}/>
-                <Route path={"/about"} element={<About/>}/>
-            </Routes>
-        </div>
-    </BrowserRouter>
+        <BrowserRouter>
+            <div className={"flex"}>
+                <Sidebar/>
+                <Routes>
+                    <Route path={"/"} element={<Home/>}/>
+                    <Route path={"/collector/:id"} element={<Collector/>}/>
+                    <Route path={"/notifications"} element={<Notifications/>}/>
+                    <Route path={"/settings"} element={<Settings/>}/>
+                    <Route path={"/about"} element={<About/>}/>
+                </Routes>
+            </div>
+        </BrowserRouter>
 )
