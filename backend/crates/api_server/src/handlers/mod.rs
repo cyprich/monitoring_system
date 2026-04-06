@@ -1,4 +1,5 @@
 use actix_web::{HttpResponse, Responder, get};
+use serde::Deserialize;
 
 mod collectors;
 mod metrics;
@@ -14,10 +15,22 @@ pub use thresholds::*;
 pub use ws::*;
 pub use api_docs::*;
 
+// response body - jsor or none
 enum ResponseBodyType {
     Json,
-    // Body { value: String },
     None,
+}
+
+// params structs
+#[derive(Deserialize, utoipa::IntoParams)]
+struct MetricsQueryParams {
+    time_limit_hours: Option<i32>,
+    resolution: Option<i32>,
+}
+
+#[derive(Deserialize, utoipa::ToSchema)]
+struct RenameCollectorStruct {
+    name: String,
 }
 
 fn handle_query_error<T: serde::Serialize>(
@@ -29,15 +42,14 @@ fn handle_query_error<T: serde::Serialize>(
             let mut r = HttpResponse::Ok();
             match body_type {
                 ResponseBodyType::Json => r.json(val),
-                // ResponseBodyType::Body { value } => r.body(value),
                 ResponseBodyType::None => r.finish(),
             }
         }
         Err(val) => match val {
-            shared::Error::DbForeignKey(fk) => HttpResponse::Unauthorized().body(fk.to_string()),
+            shared::Error::DbForeignKey(fk) => HttpResponse::Conflict().body(fk.to_string()),
             shared::Error::DbNothingChanged => {
                 // TODO might not be ID in all cases
-                HttpResponse::NotFound().body("Nothing changed, specified ID not found")
+                HttpResponse::NotModified().body("Nothing changed, specified ID not found")
             }
             // TODO more cases if needed
             _ => HttpResponse::InternalServerError().body(val.to_string()),
@@ -50,7 +62,7 @@ fn handle_query_error<T: serde::Serialize>(
         (status = 200, description="API Server reachable", body=String),
     ), 
 )]
-#[get("/")]
+#[get("")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello, world!")
 }

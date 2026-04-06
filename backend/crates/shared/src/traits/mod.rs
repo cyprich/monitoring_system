@@ -5,7 +5,6 @@ use crate::structs::{
     metrics::Metrics,
 };
 
-// TODO it says i should not use `async fn`, but ratner return `impl Future`
 #[async_trait::async_trait]
 pub trait Collector: Send + Sync {
     fn get_info(&self) -> Result<CollectorInfo, crate::Error>;

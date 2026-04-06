@@ -7,6 +7,7 @@ import {SettingsResolution} from "../../components/settings/SettingsResolution.t
 import {MetricsThresholds} from "./metricsThresholds/MetricsThresholds.tsx";
 import {EndpointsThresholds} from "./endpointsThresholds/EndpointsThresholds.tsx";
 import {Separator} from "@heroui/react";
+import {getBaseUrl} from "../../helpFunctions.ts";
 
 export interface SettingsProps {
     collector: Collector,
@@ -14,7 +15,7 @@ export interface SettingsProps {
 }
 
 export function Settings(props: SettingsProps) {
-    const url = `http://localhost:5000/collector/${props.collector.id}/rename`
+    const url = getBaseUrl() + `/collector/${props.collector.id}/rename`
 
     return (
         <div className={"grid grid-cols-[1fr_auto_1fr] gap-16 *:flex *:flex-col *:gap-8 "}>
@@ -29,7 +30,7 @@ export function Settings(props: SettingsProps) {
                                 .then(() => {
                                     props.setCollector({ ...props.collector, name: newName }
                                 )})
-                                .catch(e => { console.error(e) /* TODO */ })
+                                .catch(e => { console.error(e) })
                         }}
                     />
                 </SettingsGeneralSection>

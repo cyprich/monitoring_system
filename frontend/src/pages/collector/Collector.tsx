@@ -18,7 +18,7 @@ import Metrics from "./Metrics.tsx"
 import type {EndpointResult} from "../../types/Endpoints.ts";
 import type {Notification} from "../../types/Notifications.ts";
 import {Settings} from "./Settings.tsx";
-import {getResolution, getTimeLimit} from "../../helpFunctions.ts";
+import {getBaseUrl, getResolution, getTimeLimit} from "../../helpFunctions.ts";
 import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
 import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
 import {Separator} from "@heroui/react";
@@ -39,8 +39,7 @@ export default function Collector() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     // const [metricsThresholds, setMetricsThresholds] = useState<MetricsThresholdsInterface[]>([])
 
-    // TODO link
-    const url = `http://localhost:5000/collector/${id}`;
+    const url = getBaseUrl() + `/collector/${id}`
 
     const TIME_LIMIT_HOURS = getTimeLimit();
     const RESOLUTION = getResolution();

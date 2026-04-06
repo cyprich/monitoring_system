@@ -1,6 +1,6 @@
 import {Button, Description, FieldError, Fieldset, Form, Input, Label, ListBox, Select, TextField} from "@heroui/react";
 import * as React from "react";
-import {firstLetterUppercase} from "../../../helpFunctions.ts";
+import {firstLetterUppercase, getBaseUrl} from "../../../helpFunctions.ts";
 import {useEffect, useState} from "react";
 import axios from "axios";
 import type {Endpoint} from "../../../types/Endpoints.ts";
@@ -19,8 +19,7 @@ export function EndpointsThresholdsForm(props: EndpointsThresholdsFormProps) {
     const [endpointUrl, setEndpointUrl] = useState<string | null>(null)
     const [count, setCount] = useState<string | null>(null)
 
-    // TODO URL
-    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds`
+    const url = getBaseUrl() + `/collector/${props.collector_id}/endpoints_thresholds`
 
     useEffect(() => {
         axios
@@ -44,11 +43,9 @@ export function EndpointsThresholdsForm(props: EndpointsThresholdsFormProps) {
             count: Number(count),
         }
 
-        // TODO url
         axios
-            .post("http://localhost:5000/endpoints_thresholds", { ...result })
+            .post(getBaseUrl() + "/endpoints_thresholds", { ...result })
             .then(resp => {
-                // TODO this chould be done better
                 const endpoint = availableEndpoints.find(e => e.id == resp.data.endpoint_id)!
                 const newData: EndpointsThresholdsInterface = {
                     collector_id: props.collector_id,

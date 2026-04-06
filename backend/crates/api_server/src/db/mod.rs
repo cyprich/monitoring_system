@@ -14,6 +14,8 @@ pub use metrics::*;
 pub use notifications::*;
 pub use thresholds::*;
 
+use crate::DELETE_RECORDS_AFTER_HOURS;
+
 pub type Pool = sqlx::Pool<sqlx::Postgres>;
 pub type Builder<'a> = sqlx::QueryBuilder<'a, sqlx::Postgres>;
 
@@ -24,4 +26,26 @@ pub async fn get_pool() -> Result<Pool, shared::Error> {
         .max_connections(5)
         .connect(&url)
         .await?)
+}
+
+pub async fn delete_old_records(pool: &Pool) -> Result<(), shared::Error> {
+    let mut transaction = pool.begin().await?;
+
+    sqlx::query!(
+        "delete from metrics where time < ( now() - $1 * '1 hour'::interval )",
+        DELETE_RECORDS_AFTER_HOURS
+    )
+    .execute(&mut *transaction)
+    .await?;
+
+    sqlx::query!(
+        "delete from endpoints_results where time < ( now() - $1 * '1 hour'::interval ) ",
+        DELETE_RECORDS_AFTER_HOURS
+    )
+    .execute(&mut *transaction)
+    .await?;
+
+    transaction.commit().await?;
+
+    Ok(())
 }

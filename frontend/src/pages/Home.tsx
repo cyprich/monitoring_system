@@ -3,6 +3,7 @@ import axios from "axios";
 import type {Collector} from "../types/Collector.ts";
 import {Card} from "@heroui/react";
 import {Link} from "react-router";
+import {getBaseUrl} from "../helpFunctions.ts";
 // import {CircleCheckFill} from "@gravity-ui/icons";
 
 export default function Home() {
@@ -17,16 +18,15 @@ export default function Home() {
 function Collectors() {
     const [collectors, setCollectors] = useState<Collector[]>([])
 
-    // TODO
-    const URL = 'http://localhost:5000/collectors'
+    const url = getBaseUrl() + "/collectors";
 
     useEffect(() => {
         axios
-            .get<Collector[]>(URL)
+            .get<Collector[]>(url)
             .then(resp => {
                 setCollectors(resp.data)
             })
-    }, []);
+    }, [url]);
 
     return (
         <div>

@@ -6,6 +6,7 @@ import {TableActions} from "../../../components/TableActions.tsx";
 import type {EndpointsThresholdsInterface} from "../../../types/EndpointsThresholdsInterface.ts";
 import {CustomDialog} from "../../../components/CustomDialog.tsx";
 import {EndpointsThresholdsForm} from "./EndpointsThresholdsForm.tsx";
+import {getBaseUrl} from "../../../helpFunctions.ts";
 
 export interface EndpointsThresholdsProps {
     collector_id: number
@@ -18,12 +19,10 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
     const [isEditOpen, setIsEditOpen] = useState<boolean>(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false)
 
-    // TODO
     // const [editingThreshold, setEditingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
     const [deletingThreshold, setDeletingThreshold] = useState<EndpointsThresholdsInterface | null>(null)
 
-    // TODO url
-    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints_thresholds_join`
+    const url = getBaseUrl() + `/collector/${props.collector_id}/endpoints_thresholds_join`
 
     useEffect(() => {
         axios
@@ -35,9 +34,8 @@ export function EndpointsThresholds(props: EndpointsThresholdsProps) {
     }, [url]);
 
     function deleteThreshold(threshold_id: number) {
-        // TODO url
         axios
-            .delete(`http://localhost:5000/endpoints_thresholds/${threshold_id}`)
+            .delete(getBaseUrl() + `/endpoints_thresholds/${threshold_id}`)
             .then(() => {
                 setThresholds(prev => prev.filter(t => (t.threshold_id !== threshold_id)))
             })

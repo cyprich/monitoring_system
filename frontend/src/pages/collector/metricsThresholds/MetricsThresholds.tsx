@@ -8,6 +8,7 @@ import {CustomDialog} from "../../../components/CustomDialog.tsx";
 import {MetricsThresholdsForm} from "./MetricsThresholdsForm.tsx";
 import {type MetricType, prettyMetricType} from "../../../types/MetricType.ts";
 import {ValueAndCountTooltip} from "../../../components/ValueAndCountTooltip.tsx";
+import {getBaseUrl} from "../../../helpFunctions.ts";
 
 export interface MetricsThresholdsProps {
     collector_id: number
@@ -23,7 +24,7 @@ export function MetricsThresholds(props: MetricsThresholdsProps) {
     // const [editingThreshold, setEditingThreshold] = useState<MetricsThresholdsInterface | null>(null)
     const [deletingThreshold, setDeletingThreshold] = useState<MetricsThresholdsInterface | null>(null)
 
-    const url = `http://localhost:5000/`
+    const url = getBaseUrl()
 
     useEffect(() => {
         axios

@@ -5,6 +5,7 @@ import {useMemo, useState} from "react";
 import axios from "axios";
 import {TableEmptyContent} from "../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../components/TableActions.tsx";
+import {getBaseUrl} from "../../helpFunctions.ts";
 
 interface NotificationProps {
     notifications: Notification[],
@@ -27,8 +28,7 @@ export default function Notifications(props: NotificationProps) {
     const start = (page - 1) * ROWS_PER_PAGE + 1;
     const end = Math.min(page * ROWS_PER_PAGE, props.notifications.length);
 
-    // TODO url
-    const base_url = `http://localhost:5000/collector/${props.collector_id}/notifications`
+    const base_url = getBaseUrl() + `/collector/${props.collector_id}/notifications`
 
     function remove_notification(id: number | null) {
         let url = base_url;

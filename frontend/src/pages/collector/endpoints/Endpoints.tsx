@@ -7,6 +7,7 @@ import {TableEmptyContent} from "../../../components/TableEmptyContent.tsx";
 import {TableActions} from "../../../components/TableActions.tsx";
 import {CustomDialog} from "../../../components/CustomDialog.tsx";
 import {EndpointsForm} from "./EndpointsForm.tsx";
+import {getBaseUrl} from "../../../helpFunctions.ts";
 
 export interface EndpointsProps {
     collector_id: number,
@@ -23,10 +24,8 @@ export default function Endpoints(props: EndpointsProps) {
     // const [editingEndpoint, setEditingEndpoint] = useState<Endpoint | null>(null)
     const [deletingEndpoint, setDeletingEndpoint] = useState<Endpoint | null>(null)
 
-    // TODO url
-    const url = `http://localhost:5000/collector/${props.collector_id}/endpoints`
+    const url = getBaseUrl() + `/collector/${props.collector_id}/endpoints`
 
-    // TODO REFRESH
     useEffect(() => {
         axios
             .get<Endpoint[]>(url)

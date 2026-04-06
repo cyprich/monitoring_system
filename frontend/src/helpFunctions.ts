@@ -1,9 +1,11 @@
 import type {Key} from "@heroui/react";
 
+// general functions
 export function reload() {
     window.location.reload()
 }
 
+// localStorage access
 export function getTimeLimit(): number {
     const value = localStorage.getItem("time_limit");
 
@@ -34,11 +36,19 @@ export function setResolution(value: number) {
     reload()
 }
 
+export function getBaseUrl(): string {
+    return localStorage.getItem("base_url") || "http://localhost:5000/api/v1"
+}
+
+export function setBaseUrl(value: string) {
+    localStorage.setItem("base_url", value + "/api/v1")
+}
+
+// formatting and more
 export function keysToNumber(keys: Set<Key>): number {
     const val = keys.values().next().value;
     return Number(val)
 }
-
 
 export function firstLetterUppercase(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1)

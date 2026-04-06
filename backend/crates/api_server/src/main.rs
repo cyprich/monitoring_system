@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use actix_web::{middleware, web};
@@ -6,6 +8,7 @@ use shared::structs::endpoints::EndpointResult;
 use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
+use tokio::time::sleep;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -15,6 +18,9 @@ use db::Pool;
 mod db;
 mod handlers;
 mod notifications;
+
+const DELETE_RECORDS_AFTER_HOURS: f64 = 24.0;
+const DELETE_DELAY_MINUTES: u64 = 5;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "type", content = "data")]
@@ -36,9 +42,9 @@ pub struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // get port
     let port =
         shared::env::get("API_PORT").map_err(|val| std::io::Error::other(val.to_string()))?;
-
     let port: u16 = match port.parse() {
         Ok(val) => val,
         Err(val) => {
@@ -47,6 +53,7 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    // create pool
     let pool = match db::get_pool().await {
         Ok(val) => val,
         Err(val) => {
@@ -55,19 +62,31 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    // delete old metrics and endpoitns_results
+    let pool_clone = pool.clone();
+    tokio::spawn(async move {
+        loop {
+            let result = db::delete_old_records(&pool_clone).await;
+            if let Err(val) = result {
+                eprintln!("Error deleting old records: {}", val)
+            }
+            sleep(Duration::from_mins(DELETE_DELAY_MINUTES)).await;
+        }
+    });
+
+    // prepare app state and apidocs
     let (tx, _) = broadcast::channel::<(WebSocketType, i32)>(128);
-
     let state = AppState { pool, tx };
-
     let openapi = ApiDoc::openapi();
 
+    // run web server
     HttpServer::new(move || {
         App::new()
             // TODO
             .wrap(Cors::permissive())
             .app_data(web::Data::new(state.clone()))
             .service(
-                web::scope("")
+                web::scope("/api/v1")
                     .wrap(middleware::NormalizePath::trim())
                     .service(hello)
                     .service(ws)

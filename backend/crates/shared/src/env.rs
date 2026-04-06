@@ -9,5 +9,5 @@ pub fn base_url() -> Result<String, crate::Error> {
     dotenv()?;
     let addr = get("API_ADDRESS")?;
     let port = get("API_PORT")?;
-    Ok(format!("{addr}:{port}"))
+    Ok(format!("{addr}:{port}/api/v1"))
 }

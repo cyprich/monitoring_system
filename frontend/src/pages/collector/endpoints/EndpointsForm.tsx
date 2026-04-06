@@ -4,6 +4,7 @@ import {Button, FieldError, Fieldset, Form, Input, TextField, Label} from "@hero
 import {ExclamationShapeFill, Plus, TrashBin} from "@gravity-ui/icons";
 import axios from "axios";
 import * as React from "react";
+import {getBaseUrl} from "../../../helpFunctions.ts";
 
 export interface EndpointsFormProps {
     action: "add" | "edit"
@@ -18,7 +19,7 @@ export function EndpointsForm(props: EndpointsFormProps) {
     const [responseCodeInput, setResponseCodeInput] = useState<string>("")
     const [responseCodes, setResponseCodes] = useState<number[]>(props.endpoint?.expected_codes || [])
 
-    const backendUrl = `http://localhost:5000/collector/${props.collector_id}/endpoints`
+    const backendUrl = getBaseUrl() + `/collector/${props.collector_id}/endpoints`
 
     // TODO historical data
 

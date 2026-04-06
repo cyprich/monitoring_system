@@ -1,6 +1,6 @@
 import {Button, FieldError, Fieldset, Form, Input, Label, ListBox, Select, TextField} from "@heroui/react";
 import * as React from "react";
-import {firstLetterUppercase} from "../../../helpFunctions.ts";
+import {firstLetterUppercase, getBaseUrl} from "../../../helpFunctions.ts";
 import {useEffect, useState} from "react";
 import {type MetricType, metricTypeUnit, prettyMetricType} from "../../../types/MetricType.ts";
 import axios from "axios";
@@ -30,9 +30,7 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
     const [value, setValue] = useState<string | undefined>(undefined)
     const [count, setCount] = useState<string | undefined>(undefined)
 
-
-    // TODO URL
-    const url = `http://localhost:5000/collector/${props.collector_id}/metrics_thresholds/`
+    const url = getBaseUrl() + `/collector/${props.collector_id}/metrics_thresholds/`
 
     useEffect(() => {
         axios
@@ -74,9 +72,8 @@ export function MetricsThresholdsForm(props: MetricsThresholdsFormProps) {
             count: Number(count)
         }
 
-        // TODO url
         axios
-            .post<MetricsThresholdsInterface>("http://localhost:5000/metrics_thresholds", { ...result })
+            .post<MetricsThresholdsInterface>(getBaseUrl() + "/metrics_thresholds", { ...result })
             .then(resp => {
                 props.setThresholds(prev => [...prev, resp.data])
             })

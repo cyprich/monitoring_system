@@ -1,6 +1,9 @@
-use crate::{db, notifications::handle_endpoints};
+use crate::{
+    db,
+    handlers::{MetricsQueryParams, RenameCollectorStruct},
+    notifications::handle_endpoints,
+};
 use actix_web::{HttpResponse, Responder, delete, get, patch, put};
-use serde::Deserialize;
 
 use crate::{
     AppState, WebSocketType,
@@ -10,62 +13,23 @@ use crate::{
 use actix_web::{post, web};
 use shared::structs::{
     collector_info::CollectorInfo,
-    db::{CollectorTable, DriveTable, NetworkInterfaceTable, EndpointInsert},
+    db::EndpointInsert,
     endpoints::{Endpoint, EndpointResult},
     metrics::Metrics,
 };
 
-
-// params structs
-#[derive(Deserialize, utoipa::IntoParams)]
-struct MetricsQueryParams {
-    time_limit_hours: Option<i32>,
-    resolution: Option<i32>,
-}
-
-#[derive(Deserialize, utoipa::ToSchema)]
-struct RenameCollectorStruct {
-    name: String,
-}
-
-// handlers
-#[utoipa::path(
-    responses(
-        (status = 200, description="Collectors from database", body=Vec<CollectorTable>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-)]
 #[get("/collectors")]
 async fn collectors(state: web::Data<AppState>) -> impl Responder {
     let result = db::get_collectors(&state.pool).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Collector with ID from database", body=CollectorTable),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector")
-    )
-)]
 #[get("/collector/{id}")]
 async fn get_collector(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
     let result = db::get_collector_by_id(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Collector with ID from database", body=CollectorTable),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-        MetricsQueryParams
-    )
-)]
 #[get("/collector/{id}/metrics")]
 async fn get_collector_metrics(
     state: web::Data<AppState>,
@@ -99,30 +63,12 @@ async fn get_collector_metrics(
     handle_query_error(Ok(result), ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Drives of Collector with ID from database", body=Vec<DriveTable>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[get("/collector/{id}/drives")]
 async fn get_collector_drives(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
     let result = db::get_collector_drives(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Network Interfaces of Collector with ID from database", body=Vec<NetworkInterfaceTable>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[get("/collector/{id}/network_interfaces")]
 async fn get_collector_network_interfaces(
     state: web::Data<AppState>,
@@ -132,30 +78,12 @@ async fn get_collector_network_interfaces(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Endpoints of Collector with ID from database", body=Vec<Endpoint>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[get("/collector/{id}/endpoints")]
 async fn get_collector_endpoints(state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
     let result = db::get_endpoints(&state.pool, id.into_inner()).await;
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="New endpoint created", body=Endpoint),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 // post = create new
 #[post("/collector/{id}/endpoints")]
 async fn post_collector_endpoints(
@@ -167,15 +95,6 @@ async fn post_collector_endpoints(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Endpoint updated"),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 // put = update existing
 #[put("/collector/{id}/endpoints")]
 async fn put_collector_endpoints(
@@ -187,17 +106,7 @@ async fn put_collector_endpoints(
     handle_query_error(result, ResponseBodyType::None)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Endpoint Deleted"),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id_collector", Path, description="ID of Collector"),
-        ("id_endpoint", Path, description="ID of Endpoint"),
-    )
-)]
-#[delete("/collector/{id_collector}/endpoints/{id_endpoint}")]
+#[delete("/collector/{collector_id}/endpoints/{endpoint_id}")]
 async fn delete_collector_endpoints(
     state: web::Data<AppState>,
     id: web::Path<(i32, i32)>,
@@ -206,15 +115,6 @@ async fn delete_collector_endpoints(
     handle_query_error(result, ResponseBodyType::None)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Results of Endpoints measurements", body=Vec<EndpointResult>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[get("/collector/{id}/endpoints_results")]
 async fn get_collector_endpoint_results(
     state: web::Data<AppState>,
@@ -224,15 +124,6 @@ async fn get_collector_endpoint_results(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Results of Endpoints measurements from only the last measurements", body=Vec<EndpointResult>),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[get("/collector/{id}/endpoints_results/last")]
 async fn get_collector_endpoint_results_last(
     state: web::Data<AppState>,
@@ -242,15 +133,6 @@ async fn get_collector_endpoint_results_last(
     handle_query_error(result, ResponseBodyType::Json)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Sucessfully inserted into database"),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[post("/collector/{id}/endpoints_results")]
 async fn post_collector_endpoint_results(
     state: web::Data<AppState>,
@@ -280,12 +162,6 @@ async fn post_collector_endpoint_results(
     handle_query_error(result, ResponseBodyType::None)
 }
 
-#[utoipa::path(
-    responses(
-        (status = 201, description="Collector registered, returning ID of Collector", body=i32),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-)]
 #[post("/collector/register")]
 async fn collector_register(
     state: web::Data<AppState>,
@@ -299,15 +175,6 @@ async fn collector_register(
     }
 }
 
-#[utoipa::path(
-    responses(
-        (status = 200, description="Collector renamed"),
-        (status = 500, description="Interval Server Error", body=String)
-    ), 
-    params (
-        ("id", Path, description="ID of Collector"),
-    )
-)]
 #[patch("/collector/{id}/rename")]
 async fn rename_collector(
     state: web::Data<AppState>,
