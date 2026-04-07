@@ -6,7 +6,7 @@ use crate::structs::db::NetworkInterfaceTable;
 // todo
 #[derive(Serialize, Deserialize, utoipa::ToSchema)]
 pub struct CollectorInfo {
-    pub id: i32,
+    pub id: Option<i32>,
     pub name: String,
     pub system_name: String,
     pub host_name: String,

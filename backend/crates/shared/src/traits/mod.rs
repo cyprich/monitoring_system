@@ -7,7 +7,7 @@ use crate::structs::{
 
 #[async_trait::async_trait]
 pub trait Collector: Send + Sync {
-    fn get_info(&self) -> Result<CollectorInfo, crate::Error>;
+    fn get_info(&self) -> CollectorInfo;
     fn get_metrics(&mut self) -> Metrics;
     async fn get_endpoints(&self) -> Result<Vec<Endpoint>, crate::Error>;
 
@@ -51,22 +51,17 @@ pub trait Collector: Send + Sync {
         let id = self.try_get_new_id_from_api().await?;
         self.set_id(id);
 
-        let config = CollectorConfig::load();
-        match config {
-            Ok(mut config) => {
-                config.id = Some(id);
-                let result = config.save();
-                if let Err(val) = result {
-                    eprintln!(
-                        "Succesfully got new ID, but failed to save Collector config: {}",
-                        val
-                    );
-                }
-            }
-            Err(val) => eprintln!("Failed to load Collector config: {}", val),
+        let mut config = CollectorConfig::load().unwrap_or_default();
+        config.id = Some(id);
+
+        let result = config.save();
+        if let Err(val) = result {
+            eprintln!(
+                "Succesfully got new ID, but failed to save Collector config: {}",
+                val
+            );
         }
 
-        // TODO should i really return Ok if the saving the config fails?
         Ok(())
     }
 
@@ -82,7 +77,7 @@ pub trait Collector: Send + Sync {
 
     async fn try_get_new_id_from_api(&self) -> Result<i32, crate::Error> {
         let url = format!("{}/collector/register", self.get_base_url());
-        let info = self.get_info()?;
+        let info = self.get_info();
 
         let mut tries = 10; // try 10 times
 

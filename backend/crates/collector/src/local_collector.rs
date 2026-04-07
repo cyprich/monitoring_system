@@ -49,10 +49,9 @@ impl Collector for LocalCollector {
         }
     }
 
-    fn get_info(&self) -> Result<CollectorInfo, shared::Error> {
-        match self.id {
-            Some(val) => Ok(CollectorInfo {
-                id: val,
+    fn get_info(&self) -> CollectorInfo {
+            CollectorInfo {
+                id: self.id,
                 name: self.name.clone(),
                 system_name: self.system_name.clone(),
                 host_name: self.host_name.clone(),
@@ -66,11 +65,7 @@ impl Collector for LocalCollector {
                     .iter()
                     .map(|n| NetworkInterfaceInfo::from((n.0.as_str(), n.1)))
                     .collect(),
-            }),
-            None => Err(shared::Error::General(
-                "Collector does not have ID".to_string(),
-            )),
-        }
+            }
     }
 
     async fn get_endpoints(&self) -> Result<Vec<Endpoint>, shared::Error> {
