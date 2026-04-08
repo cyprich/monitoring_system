@@ -62,6 +62,12 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    // database migrations
+    let migrations = sqlx::migrate!("../../migrations").run(&pool).await;
+    if let Err(val) = migrations {
+        eprintln!("Database Migrations failed: {}", val);
+    }
+
     // delete old metrics and endpoitns_results
     let pool_clone = pool.clone();
     tokio::spawn(async move {
