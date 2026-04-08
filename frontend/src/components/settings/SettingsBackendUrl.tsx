@@ -2,23 +2,24 @@ import {Button, FieldError, Form, Input, Label, TextField, Toast, toast} from "@
 import SettingsGeneralSection from "./SettingsGeneralSection.tsx";
 import {useState} from "react";
 import {
-    getBaseUrlWithoutExtension, getWebsocketBaseUrl,
-    getWebsocketBaseUrlWithoutExtension, setBaseUrl, setWebsocketBaseUrl
+    getBaseUrl, setBaseUrl 
 } from "../../helpFunctions.ts";
 import axios from "axios";
 import {TriangleExclamationFill} from "@gravity-ui/icons";
 
 export function SettingsBackendUrl() {
-    const [apiValue, setApiValue] = useState<string>(getBaseUrlWithoutExtension())
-    const [wsValue, setWsValue] = useState<string>(getWebsocketBaseUrlWithoutExtension())
+    // const [apiValue, setApiValue] = useState<string>(getBaseUrlWithoutExtension())
+    // const [wsValue, setWsValue] = useState<string>(getWebsocketBaseUrlWithoutExtension())
+    const [apiValue, setApiValue] = useState<string>(getBaseUrl())
+    const [wsValue, setWsValue] = useState<string>(getBaseUrl())
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setBaseUrl(apiValue)
-        setWebsocketBaseUrl(wsValue)
+        // setWebsocketBaseUrl(wsValue)
 
         axios
-            .get(apiValue + "/api/v1")
+            .get(apiValue)
             .then(resp => {
                 if (resp.data !== "Hello World from monitoring system backend API!") {
                     customToast("API", false)
@@ -46,8 +47,8 @@ export function SettingsBackendUrl() {
     }
 
     function reset() {
-        setApiValue(getBaseUrlWithoutExtension())
-        setWsValue(getWebsocketBaseUrlWithoutExtension())
+        // setApiValue(getBaseUrlWithoutExtension())
+        // setWsValue(getWebsocketBaseUrlWithoutExtension())
     }
 
     function customToast(type: "API" | "WebSocket", success: boolean) {

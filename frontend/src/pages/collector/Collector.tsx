@@ -40,6 +40,7 @@ export default function Collector() {
     // const [metricsThresholds, setMetricsThresholds] = useState<MetricsThresholdsInterface[]>([])
 
     const url = getBaseUrl() + `/collector/${id}`
+    console.log(url)
 
     const TIME_LIMIT_HOURS = getTimeLimit();
     const RESOLUTION = getResolution();
@@ -247,11 +248,5 @@ function CollectorHeader(collector: Collector) {
                 <Gear onClick={() => scroll_to("settings")}/>
             </div>
         </div>
-    )
-}
-
-function backendUnreachableAlert() {
-    return (
-        <>eh</>
     )
 }

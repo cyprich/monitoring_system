@@ -1,0 +1,14 @@
+FROM rust:1.94 AS builder 
+WORKDIR /app 
+
+COPY . . 
+RUN cargo fetch
+RUN cargo build --release --bin api_server 
+
+FROM debian:13-slim
+WORKDIR /app 
+COPY --from=builder /app/target/release/api_server .
+CMD [ "./api_server" ] 
+
+
+

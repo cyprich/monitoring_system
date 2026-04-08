@@ -13,6 +13,16 @@ export default function Home() {
     const url = getBaseUrl();
 
     useEffect(() => {
+        const base = getBaseUrl()
+        console.log("STARTED WITH", base)
+        console.log("FETCH", 
+            fetch(base)
+                .then((x) => console.log("THEN", x))
+                .catch((x) => console.log("CATCH", x))
+        )
+    }, [])
+
+    useEffect(() => {
         // check if backend is reachable
         axios
             .get(url)

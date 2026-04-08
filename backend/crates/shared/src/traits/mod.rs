@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::Duration};
+
 use reqwest::StatusCode;
 
 use crate::structs::{
@@ -88,10 +90,11 @@ pub trait Collector: Send + Sync {
             match result {
                 Ok(val) => return Ok(val),
                 Err(val) => {
-                    eprintln!("Error registering: {}, try {}/10", val, tries)
+                    eprintln!("Error registering: {}, try {}/10", val, 10 - tries + 1)
                 }
             }
             tries -= 1;
+            sleep(Duration::from_secs(3));
         }
 
         Err(crate::Error::General(
