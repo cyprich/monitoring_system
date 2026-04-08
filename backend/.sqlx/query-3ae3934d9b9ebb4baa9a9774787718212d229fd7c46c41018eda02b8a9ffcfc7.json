@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * from collectors where id = $1 order by id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "system_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "host_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "kernel_version",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "total_memory_mb",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "cpu_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_swap_mb",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3ae3934d9b9ebb4baa9a9774787718212d229fd7c46c41018eda02b8a9ffcfc7"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update collectors set name = $1 where id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa2f4d7cd8955ce1f3d355721573f1f00479c689b23fd935c862d2791d21450b"
+}

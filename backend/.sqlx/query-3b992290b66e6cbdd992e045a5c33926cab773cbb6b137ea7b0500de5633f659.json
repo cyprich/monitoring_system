@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select ty.name \n        from metric_type ty\n        where ty.name not in (\n            select th.metric_type\n            from metrics_thresholds th\n            where th.collector_id = $1\n        )\n        order by ty.name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3b992290b66e6cbdd992e045a5c33926cab773cbb6b137ea7b0500de5633f659"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * from network_interfaces where collector_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "mac",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3cff11e0f62c316d66f874e4f1d91a0ff72fdfea91b5afea3136fcd54a50897b"
+}

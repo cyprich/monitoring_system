@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * \n        from metrics \n        where collector_id = $1 \n        and metric_type = $2\n        and component_name = $3\n        limit $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "value",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "metric_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "component_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8222ed3c7674910708d56ad6d3240ae4e258ed6a8d5147e10a5ee77759fa2bb0"
+}

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into endpoints ( collector_id, url, expected_codes ) values ( $1, $2, $3 ) returning *",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "expected_codes",
+        "type_info": "Int4Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "10d7b6ed27b5e74306a84f3fe6123c239fd25abe55f8497fc5c5a57c089660a5"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from metrics where time < ( now() - $1 * '1 hour'::interval )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "29155044505737fed95aa2e3a7668f1217827ab53b7bfa57a543dbe9f9861ec1"
+}

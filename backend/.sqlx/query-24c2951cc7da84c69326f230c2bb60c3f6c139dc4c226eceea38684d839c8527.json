@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from endpoints_results where endpoint_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24c2951cc7da84c69326f230c2bb60c3f6c139dc4c226eceea38684d839c8527"
+}

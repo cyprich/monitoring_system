@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select *\n        from drives\n        where collector_id = $1\n        and mountpoint not in (\n            select component_name\n            from metrics_thresholds\n            where collector_id = $1\n            and metric_type = 'drive_used_space'\n        ) order by mountpoint",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "mountpoint",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "capacity_gb",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "file_system",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "12da4d6f67225fb775a1b4e88f3dbb5f44cb6b553de0726da5530f56dfa7a850"
+}

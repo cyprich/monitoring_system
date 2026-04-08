@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select *\n        from endpoints\n        where id not in (\n            select endpoint_id\n            from endpoints_thresholds t\n            join endpoints e on t.endpoint_id = e.id\n            where collector_id = $1\n        );",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "expected_codes",
+        "type_info": "Int4Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c3ebd8167f1a0f019540b2dd83f0c057d2286be06f6fa6d0ef17396c1797d8a4"
+}

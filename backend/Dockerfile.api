@@ -2,6 +2,16 @@ FROM rust:1.94 AS builder
 WORKDIR /app 
 
 COPY . . 
+
+# database migrations
+# RUN cargo install sqlx-cli --no-default-features --features=postgres
+# ARG DATABASE_URL 
+# ENV DATABASE_URL=${DATABASE_URL}
+ENV SQLX_OFFLINE=true
+# RUN cargo sqlx prepare --workspace
+# RUN cat sqlx-data.json
+# RUN sqlx migrate run
+
 RUN cargo fetch
 RUN cargo build --release --bin api_server 
 
@@ -9,6 +19,4 @@ FROM debian:13-slim
 WORKDIR /app 
 COPY --from=builder /app/target/release/api_server .
 CMD [ "./api_server" ] 
-
-
 

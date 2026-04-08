@@ -1,9 +1,28 @@
 services:
+  db:
+    image: postgres:18.3
+    container_name: monitoring-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgres
+    environment:
+      - POSTGRES_USER=pg
+      - POSTGRES_PASSWORD=pg
+      - POSTGRES_DB=pg
+      - PGUSER=pg
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "pg"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
   frontend:
     build:
       context: ./frontend
     image: monitoring-frontend:latest
-    container_name: frontend
+    container_name: monitoring-frontend
     volumes:
       - frontend-data:/srv
 
@@ -11,18 +30,23 @@ services:
     build:
       context: ./backend
       dockerfile: ./Dockerfile.api
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     image: monitoring-api:latest
-    container_name: api_server
+    container_name: monitoring-api_server
     environment:
       - API_PORT=5000
       - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
 
   collector:
     build:
       context: ./backend
       dockerfile: ./Dockerfile.collector
     image: monitoring-collector:latest
-    container_name: collector
+    container_name: monitoring-collector
     environment:
       - API_PORT=5000
       - API_ADDRESS=http://api_server
@@ -51,3 +75,4 @@ volumes:
   caddy-data:
   collector-data:
   frontend-data:
+  db-data:

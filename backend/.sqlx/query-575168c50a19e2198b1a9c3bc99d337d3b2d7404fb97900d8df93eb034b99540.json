@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from endpoints_thresholds where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "575168c50a19e2198b1a9c3bc99d337d3b2d7404fb97900d8df93eb034b99540"
+}

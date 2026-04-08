@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select t.id threshold_id, endpoint_id, collector_id, t.count threshold_value, url, expected_codes\n        from endpoints e\n        join endpoints_thresholds t on e.id = t.endpoint_id\n        where collector_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "threshold_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "endpoint_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "threshold_value",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "url",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "expected_codes",
+        "type_info": "Int4Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b025b6cc7bf8333d7dbdbe7badcdaf48fec5390fad95fc5120f2bf515aa913bb"
+}

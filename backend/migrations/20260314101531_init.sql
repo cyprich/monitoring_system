@@ -58,7 +58,7 @@ create table endpoints (
     id serial not null, 
     collector_id integer not null, 
     url varchar not null, 
-    expected_codes integer[],
+    expected_codes integer[] not null,
     primary key (id),
     foreign key (collector_id) references collectors(id),
     unique(collector_id, url)
