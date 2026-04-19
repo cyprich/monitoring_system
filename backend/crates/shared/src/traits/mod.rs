@@ -1,10 +1,11 @@
-use std::{thread::sleep, time::Duration};
+use std::{collections::HashSet, thread::sleep, time::Duration};
 
+use netstat2::{AddressFamilyFlags, ProtocolFlags, TcpState, get_sockets_info};
 use reqwest::StatusCode;
 
 use crate::structs::{
     collector_config::CollectorConfig, collector_info::CollectorInfo, endpoints::Endpoint,
-    metrics::Metrics,
+    metrics::Metrics, ports::Port,
 };
 
 #[async_trait::async_trait]
@@ -122,5 +123,40 @@ pub trait Collector: Send + Sync {
             },
             Err(val) => Err(crate::Error::ReqwestGeneral(val)),
         }
+    }
+
+    fn get_ports() -> Result<HashSet<Port>, crate::Error> {
+        let last_update = chrono::Utc::now();
+        let sockets_info = get_sockets_info(
+            AddressFamilyFlags::IPV4 | AddressFamilyFlags::IPV6,
+            ProtocolFlags::TCP | ProtocolFlags::UDP,
+        )?;
+
+        let mut ports = HashSet::new();
+
+        for s in sockets_info {
+            match s.protocol_socket_info {
+                netstat2::ProtocolSocketInfo::Tcp(tcp) => {
+                    if tcp.state == TcpState::Listen {
+                        ports.insert(Port {
+                            address: tcp.local_addr.to_string(),
+                            port: tcp.local_port,
+                            protocol: "TCP".into(),
+                            last_update,
+                        });
+                    }
+                }
+                netstat2::ProtocolSocketInfo::Udp(udp) => {
+                    ports.insert(Port {
+                        address: udp.local_addr.to_string(),
+                        port: udp.local_port,
+                        protocol: "UDP".into(),
+                        last_update,
+                    });
+                }
+            }
+        }
+
+        Ok(ports)
     }
 }

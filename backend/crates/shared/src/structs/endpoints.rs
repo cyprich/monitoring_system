@@ -12,16 +12,7 @@ pub struct Endpoint {
     pub expected_codes: HashSet<u16>,
 }
 
-// TODO every request has it's own client - not good
 impl Endpoint {
-    pub fn new(id: i32, url: &str, expected_codes: HashSet<u16>) -> Self {
-        Self {
-            id,
-            url: url.to_string(),
-            expected_codes,
-        }
-    }
-
     pub async fn send(&self, client: &reqwest::Client) -> Result<EndpointResult, crate::Error> {
         let url = &self.url;
 
@@ -51,7 +42,11 @@ impl Endpoint {
 impl From<EndpointsTable> for Endpoint {
     fn from(value: EndpointsTable) -> Self {
         let codes = value.expected_codes.iter().map(|c| *c as u16);
-        Self::new(value.id, &value.url, HashSet::from_iter(codes))
+        Self {
+            id: value.id,
+            url: value.url,
+            expected_codes: HashSet::from_iter(codes),
+        }
     }
 }
 

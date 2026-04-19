@@ -19,15 +19,11 @@ pub struct Metrics {
     pub network_interfaces: Vec<NetworkInterfaceMetrics>,
 }
 
-impl Metrics {
-    pub fn new() -> Metrics {
-        Metrics::default()
-    }
-
-    pub fn json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
-    }
-}
+// impl Metrics {
+//     pub fn json(&self) -> String {
+//         serde_json::to_string(self).unwrap_or_default()
+//     }
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct DriveMetrics {

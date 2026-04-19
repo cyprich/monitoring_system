@@ -5,7 +5,7 @@ use shared::structs::metrics::Metrics;
 use crate::{AppState, WebSocketType};
 
 #[post("/metrics")]
-pub async fn metrics_post(
+pub async fn post_metrics(
     state: web::Data<AppState>,
     metrics: web::Json<Metrics>,
 ) -> impl Responder {

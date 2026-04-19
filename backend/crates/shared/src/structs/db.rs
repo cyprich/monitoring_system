@@ -52,6 +52,23 @@ pub struct EndpointsTable {
     pub expected_codes: Vec<i32>,
 }
 
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, Clone)]
+pub struct PortsTable {
+    pub id: i32,
+    pub collector_id: i32,
+    pub address: String,
+    pub port: i32,
+    pub protocol: String,
+    pub last_update: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PortsNotificationSettingsTable {
+    pub collector_id: i32,
+    pub show_for_opened: bool,
+    pub show_for_closed: bool,
+}
+
 // it has the same fields, only here for compatibility
 pub type EndpointsResultsTable = crate::structs::endpoints::EndpointResult;
 pub type NotificationsTable = crate::structs::notifications::Notification;

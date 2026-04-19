@@ -13,3 +13,4 @@ tokio = { version = "1.50.0", features = ["full"] }
 chrono = "0.4.44"
 toml = "1.0.6"
 async-trait = "0.1.89"
+netstat2 = "0.11.2"

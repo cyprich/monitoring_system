@@ -4,13 +4,14 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use actix_web::{middleware, web};
 use serde::Serialize;
+use shared::structs::db::PortsTable;
 use shared::structs::endpoints::EndpointResult;
 use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
 use tokio::time::sleep;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
+// use utoipa::OpenApi;
+// use utoipa_swagger_ui::SwaggerUi;
 
 use crate::handlers::*;
 use db::Pool;
@@ -31,6 +32,10 @@ enum WebSocketType {
     EndpointResult(Vec<EndpointResult>),
     #[serde(rename = "notifications")]
     Notifications(Vec<Notification>),
+    #[serde(rename = "ports_opened")]
+    PortsOpened(Vec<PortsTable>),
+    #[serde(rename = "ports_closed")]
+    PortsCloseed(Vec<PortsTable>),
 }
 
 #[derive(Clone)]
@@ -52,6 +57,7 @@ async fn main() -> std::io::Result<()> {
             return Err(std::io::Error::other(val));
         }
     };
+    println!("API port: {}", port);
 
     // create pool
     let pool = match db::get_pool().await {
@@ -61,11 +67,14 @@ async fn main() -> std::io::Result<()> {
             return Err(std::io::Error::other(val.to_string()));
         }
     };
+    println!("DB pool opened");
 
     // database migrations
     let migrations = sqlx::migrate!("../../migrations").run(&pool).await;
     if let Err(val) = migrations {
         eprintln!("Database Migrations failed: {}", val);
+    } else {
+        println!("Migrations successfully done");
     }
 
     // delete old metrics and endpoitns_results
@@ -83,8 +92,9 @@ async fn main() -> std::io::Result<()> {
     // prepare app state and apidocs
     let (tx, _) = broadcast::channel::<(WebSocketType, i32)>(128);
     let state = AppState { pool, tx };
-    let openapi = ApiDoc::openapi();
+    // let openapi = ApiDoc::openapi();
 
+    println!("Starting API server");
     // run web server
     HttpServer::new(move || {
         App::new()
@@ -97,9 +107,9 @@ async fn main() -> std::io::Result<()> {
                     .service(hello)
                     .service(ws_hello)
                     .service(ws_collector)
-                    .service(metrics_post)
+                    .service(post_metrics)
                     .service(collector_register)
-                    .service(collectors)
+                    .service(get_collectors)
                     .service(get_collector)
                     .service(get_collector_metrics)
                     .service(get_collector_drives)
@@ -126,11 +136,17 @@ async fn main() -> std::io::Result<()> {
                     .service(post_metrics_thresholds)
                     .service(post_endpoints_thresholds)
                     .service(delete_metrics_thresholds)
-                    .service(delete_endpoints_thresholds),
+                    .service(delete_endpoints_thresholds)
+                    .service(get_collector_ports)
+                    .service(put_collector_ports_opened)
+                    .service(put_collector_ports_closed)
+                    .service(get_collector_ports_notifications_settings)
+                    .service(put_collector_ports_notifications_settings_opened)
+                    .service(put_collector_ports_notifications_settings_closed),
             )
-            .service(
-                SwaggerUi::new("/swagger_ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
-            )
+        // .service(
+        //     SwaggerUi::new("/swagger_ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
+        // )
     })
     .bind(("0.0.0.0", port))?
     .run()

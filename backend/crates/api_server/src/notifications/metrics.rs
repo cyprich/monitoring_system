@@ -70,6 +70,7 @@ async fn create_notifications(collector_id: i32, map: NotificationsMap) -> Vec<N
 
     for ((component_name, metric_type), (threshold_value, measured_values)) in map {
         let avg = measured_values.iter().sum::<f64>() / measured_values.len() as f64;
+        let avg = (avg * 100.0).round() / 100.0; // 2 decimal places
 
         if avg <= threshold_value {
             continue;

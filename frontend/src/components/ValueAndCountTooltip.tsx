@@ -21,7 +21,7 @@ export function ValueAndCountTooltip(props: CountAndValueTooltipProps) {
                     <p>If average goes above <span className={"text-variable-name"}>Value</span> </p>
                     <p>for <span className={"text-variable-name"}>Count</span> consecutive times, </p>
                     <p>you will be notified.</p>
-                    <p>Metrics are collected every 5 seconds.</p>
+                    <p>Metrics are collected every 10 seconds.</p>
                 </Tooltip.Content>
             </Tooltip>
         </div>

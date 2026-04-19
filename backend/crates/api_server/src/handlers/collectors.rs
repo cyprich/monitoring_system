@@ -19,7 +19,7 @@ use shared::structs::{
 };
 
 #[get("/collectors")]
-async fn collectors(state: web::Data<AppState>) -> impl Responder {
+async fn get_collectors(state: web::Data<AppState>) -> impl Responder {
     let result = db::get_collectors(&state.pool).await;
     handle_query_error(result, ResponseBodyType::Json)
 }

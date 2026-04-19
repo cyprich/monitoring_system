@@ -30,8 +30,8 @@ pub async fn ws_collector(
     req: HttpRequest,
     stream: web::Payload,
 ) -> Result<HttpResponse, Error> {
-    let (resp, mut send, mut receive) = actix_ws::handle(&req, stream)?;
     let id = path.into_inner();
+    let (resp, mut send, mut receive) = actix_ws::handle(&req, stream)?;
 
     rt::spawn(async move {
         let mut rx = state.tx.subscribe();

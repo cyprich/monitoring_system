@@ -27,6 +27,25 @@ pub struct LocalCollector {
 // implementations
 #[async_trait::async_trait]
 impl Collector for LocalCollector {
+    fn get_info(&self) -> CollectorInfo {
+        CollectorInfo {
+            id: self.id,
+            name: self.name.clone(),
+            system_name: self.system_name.clone(),
+            host_name: self.host_name.clone(),
+            kernel_version: self.kernel_version.clone(),
+            total_memory_mb: self.total_memory_mb,
+            total_swap_mb: self.total_swap_mb,
+            cpu_count: self.cpu_count,
+            drives: self.sysinfo_drives.iter().map(DriveInfo::from).collect(),
+            network_interfaces: self
+                .sysinfo_network_interfaces
+                .iter()
+                .map(|n| NetworkInterfaceInfo::from((n.0.as_str(), n.1)))
+                .collect(),
+        }
+    }
+
     fn get_metrics(&mut self) -> Metrics {
         self.sysinfo_system.refresh_memory();
         self.sysinfo_system.refresh_cpu_usage();
@@ -47,25 +66,6 @@ impl Collector for LocalCollector {
                 .map(|n| NetworkInterfaceMetrics::from((n.0.as_str(), n.1)))
                 .collect(),
         }
-    }
-
-    fn get_info(&self) -> CollectorInfo {
-            CollectorInfo {
-                id: self.id,
-                name: self.name.clone(),
-                system_name: self.system_name.clone(),
-                host_name: self.host_name.clone(),
-                kernel_version: self.kernel_version.clone(),
-                total_memory_mb: self.total_memory_mb,
-                total_swap_mb: self.total_swap_mb,
-                cpu_count: self.cpu_count,
-                drives: self.sysinfo_drives.iter().map(DriveInfo::from).collect(),
-                network_interfaces: self
-                    .sysinfo_network_interfaces
-                    .iter()
-                    .map(|n| NetworkInterfaceInfo::from((n.0.as_str(), n.1)))
-                    .collect(),
-            }
     }
 
     async fn get_endpoints(&self) -> Result<Vec<Endpoint>, shared::Error> {

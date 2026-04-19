@@ -28,6 +28,8 @@ pub enum Error {
     TomlSer(toml::ser::Error),
     TomlDe(toml::de::Error),
 
+    Netstat(netstat2::error::Error),
+
     UnsupportedSystem,
     Elapsed,
     General(String),
@@ -85,6 +87,11 @@ impl Display for Error {
             Error::UnsupportedSystem => write!(f, "System not supported"),
             Error::Elapsed => write!(f, "Time elapsed - couldn't reach in specified time"),
             Error::General(val) => write!(f, "General Error: {}", val),
+            Error::Netstat(val) => write!(
+                f,
+                "Error while trying to get information about network ports: {}",
+                val
+            ),
         }
     }
 }
@@ -147,5 +154,11 @@ impl From<toml::ser::Error> for Error {
 impl From<toml::de::Error> for Error {
     fn from(value: toml::de::Error) -> Self {
         Error::TomlDe(value)
+    }
+}
+
+impl From<netstat2::error::Error> for Error {
+    fn from(value: netstat2::error::Error) -> Self {
+        Error::Netstat(value)
     }
 }

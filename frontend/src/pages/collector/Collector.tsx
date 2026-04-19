@@ -22,6 +22,8 @@ import {getBaseUrl, getResolution, getTimeLimit, getWebsocketBaseUrl} from "../.
 import {SettingsTimeLimit} from "../../components/settings/SettingsTimeLimit.tsx";
 import {SettingsResolution} from "../../components/settings/SettingsResolution.tsx";
 import {Separator} from "@heroui/react";
+import Ports from "./Ports.tsx";
+import type {PortsInterface} from "../../types/PortsInterface.ts";
 
 export interface CollectorProps {
     collector: Collector | null,
@@ -37,6 +39,7 @@ export default function Collector() {
     const [, setLastMetrics] = useState<MetricsInterface[]>([]);
     const [lastEndpointsResults, setLastEndpointsResults] = useState<EndpointResult[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
+    const [ports, setPorts] = useState<PortsInterface[]>([])
     // const [metricsThresholds, setMetricsThresholds] = useState<MetricsThresholdsInterface[]>([])
 
     const url = getBaseUrl() + `/collector/${id}`
@@ -45,7 +48,7 @@ export default function Collector() {
     const TIME_LIMIT_HOURS = getTimeLimit();
     const RESOLUTION = getResolution();
 
-    const METRICS_INTERVAL = 5; // new metrics every 5 seconds
+    const METRICS_INTERVAL = 10; // new metrics every 10 seconds
     const TOTAL_METRICS_COUNT = (TIME_LIMIT_HOURS * 3600) / METRICS_INTERVAL; // how many metrics in total
     const VALUES_IN_WINDOW = Math.floor(TOTAL_METRICS_COUNT / RESOLUTION); // number of values for each window
 
@@ -116,12 +119,17 @@ export default function Collector() {
                 )
         })
 
-        // // metrics thresholds
-        // axios
-        //     .get<MetricsThresholdsInterface[]>(`${url}/metrics_thresholds`)
-        //     .then(resp => {
-        //         setMetricsThresholds(resp.data)
-        //     })
+        // ports
+        axios
+            .get<PortsInterface[]>(`${url}/ports`)
+            .then((resp) => {
+                setPorts(
+                    resp.data.map(p => ({
+                        ...p,
+                        last_update: new Date(p.last_update).toLocaleTimeString()
+                    })) || []
+                )
+            })
     }, [TIME_LIMIT_HOURS, RESOLUTION, id, url]);
 
     useEffect(() => {
@@ -133,34 +141,56 @@ export default function Collector() {
 
         socket.addEventListener("message", event => {
             const recv = JSON.parse(event.data);
-            if (recv.type === "metrics") {
-                // https://howtodoinjava.com/typescript/typescript-date-object/
-                const newData: MetricsInterface = recv.data
-                const newTime = new Date(newData.time).toLocaleTimeString()
-                setLastMetrics(prev => {
-                    const newLastMetrics = [...prev, {...newData, time: newTime}]
+            switch (recv.type) {
+                case "metrics": {
+                    // https://howtodoinjava.com/typescript/typescript-date-object/
+                    const newData: MetricsInterface = recv.data
+                    const newTime = new Date(newData.time).toLocaleTimeString()
+                    setLastMetrics(prev => {
+                        const newLastMetrics = [...prev, {...newData, time: newTime}]
 
-                    if (newLastMetrics.length >= VALUES_IN_WINDOW) {
-                        setMetrics(prev => [...prev, average_metrics(newLastMetrics)!].slice(-RESOLUTION))
-                        return []
-                    } else {
-                        return newLastMetrics
-                    }
-                });
-            } else if (recv.type === "endpoints_results") {
-                let newData: EndpointResult[] = recv.data;
-                newData = newData.map(r => ({
-                    ...r,
-                    time: new Date(r.time).toLocaleTimeString()
-                }))
-                setLastEndpointsResults(newData)
-            } else if (recv.type === 'notifications') {
-                let newData: Notification[] = recv.data;
-                newData = newData.map(n => ({
-                    ...n,
-                    time: new Date(n.time).toLocaleDateString() + " " + new Date(n.time).toLocaleTimeString()
-                }))
-                setNotifications(prev => [...prev, ...newData])
+                        if (newLastMetrics.length >= VALUES_IN_WINDOW) {
+                            setMetrics(prev => [...prev, average_metrics(newLastMetrics)!].slice(-RESOLUTION))
+                            return []
+                        } else {
+                            return newLastMetrics
+                        }
+                    });
+                    break
+                }
+                case "endpoints_results": {
+                    let newData: EndpointResult[] = recv.data;
+                    newData = newData.map(r => ({
+                        ...r,
+                        time: new Date(r.time).toLocaleTimeString()
+                    }))
+                    setLastEndpointsResults(newData)
+                    break
+                }
+                case "notifications": {
+                    let newData: Notification[] = recv.data;
+                    newData = newData.map(n => ({
+                        ...n,
+                        time: new Date(n.time).toLocaleDateString() + " " + new Date(n.time).toLocaleTimeString()
+                    }))
+                    setNotifications(prev => [...prev, ...newData])
+                    break
+                }
+                case "ports_opened": {
+                    let newData: PortsInterface[] = recv.data;
+                    newData = newData.map(i => ({
+                        ...i,
+                        last_update: new Date(i.last_update).toLocaleTimeString()
+                    }))
+                    setPorts((prev) => [ ...prev, ...newData ])
+                    break
+                }
+                case "ports_closed": {
+                    const newData: PortsInterface[] = recv.data;
+                    const ids = new Set(newData.map(p => p.id))
+                    setPorts((prev) => prev.filter(p => !ids.has(p.id)))
+                    break
+                }
             }
         })
 
@@ -190,8 +220,8 @@ export default function Collector() {
                 <Endpoints collector_id={collector?.id || 0} lastEndpointsResults={lastEndpointsResults}/>
             </CustomSurface>
 
-            <CustomSurface title={"Security stuff?"} id={"security"} icon={ <ShieldKeyhole/> } >
-                <p className={"custom-description"}>//TODO</p>
+            <CustomSurface title={"Listening Ports"} id={"ports"} icon={ <ShieldKeyhole/> } >
+                <Ports collector_id={collector?.id || 0} ports={ports}/>
             </CustomSurface>
 
             <CustomSurface title={"Notifications"} id={"notifications"} icon={ <Bell/> } >
@@ -234,16 +264,16 @@ function CollectorHeader(collector: Collector) {
                 <p>{(collector.total_memory_mb || 0) / 1000} GB RAM</p>
                 <p>{(collector.total_swap_mb || 0) / 1000} GB Swap</p>
                 <p>
-                    {collector.drives?.length || 0} drives
+                    {collector.drives?.length || 0} drive{collector.drives?.length !== 1 && "s"}
                     <span className={"font-extralight"}> with total capacity of </span>
                     {total_capacity}GB
                 </p>
-                <p>{collector.network_interfaces?.length || 0} network interfaces</p>
+                <p>{collector.network_interfaces?.length || 0} network interface{collector.network_interfaces?.length !== 1 && "s"}</p>
             </div>
             <div className={"flex gap-2 *:size-11 *:p-2 *:rounded-lg *:border-2 *:hover:bg-zinc-200 transition-all "}>
                 <ChartLineArrowUp onClick={() => scroll_to("metrics")}/>
                 <ArrowShapeUpFromLine onClick={() => scroll_to("endpoints")}/>
-                <ShieldKeyhole onClick={() => scroll_to("security")}/>
+                <ShieldKeyhole onClick={() => scroll_to("ports")}/>
                 <Bell onClick={() => scroll_to("notifications")}/>
                 <Gear onClick={() => scroll_to("settings")}/>
             </div>

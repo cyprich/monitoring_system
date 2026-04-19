@@ -5,6 +5,7 @@ mod endpoints;
 mod endpoints_results;
 mod metrics;
 mod notifications;
+mod ports;
 mod thresholds;
 
 pub use collector::*;
@@ -12,6 +13,7 @@ pub use endpoints::*;
 pub use endpoints_results::*;
 pub use metrics::*;
 pub use notifications::*;
+pub use ports::*;
 pub use thresholds::*;
 
 use crate::DELETE_RECORDS_AFTER_HOURS;

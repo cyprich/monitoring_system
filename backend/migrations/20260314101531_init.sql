@@ -107,6 +107,26 @@ create table endpoints_thresholds (
     unique(endpoint_id)
 );
 
+create table ports (
+    id serial, 
+    collector_id integer not null, 
+    address varchar not null,
+    port integer not null,
+    protocol char(3) not null,
+    last_update timestamptz not null,
+    primary key (id), 
+    foreign key (collector_id) references collectors(id),
+    unique (collector_id, address, port, protocol)
+);
+
+create table ports_notifications_settings (
+    collector_id integer, 
+    show_for_opened boolean not null default false,  
+    show_for_closed boolean not null default false,  
+    primary key (collector_id),
+    foreign key (collector_id) references collectors(id)
+);
+
 --------------------- insert metric types ---------------------
 
 insert into metric_type (name) values 

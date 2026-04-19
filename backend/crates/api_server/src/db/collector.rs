@@ -51,6 +51,14 @@ pub async fn register_collector(
 
     builder.build().execute(&mut *transaction).await?;
 
+    // ports notifications settings
+    sqlx::query!(
+        "insert into ports_notifications_settings (collector_id) values ($1)",
+        id
+    )
+    .execute(&mut *transaction)
+    .await?;
+
     transaction.commit().await?;
 
     Ok(id)
