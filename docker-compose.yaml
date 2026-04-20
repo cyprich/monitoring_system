@@ -31,29 +31,29 @@ services:
       context: ./backend
       dockerfile: ./Dockerfile.api
       args:
-        DATABASE_URL: ${DATABASE_URL}
-    image: monitoring-api:latest
+        DATABASE_URL: postgres://pg:pg@db:5432/pg
+    image: monitoring-api_server:latest
     container_name: monitoring-api_server
     environment:
       - API_PORT=5000
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgres://pg:pg@db:5432/pg
     depends_on:
       db:
         condition: service_healthy
 
-  collector:
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile.collector
-    image: monitoring-collector:latest
-    container_name: monitoring-collector
-    environment:
-      - API_PORT=5000
-      - API_ADDRESS=http://api_server
-    volumes:
-      - collector-data:/app
-    depends_on:
-      - api_server
+  # collector:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: ./Dockerfile.collector
+  #   image: monitoring-collector:latest
+  #   container_name: monitoring-collector
+  #   environment:
+  #     - API_PORT=5000
+  #     - API_ADDRESS=http://api_server
+  #   volumes:
+  #     - collector-data:/app
+  #   depends_on:
+  #     - api_server
 
   caddy:
     image: caddy:2.11.2-alpine
@@ -73,6 +73,6 @@ services:
 volumes:
   caddy-config:
   caddy-data:
-  collector-data:
+  # collector-data:
   frontend-data:
   db-data:

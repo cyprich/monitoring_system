@@ -15,12 +15,12 @@
       },
       {
         "ordinal": 2,
-        "name": "component_name",
+        "name": "metric_type",
         "type_info": "Varchar"
       },
       {
         "ordinal": 3,
-        "name": "metric_type",
+        "name": "component_name",
         "type_info": "Varchar"
       },
       {

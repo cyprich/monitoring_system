@@ -20,13 +20,13 @@
       },
       {
         "ordinal": 3,
-        "name": "time",
-        "type_info": "Timestamptz"
+        "name": "description",
+        "type_info": "Varchar"
       },
       {
         "ordinal": 4,
-        "name": "description",
-        "type_info": "Varchar"
+        "name": "time",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -38,8 +38,8 @@
       false,
       false,
       false,
-      false,
-      true
+      true,
+      false
     ]
   },
   "hash": "9a65ce686315f845add1afe9365e23463a1499a8d2ce478bbf2846a7bf032ed0"

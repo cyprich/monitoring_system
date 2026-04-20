@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into ports_notifications_settings (collector_id) values ($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "43ad680b442e850525fa0c9632784204b9d0882ef180fc7a7fee409b81d74006"
+}

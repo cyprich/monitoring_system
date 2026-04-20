@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * from ports_notifications_settings where collector_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "collector_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "show_for_opened",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "show_for_closed",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a680ec965025f6e54d484f0eb94bb21cad51603815d8324f4dc250fdeddb9f94"
+}

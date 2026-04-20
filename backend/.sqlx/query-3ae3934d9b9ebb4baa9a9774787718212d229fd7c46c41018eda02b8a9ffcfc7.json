@@ -35,12 +35,12 @@
       },
       {
         "ordinal": 6,
-        "name": "cpu_count",
+        "name": "total_swap_mb",
         "type_info": "Int4"
       },
       {
         "ordinal": 7,
-        "name": "total_swap_mb",
+        "name": "cpu_count",
         "type_info": "Int4"
       }
     ],

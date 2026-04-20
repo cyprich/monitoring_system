@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into metrics_thresholds\n        (collector_id, metric_type, component_name, value, count)\n        values ($1, $2, $3, $4, $5)\n        returning *",
+  "query": "select * from ports where collector_id = $1 order by port",
   "describe": {
     "columns": [
       {
@@ -15,31 +15,27 @@
       },
       {
         "ordinal": 2,
-        "name": "metric_type",
+        "name": "address",
         "type_info": "Varchar"
       },
       {
         "ordinal": 3,
-        "name": "component_name",
-        "type_info": "Varchar"
+        "name": "port",
+        "type_info": "Int4"
       },
       {
         "ordinal": 4,
-        "name": "value",
-        "type_info": "Float8"
+        "name": "protocol",
+        "type_info": "Bpchar"
       },
       {
         "ordinal": 5,
-        "name": "count",
-        "type_info": "Int4"
+        "name": "last_update",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4",
-        "Varchar",
-        "Varchar",
-        "Float8",
         "Int4"
       ]
     },
@@ -52,5 +48,5 @@
       false
     ]
   },
-  "hash": "ea553d0ea0605442072e965473f0115301bbf9e1023950afab8f9b5e93465a16"
+  "hash": "ab23503a0df331392b9b467b165494a6a5ad06c0a9e2a2f341b9b1ab8ec208b2"
 }
