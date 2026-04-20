@@ -23,7 +23,7 @@ const PORTS_DELAY: u64 = 10;
 #[tokio::main]
 pub async fn main() -> Result<(), shared::Error> {
     let mut collector = LocalCollector::new().unwrap();
-    collector.try_get_id().await.unwrap();
+    collector.try_get_id(true).await.unwrap();
     let collector_id = collector.id.unwrap();
 
     let base_url = shared::env::base_url()?;
@@ -70,7 +70,7 @@ async fn handle_metrics(collector: &mut impl Collector) {
                 match val {
                     shared::Error::CollectorRequiresID => {
                         eprint!("New ID required, trying... ");
-                        match collector.try_get_id().await {
+                        match collector.try_get_id(false).await {
                             Ok(_) => eprintln!("Success"),
                             Err(val) => eprintln!("Failed: {}", val),
                         }

@@ -21,7 +21,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    image: monitoring-frontend:latest
+    # image: monitoring-frontend:latest
     container_name: monitoring-frontend
     volumes:
       - frontend-data:/srv
@@ -32,7 +32,7 @@ services:
       dockerfile: ./Dockerfile.api
       args:
         DATABASE_URL: postgres://pg:pg@db:5432/pg
-    image: monitoring-api_server:latest
+    # image: monitoring-api_server:latest
     container_name: monitoring-api_server
     environment:
       - API_PORT=5000

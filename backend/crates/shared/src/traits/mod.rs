@@ -44,11 +44,13 @@ pub trait Collector: Send + Sync {
         Ok(())
     }
 
-    async fn try_get_id(&mut self) -> Result<(), crate::Error> {
-        let result = self.try_get_id_from_file();
-        if let Ok(id) = result {
-            self.set_id(id);
-            return Ok(());
+    async fn try_get_id(&mut self, load_from_file: bool) -> Result<(), crate::Error> {
+        if load_from_file {
+            let result = self.try_get_id_from_file();
+            if let Ok(id) = result {
+                self.set_id(id);
+                return Ok(());
+            }
         }
 
         let id = self.try_get_new_id_from_api().await?;

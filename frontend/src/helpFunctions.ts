@@ -40,15 +40,7 @@ export function setResolution(value: number) {
 
 // base url
 export function getBaseUrl(): string {
-    // return getBaseUrlWithoutExtension() + "/api/v1"
-    // return "frontend/api/v1"
-
-    // const x = localStorage.getItem("base_url")!;
-    // console.log("URL", x); 
-    // return x
-
-    // TODO from env variable
-    return "http://localhost:5000/api/v1"
+    return "/api/v1"
 }
 
 export function setBaseUrl(value: string) {
@@ -57,18 +49,13 @@ export function setBaseUrl(value: string) {
 
 // websocket base url
 export function getWebsocketBaseUrl(): string {
-    // return localStorage.getItem("ws_base_url")!
-    // TODO from env variable
-    return "ws://localhost:5000/api/v1"
+    const protocol = window.location.protocol === "https" ? "wss" : "ws"
+    return `${protocol}://${window.location.host}/api/v1`
 }
 
 export function setWebsocketBaseUrl(value: string) {
     localStorage.setItem("ws_base_url", value)
 }
-
-// export function getWebsocketBaseUrlWithoutExtension(): string {
-//     return (localStorage.getItem("ws_base_url") || "ws://localhost:5000")
-// }
 
 
 // formatting and more
