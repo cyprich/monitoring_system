@@ -2,10 +2,10 @@ services:
   db:
     image: postgres:18.3
     container_name: monitoring-db
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgres
+      - db-data:/var/lib/postgresql
     environment:
       - POSTGRES_USER=pg
       - POSTGRES_PASSWORD=pg
@@ -21,7 +21,6 @@ services:
   frontend:
     build:
       context: ./frontend
-    # image: monitoring-frontend:latest
     container_name: monitoring-frontend
     volumes:
       - frontend-data:/srv
@@ -32,7 +31,6 @@ services:
       dockerfile: ./Dockerfile.api
       args:
         DATABASE_URL: postgres://pg:pg@db:5432/pg
-    # image: monitoring-api_server:latest
     container_name: monitoring-api_server
     environment:
       - API_PORT=5000
