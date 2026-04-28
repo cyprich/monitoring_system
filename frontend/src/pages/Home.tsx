@@ -46,7 +46,7 @@ export default function Home() {
                                 <Alert.Title>Backend not Reachable</Alert.Title>
                                 <Alert.Description>
                                     Unable to connect to Backend API Server.
-                                    Please make sure it's running and the URL in settings is correct.
+                                    Please make sure it's running.
                                 </Alert.Description>
                             </Alert.Content>
                         </Alert>
@@ -55,35 +55,40 @@ export default function Home() {
                         <h2>Collectors</h2>
                         <div className={"flex flex-wrap gap-4"}>
                             {
-                                collectors.map((c, i) => (
-                                    <Link to={`/collector/${c.id}`} key={i}>
-                                        <Card className={"clickable-small min-w-80"}>
-                                            <Card.Header>
-                                                <Card.Title>{c.name}</Card.Title>
-                                                <Card.Description className={"flex flex-col"}>
-                                                    {
-                                                        c.host_name != c.name &&
-                                                        <span className={"-mt-2! font-bold"}>{c.host_name}</span>
-                                                    }
-                                                    <span className={"flex items-center"}>
-                                                <span>{c.system_name}</span>
-                                                <span className={"w-0.5 h-5 mx-2 bg-black/25"}/>
-                                                <span>{c.kernel_version}</span>
-                                            </span>
-                                                    <span>CPU: {c.cpu_count} cores</span>
-                                                    <span>RAM: {((c.total_memory_mb || 0) / 1000).toFixed(0)} GB</span>
-                                                </Card.Description>
-                                            </Card.Header>
-                                            {/*<Card.Footer>*/}
-                                            {/*    <div className={"flex items-center gap-1"}>*/}
-                                            {/*        /!* TODO *!/*/}
-                                            {/*        <CircleCheckFill className={"text-success"}/>*/}
-                                            {/*        <p className={"text-success"}>Online</p>*/}
-                                            {/*    </div>*/}
-                                            {/*</Card.Footer>*/}
-                                        </Card>
-                                    </Link>
-                                ))
+                                collectors.length === 0
+                                    ? <div className={"flex flex-col gap-1"}>
+                                        <p>0 collectors found!</p>
+                                        <p>Make sure that your collector is running and it can reach backend.</p>
+                                    </div>
+                                    : collectors.map((c, i) => (
+                                        <Link to={`/collector/${c.id}`} key={i}>
+                                            <Card className={"clickable-small min-w-80"}>
+                                                <Card.Header>
+                                                    <Card.Title>{c.name}</Card.Title>
+                                                    <Card.Description className={"flex flex-col"}>
+                                                        {
+                                                            c.host_name != c.name &&
+                                                            <span className={"-mt-2! font-bold"}>{c.host_name}</span>
+                                                        }
+                                                        <span className={"flex items-center"}>
+                                                    <span>{c.system_name}</span>
+                                                    <span className={"w-0.5 h-5 mx-2 bg-black/25"}/>
+                                                    <span>{c.kernel_version}</span>
+                                                </span>
+                                                        <span>CPU: {c.cpu_count} cores</span>
+                                                        <span>RAM: {((c.total_memory_mb || 0) / 1000).toFixed(0)} GB</span>
+                                                    </Card.Description>
+                                                </Card.Header>
+                                                {/*<Card.Footer>*/}
+                                                {/*    <div className={"flex items-center gap-1"}>*/}
+                                                {/*        /!* TODO *!/*/}
+                                                {/*        <CircleCheckFill className={"text-success"}/>*/}
+                                                {/*        <p className={"text-success"}>Online</p>*/}
+                                                {/*    </div>*/}
+                                                {/*</Card.Footer>*/}
+                                            </Card>
+                                        </Link>
+                                    ))
                             }
                         </div>
                     </div>

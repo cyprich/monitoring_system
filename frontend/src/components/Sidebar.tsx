@@ -2,7 +2,6 @@ import HouseIcon from '@gravity-ui/icons/svgs/house.svg';
 import LayoutSideContentLeftIcon from '@gravity-ui/icons/svgs/layout-side-content-left.svg';
 import GearIcon from '@gravity-ui/icons/svgs/gear.svg';
 import CircleInfoIcon from '@gravity-ui/icons/svgs/circle-info.svg';
-import BellIcon from '@gravity-ui/icons/svgs/bell.svg';
 import {useState} from "react";
 import {Link} from "react-router";
 
@@ -23,11 +22,6 @@ export default function Sidebar() {
                     name={"Home"}
                     link={"/"}
                     icon={HouseIcon}
-                    expanded={isExpanded}/>
-                <SidebarItem
-                    name={"Notifications"}
-                    link={"/notifications"}
-                    icon={BellIcon}
                     expanded={isExpanded}/>
                 <SidebarItem
                     name={"Settings"}
