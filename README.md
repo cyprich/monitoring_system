@@ -17,10 +17,10 @@ Run it on the system you want to monitor
 
 First, you need to set these environment variables
 
-| Variable      | Example value           | Description                     |
-| ------------- | ----------------------- | ------------------------------- |
-| `API_ADDRESS` | `http://localhost:5000` | IP address or URL of API server |
-| `API_PORT`    | `80`                    | Port of API server              |
+| Variable      | Example value      | Description                                                           |
+| ------------- | ------------------ | --------------------------------------------------------------------- |
+| `API_ADDRESS` | `http://localhost` | IP address or URL of API server                                       |
+| `API_PORT`    | `80`               | Port of API server, you have to keep it as `80` if running via docker |
 
 Running is done via `cargo run --release --bin collector` in the `backend` directory  
 You can also use the precompiled binary - [https://github.com/cyprich/monitoring_system/releases/download/v0.1/collector-linux-x86_64](https://github.com/cyprich/monitoring_system/releases/download/v0.1/collector-linux-x86_64) - and run it as `./collector-linux-x86_64`
