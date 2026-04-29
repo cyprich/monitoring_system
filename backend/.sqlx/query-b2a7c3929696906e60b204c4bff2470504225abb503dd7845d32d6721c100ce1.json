@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select * \n        from metrics \n        where collector_id = $1 \n        and metric_type = $2\n        and component_name = $3\n        limit $4",
+  "query": "select * \n        from metrics \n        where collector_id = $1 \n        and metric_type = $2\n        and component_name = $3\n        order by time desc\n        limit $4",
   "describe": {
     "columns": [
       {
@@ -45,5 +45,5 @@
       false
     ]
   },
-  "hash": "8222ed3c7674910708d56ad6d3240ae4e258ed6a8d5147e10a5ee77759fa2bb0"
+  "hash": "b2a7c3929696906e60b204c4bff2470504225abb503dd7845d32d6721c100ce1"
 }

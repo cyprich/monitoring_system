@@ -67,6 +67,7 @@ pub async fn get_endpoints_results_by_endpoint_id(
         "select * 
         from endpoints_results 
         where endpoint_id = $1 
+        order by time desc
         limit $2",
         endpoint_id,
         limit as i64

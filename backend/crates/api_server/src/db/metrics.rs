@@ -128,6 +128,7 @@ pub async fn get_metrics_by_type_and_component(
         where collector_id = $1 
         and metric_type = $2
         and component_name = $3
+        order by time desc
         limit $4",
         collector_id,
         metric_type,

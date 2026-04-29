@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select * \n        from endpoints_results \n        where endpoint_id = $1 \n        limit $2",
+  "query": "select * \n        from endpoints_results \n        where endpoint_id = $1 \n        order by time desc\n        limit $2",
   "describe": {
     "columns": [
       {
@@ -37,5 +37,5 @@
       true
     ]
   },
-  "hash": "fb87ab2b18e57c92618e2fe5cf637dd5e9e73b8343f4530ab20b99227314bd69"
+  "hash": "2edac0bb6da4110e0ff38a931f1c6c4de12545d6f604dbd8588d8a835653943c"
 }
