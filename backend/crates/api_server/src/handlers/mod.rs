@@ -1,7 +1,6 @@
 use actix_web::{HttpResponse, Responder, get};
 use serde::Deserialize;
 
-mod api_docs;
 mod collectors;
 mod metrics;
 mod notifications;
@@ -9,7 +8,6 @@ mod ports;
 mod thresholds;
 mod ws;
 
-pub use api_docs::*;
 pub use collectors::*;
 pub use metrics::*;
 pub use notifications::*;
@@ -24,13 +22,13 @@ enum ResponseBodyType {
 }
 
 // params structs
-#[derive(Deserialize, utoipa::IntoParams)]
+#[derive(Deserialize)]
 struct MetricsQueryParams {
     time_limit_hours: Option<i32>,
     resolution: Option<i32>,
 }
 
-#[derive(Deserialize, utoipa::ToSchema)]
+#[derive(Deserialize)]
 struct RenameCollectorStruct {
     name: String,
 }

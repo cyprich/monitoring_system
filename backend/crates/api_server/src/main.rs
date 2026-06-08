@@ -10,8 +10,6 @@ use shared::structs::metrics::Metrics;
 use shared::structs::notifications::Notification;
 use tokio::sync::broadcast;
 use tokio::time::sleep;
-// use utoipa::OpenApi;
-// use utoipa_swagger_ui::SwaggerUi;
 
 use crate::handlers::*;
 use db::Pool;
@@ -92,7 +90,6 @@ async fn main() -> std::io::Result<()> {
     // prepare app state and apidocs
     let (tx, _) = broadcast::channel::<(WebSocketType, i32)>(128);
     let state = AppState { pool, tx };
-    // let openapi = ApiDoc::openapi();
 
     println!("Starting API server");
     // run web server
@@ -144,9 +141,6 @@ async fn main() -> std::io::Result<()> {
                     .service(put_collector_ports_notifications_settings_opened)
                     .service(put_collector_ports_notifications_settings_closed),
             )
-        // .service(
-        //     SwaggerUi::new("/swagger_ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
-        // )
     })
     .bind(("0.0.0.0", port))?
     .run()

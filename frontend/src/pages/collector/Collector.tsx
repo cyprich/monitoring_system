@@ -52,29 +52,41 @@ export default function Collector() {
     const VALUES_IN_WINDOW = Math.floor(TOTAL_METRICS_COUNT / RESOLUTION); // number of values for each window
 
     useEffect(() => {
+        let isCancelled = false;
+        let collectorData: Collector | null = null;
+        let drivesData: Drive[] | null = null;
+        let networkInterfacesData: NetworkInterface[] | null = null;
+
+        function updateCollector() {
+            if (isCancelled || collectorData === null) {
+                return;
+            }
+
+            setCollector({
+                ...collectorData,
+                drives: drivesData,
+                network_interfaces: networkInterfacesData
+            });
+        }
+
         // collector
         axios
             .get<Collector>(url)
             .then((resp) => {
-                setCollector(resp.data)
+                collectorData = resp.data;
+                updateCollector();
             })
 
         // drives
         axios.get<Drive[]>(`${url}/drives`).then((resp) => {
-            setCollector(
-                prev => (
-                    prev ? {...prev, drives: resp.data} : prev
-                )
-            )
+            drivesData = resp.data;
+            updateCollector();
         });
 
         // network interfaces
         axios.get<NetworkInterface[]>(`${url}/network_interfaces`).then((resp) => {
-            setCollector(
-                prev => (
-                    prev ? {...prev, network_interfaces: resp.data} : prev
-                )
-            )
+            networkInterfacesData = resp.data;
+            updateCollector();
         });
 
         // historic metrics
@@ -129,6 +141,10 @@ export default function Collector() {
                     })) || []
                 )
             })
+
+        return () => {
+            isCancelled = true;
+        }
     }, [TIME_LIMIT_HOURS, RESOLUTION, id, url]);
 
     useEffect(() => {
@@ -216,11 +232,11 @@ export default function Collector() {
             </CustomSurface>
 
             <CustomSurface title={"API Endpoints"} id={"endpoints"} icon={ <ArrowShapeUpFromLine/> } >
-                <Endpoints collector_id={collector?.id || 0} lastEndpointsResults={lastEndpointsResults}/>
+                <Endpoints collector_id={id} lastEndpointsResults={lastEndpointsResults}/>
             </CustomSurface>
 
             <CustomSurface title={"Listening Ports"} id={"ports"} icon={ <ShieldKeyhole/> } >
-                <Ports collector_id={collector?.id || 0} ports={ports}/>
+                <Ports collector_id={id} ports={ports}/>
             </CustomSurface>
 
             <CustomSurface title={"Notifications"} id={"notifications"} icon={ <Bell/> } >
